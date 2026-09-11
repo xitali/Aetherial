@@ -1,0 +1,2032 @@
+<Window x:Class="DiskOptimizer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:DiskOptimizer.Models"
+        xmlns:services="clr-namespace:DiskOptimizer.Services"
+        mc:Ignorable="d"
+        Title="AETHERIAL • STORAGE &amp; DIAGNOSTICS SUITE (Administrator)" 
+        Icon="Assets/app_icon.png"
+        Height="1000" Width="1600"
+        MinHeight="820" MinWidth="1260"
+        Background="#0B0C18"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        FontSize="15"
+        FontFamily="Segoe UI Variable, Segoe UI, sans-serif">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="42" 
+                      ResizeBorderThickness="6" 
+                      CornerRadius="0" 
+                      GlassFrameThickness="0" 
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="46" /> <!-- Nowoczesny Cyber Pasek Tytułowy (Aetherial Header) -->
+            <RowDefinition Height="*" />  <!-- Główny interfejs (Sidebar + Workspace) -->
+        </Grid.RowDefinitions>
+
+        <!-- ==================== NOWOCZESNY PASEK TYTUŁOWY AETHERIAL ==================== -->
+        <Border Grid.Row="0" Background="#0A0B14" BorderBrush="#1C1B30" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Lewa strona: Nowe Logo AETHERIAL i podtytuł -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <Border Width="30" Height="30" Background="#181530" BorderBrush="#8B5CF6" BorderThickness="1.5" CornerRadius="8" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <Image Source="Assets/app_icon.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="AETHERIAL" FontWeight="Black" FontSize="14" Foreground="#06B6D4" VerticalAlignment="Center" />
+                            <TextBlock Text=" SUITE" FontWeight="Bold" FontSize="11" Foreground="#A78BFA" VerticalAlignment="Center" Margin="2,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="AERONAUTIC OPTIMIZATION &amp; DIAGNOSTIC SUITE" FontSize="7.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,1,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Środek: STORAGE & DIAGNOSTICS DASHBOARD + SYSTEM HEALTH + UPTIME + SECURITY -->
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="STORAGE &amp; DIAGNOSTICS DASHBOARD" FontWeight="ExtraBold" FontSize="12.5" Foreground="#F8FAFC" HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                        <TextBlock Text="SYSTEM HEALTH: " FontSize="9" FontWeight="SemiBold" Foreground="#64748B" />
+                        <TextBlock Text="OPTIMAL" FontSize="9" FontWeight="Bold" Foreground="#10B981" Margin="0,0,14,0" />
+
+                        <TextBlock Text="UPTIME: " FontSize="9" FontWeight="SemiBold" Foreground="#64748B" />
+                        <TextBlock x:Name="TopUptimeText" Text="14D 03H" FontSize="9" FontWeight="Bold" Foreground="#06B6D4" Margin="0,0,14,0" />
+
+                        <TextBlock Text="SECURITY: " FontSize="9" FontWeight="SemiBold" Foreground="#64748B" />
+                        <TextBlock Text="PROTECTED (ACTIVE)" FontSize="9" FontWeight="Bold" Foreground="#10B981" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Prawa strona: Ustawienia oraz Przyciski sterowania oknem (—, 🗖, Exit) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch">
+                    <Button Style="{StaticResource TitleBarButtonStyle}" 
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Click="NavToSettings_Click" 
+                            ToolTip="Ustawienia Aetherial"
+                            Width="40" Height="46">
+                        <TextBlock Text="⚙" FontSize="15" Foreground="#94A3B8" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+
+                    <Button x:Name="MinimizeButton" 
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Click="MinimizeButton_Click" 
+                            ToolTip="Minimalizuj"
+                            Width="48" Height="42" 
+                            Style="{StaticResource TitleBarButtonStyle}">
+                        <TextBlock Text="—" FontSize="14" Foreground="#A0A0B0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+
+                    <Button x:Name="MaximizeButton" 
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Click="MaximizeButton_Click" 
+                            ToolTip="Maksymalizuj / Przywróć"
+                            Width="48" Height="42" 
+                            Style="{StaticResource TitleBarButtonStyle}">
+                        <TextBlock x:Name="MaximizeIconText" Text="🗖" FontSize="14" Foreground="#A0A0B0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+
+                    <Button x:Name="CloseButton" 
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Click="CloseButton_Click" 
+                            ToolTip="Zamknij program (Exit)"
+                            Height="42" Padding="14,0"
+                            Style="{StaticResource TitleBarCloseButtonStyle}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="✕" FontSize="14" FontWeight="Bold" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Exit" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== GŁÓWNA ZAWARTOŚĆ OKNA ==================== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="84" /> <!-- NOWY WĄSKI, ULTRA-COOL BOCZNY PASEK NAWIGACJI -->
+                <ColumnDefinition Width="*" />  <!-- GŁÓWNY POWIĘKSZONY OBSZAR ROBOCZY -->
+            </Grid.ColumnDefinitions>
+
+            <!-- ==================== BOCZNY PASEK NAWIGACJI (COOL SLIM RAIL) ==================== -->
+            <Border Grid.Column="0" Background="#111116" BorderBrush="#1C1C26" BorderThickness="0,0,1,0" Padding="0,14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /> <!-- Logo Badge -->
+                        <RowDefinition Height="*" />    <!-- Przyciski nawigacyjne -->
+                        <RowDefinition Height="Auto" /> <!-- Status Administratora -->
+                    </Grid.RowDefinitions>
+
+                    <!-- 1. Logo AETHERIAL z neonowym akcentem -->
+                    <Border Grid.Row="0" Width="48" Height="48" Background="#16152C" BorderBrush="#8B5CF6" BorderThickness="1.5" CornerRadius="12" HorizontalAlignment="Center" Margin="0,0,0,16" ToolTip="Aetherial Systems Suite">
+                        <Image Source="Assets/app_icon.png" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <!-- 2. Menu Modułów (Smukłe przyciski Rail z ikonami i mikronapisami) -->
+                    <StackPanel Grid.Row="1" HorizontalAlignment="Center">
+                        <RadioButton x:Name="NavDashboardRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="0" ToolTip="Pulpit — Centrum sterowania i automatyzacja 1-kliknięciem" IsChecked="True">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="📊" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Pulpit" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavCleanerRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="1" ToolTip="Śmieci — Pamięci podręczne, shadery GPU, kosz i temp">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="🧹" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Śmieci" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavExplorerRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="2" ToolTip="Dyski — Eksplorator partycji C, D, E, F, pliki giganty i tarcza Windows">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="🧭" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Dyski" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavDriversRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="3" ToolTip="Sprzęt — Specyfikacja PC i certyfikowane sterowniki WHQL">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="🔌" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Sprzęt" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavToolsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="4" ToolTip="Narzędzia — Migracja na D/E, projekty Dev, VHDX i RAM">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="⚡" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Narzędzia" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavAppsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="5" ToolTip="Programy — Hub aplikacji (Dev, Homelab, AI, Grafika) i auto-aktualizacje winget">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="📥" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Programy" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="NavSettingsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="6" ToolTip="Ustawienia — Domyślny folder instalacji, audyty i moduły zaawansowane">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="⚙️" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                <TextBlock Text="Ustawienia" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+
+                    <!-- 3. Wskaźniki telemetryczne i status Administratora na dole (Styl ze zdjęcia nr 2) -->
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,8,0,2">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                            <TextBlock Text="📈" FontSize="13" Margin="2,0" ToolTip="Telemetria We/Wy SSD" />
+                            <TextBlock Text="⚡" FontSize="13" Margin="2,0" ToolTip="Aktywność GPU" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                            <TextBlock Text="🛡️" FontSize="13" Margin="2,0" ToolTip="Tarcza Systemu Aktywna" />
+                            <TextBlock Text="⚙️" FontSize="13" Margin="2,0" ToolTip="Diagnostyka" />
+                        </StackPanel>
+                        <Border Background="#142416" BorderBrush="#2E7D32" BorderThickness="1" CornerRadius="6" Width="48" Height="22" HorizontalAlignment="Center" ToolTip="Uruchomiono z pełnymi uprawnieniami Administratora Windows">
+                            <TextBlock Text="ADMIN" FontSize="8.5" FontWeight="Bold" Foreground="#81C784" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ==================== GŁÓWNY OBSZAR ROBOCZY (WORKSPACE) ==================== -->
+            <Grid Grid.Column="1" Margin="22,16,22,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" /> <!-- Dyski C, D, E, F -->
+                    <RowDefinition Height="*" />    <!-- Przełączane widoki -->
+                    <RowDefinition Height="Auto" /> <!-- Nowoczesny pasek stanu i log -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. KARTY DYSKÓW (C, D, E, F) - W JEDNYM RZĘDZIE (1-ROW ULTRA-SLICK STATUS STRIP) -->
+                <Border Grid.Row="0" Background="#13131A" CornerRadius="8" BorderBrush="#20202C" BorderThickness="1" Padding="12,8" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Etykieta NVMe SSD -->
+                        <Border Grid.Column="0" Background="#1A1A26" CornerRadius="6" BorderBrush="#2A2A3A" BorderThickness="1" Padding="10,5" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="⚡" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Kingston KC3000 NVMe PCIe 4.0" FontWeight="Bold" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 4 Partycje w 1 równym rzędzie -->
+                        <ItemsControl Grid.Column="1" x:Name="DrivesItemsControl" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="4" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:DriveModel}">
+                                    <Border Background="#181824" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="10,6" Margin="4,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Nazwa dysku -->
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                <TextBlock Text="💾" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- Pasek zużycia -->
+                                            <ProgressBar Grid.Column="1" Value="{Binding UsedPercent, Mode=OneWay}" Maximum="100" Height="4" Margin="0,0,8,0" Foreground="{Binding StatusColor}" Background="#0E0E12" VerticalAlignment="Center" />
+
+                                            <!-- Wolne miejsce -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FormattedFree}" FontWeight="Bold" FontSize="12" Foreground="{Binding StatusColor}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding FormattedTotal, StringFormat={} / {0}}" FontSize="11" Foreground="#7A7A88" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Podsumowanie Łączne Wolne Miejsce & Przycisk Pełnego Skanowania -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <Border Background="#162334" BorderBrush="#0078D4" BorderThickness="1" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="📊" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="DrivesSummaryText" Text="Łącznie: 1.26 TB wolne" FontSize="12" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                            <Button x:Name="MasterScanButton" Content="⚡ Pełne Skanowanie" Style="{StaticResource PrimaryButtonStyle}" Padding="14,6" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" Click="MasterScanAll_Click" ToolTip="Jednym kliknięciem odświeża stan wszystkich partycji, bada zużycie RAM oraz skanuje wszystkie pamięci podręczne i śmieci" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 2. PRZEŁĄCZANE WIDOKI MODUŁÓW -->
+                <Grid Grid.Row="1">
+
+                    <!-- ==================== WIDOK 0: AETHERIAL CYBER-NEON DASHBOARD (STYL ZE ZDJĘCIA NR 2) ==================== -->
+                    <Grid x:Name="ViewDashboard" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="3*" MinHeight="360" /> <!-- GÓRNY RZĄD: SSD STORAGE OPTIMIZATION & DISK HEALTH -->
+                            <RowDefinition Height="2*" MinHeight="250" /> <!-- DOLNY RZĄD: LIVE METRICS, DIAGNOSTICS & THROUGHPUT -->
+                        </Grid.RowDefinitions>
+
+                        <!-- ==================== GÓRNY RZĄD: SSD STORAGE OPTIMIZATION & DISK HEALTH & DEFRAG ==================== -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="65*" /> <!-- SSD STORAGE OPTIMIZATION (Słupki 3D & 94% OPTIMIZED) -->
+                                <ColumnDefinition Width="35*" /> <!-- DISK HEALTH & DEFRAG (Radial 98% Gauge) -->
+                            </Grid.ColumnDefinitions>
+
+                            <!-- KARTA 1: SSD STORAGE OPTIMIZATION -->
+                            <Border x:Name="Dash1ClickCardBorder" Grid.Column="0" Background="#0F1022" CornerRadius="12" BorderBrush="#252445" BorderThickness="1.5" Padding="20,16" Margin="0,0,12,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" /> <!-- Nagłówek -->
+                                        <RowDefinition Height="*" />    <!-- Wizualizacja 3D i statystyki -->
+                                        <RowDefinition Height="Auto" /> <!-- Pasek akcji 1-Klik i stan cache -->
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Nagłówek Widgetu -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="SSD STORAGE OPTIMIZATION" FontSize="13" FontWeight="Black" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                                            <Border x:Name="Dash1ClickBadge" Background="#1E1B4B" BorderBrush="#8B5CF6" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock x:Name="Dash1ClickBadgeText" Text="ZALECANE" FontSize="10" FontWeight="Bold" Foreground="#A78BFA" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="24" Height="24" Padding="0" Margin="0,0,4,0">
+                                                <TextBlock Text="‹" FontSize="15" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Button>
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="24" Height="24" Padding="0">
+                                                <TextBlock Text="›" FontSize="15" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Środek: SSD Icon + 3D Isometric Bar Columns + 94% OPTIMIZED Display -->
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" /> <!-- SSD Icon & Luminous Bus Line -->
+                                            <ColumnDefinition Width="*" />    <!-- 3D Isometric Bars -->
+                                            <ColumnDefinition Width="Auto" /> <!-- 94% OPTIMIZED Display -->
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- SSD Icon z neonową linią magistrali pamięci (Styl ze zdjęcia nr 2) -->
+                                        <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,22,0">
+                                            <Border Width="62" Height="62" Background="#181530" BorderBrush="#A855F7" BorderThickness="2" CornerRadius="12">
+                                                <Grid>
+                                                    <Rectangle Stroke="#C084FC" StrokeThickness="1" Margin="4" RadiusX="8" RadiusY="8" StrokeDashArray="2 2" />
+                                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <TextBlock Text="💾" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                                        <TextBlock Text="SSD" FontSize="11" FontWeight="Black" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                            <!-- Świecąca magistrala danych -->
+                                            <Rectangle Width="2" Height="30" Fill="#06B6D4" Margin="0,4,0,4" />
+                                            <!-- Warstwy NAND flash -->
+                                            <Canvas Width="44" Height="24">
+                                                <Polygon Points="22,2 42,10 22,18 2,10" Fill="#1E1945" Stroke="#06B6D4" StrokeThickness="1.5" />
+                                                <Polygon Points="22,6 42,14 22,22 2,14" Fill="#141230" Stroke="#8B5CF6" StrokeThickness="1.5" />
+                                            </Canvas>
+                                        </StackPanel>
+
+                                        <!-- 4 Słupki 3D dla dysków z izometrycznymi podstawami -->
+                                        <Grid Grid.Column="1" VerticalAlignment="Center" Margin="10,0,10,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Słupki gradientowe 3D -->
+                                            <Grid Grid.Row="1" Height="130" Margin="0,6,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Słupek 1: Drive C (System) - Gradient Magenta/Purple -->
+                                                <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                    <StackPanel HorizontalAlignment="Center">
+                                                        <Polygon Points="20,0 40,7 20,14 0,7" Fill="#F472B6" />
+                                                        <Border Width="40" Height="90" CornerRadius="0,0,4,4">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="#EC4899" Offset="0" />
+                                                                    <GradientStop Color="#8B5CF6" Offset="1" />
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Słupek 2: Drive D NVMe - Gradient Violet/Cyan -->
+                                                <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                    <StackPanel HorizontalAlignment="Center">
+                                                        <Polygon Points="20,0 40,7 20,14 0,7" Fill="#C084FC" />
+                                                        <Border Width="40" Height="110" CornerRadius="0,0,4,4">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="#8B5CF6" Offset="0" />
+                                                                    <GradientStop Color="#06B6D4" Offset="1" />
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Słupek 3: Drive E (Data) - Gradient Blue/Cyan -->
+                                                <Grid Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                    <StackPanel HorizontalAlignment="Center">
+                                                        <Polygon Points="20,0 40,7 20,14 0,7" Fill="#38BDF8" />
+                                                        <Border Width="40" Height="75" CornerRadius="0,0,4,4">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="#0284C7" Offset="0" />
+                                                                    <GradientStop Color="#06B6D4" Offset="1" />
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Słupek 4: Drive F NVMe - Gradient Cyan/Green -->
+                                                <Grid Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                    <StackPanel HorizontalAlignment="Center">
+                                                        <Polygon Points="20,0 40,7 20,14 0,7" Fill="#67E8F9" />
+                                                        <Border Width="40" Height="125" CornerRadius="0,0,4,4">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="#06B6D4" Offset="0" />
+                                                                    <GradientStop Color="#10B981" Offset="1" />
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Grid>
+
+                                            <!-- Podpisy dysków -->
+                                            <Grid Grid.Row="2" Margin="0,4,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                                    <TextBlock Text="DRIVE C" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="OS" FontSize="9" Foreground="#64748B" HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                                    <TextBlock Text="DRIVE D" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="NVMe" FontSize="9" Foreground="#A78BFA" HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                                    <TextBlock Text="DRIVE E" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="DATA" FontSize="9" Foreground="#64748B" HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                                                    <TextBlock Text="DRIVE F" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="NVMe" FontSize="9" Foreground="#38BDF8" HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Legenda stanu: ACTIVE & OPTIMIZED -->
+                                            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,18,0">
+                                                    <Ellipse Width="7" Height="7" Fill="#EC4899" Margin="0,0,5,0" />
+                                                    <TextBlock Text="ACTIVE" FontSize="10" FontWeight="Bold" Foreground="#EC4899" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="7" Height="7" Fill="#06B6D4" Margin="0,0,5,0" />
+                                                    <TextBlock Text="OPTIMIZED" FontSize="10" FontWeight="Bold" Foreground="#06B6D4" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Prawa strona: Wielka cyfra 94% OPTIMIZED z neonowym blaskiem -->
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,10,0">
+                                            <TextBlock Text="94%" FontSize="44" FontWeight="Black" Foreground="#06B6D4" HorizontalAlignment="Center" />
+                                            <TextBlock Text="OPTIMIZED" FontSize="12.5" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />
+                                            <TextBlock Text="1.8 TB / 2.0 TB" FontSize="11.5" FontWeight="SemiBold" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Dolny pasek karty: Przyciski akcji 1-Klik i Skanowanie oraz status pamięci podręcznej -->
+                                    <Grid Grid.Row="2" Margin="0,14,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Background="#16182E" CornerRadius="6" BorderBrush="#252445" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="🧹 Cache: " FontSize="12" Foreground="#94A3B8" />
+                                                    <TextBlock x:Name="DashCacheText" Text="0 B" FontSize="12" FontWeight="Bold" Foreground="#06B6D4" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Background="#16182E" CornerRadius="6" BorderBrush="#252445" BorderThickness="1" Padding="10,5">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="🎮 Shadery GPU: " FontSize="12" Foreground="#94A3B8" />
+                                                    <TextBlock x:Name="DashShadersText" Text="0 B (Czysto)" FontSize="12" FontWeight="Bold" Foreground="#10B981" />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="🔄 Skanuj" Style="{StaticResource SecondaryButtonStyle}" Padding="12,7" Margin="0,0,8,0" Click="ScanAllButton_Click" ToolTip="Odśwież stan partycji i przeskanuj pamięci podręczne" />
+                                            <Button x:Name="Dash1ClickButton" Content="⚡ 1-KLIK AUTO-OPTYMALIZACJA" Style="{StaticResource PrimaryButtonStyle}" Padding="18,8" FontSize="13" Click="AutoOptimize1Click_Click" ToolTip="Uruchamia pełną procedurę czyszczenia shaderów, pamięci RAM i optymalizacji TRIM SSD" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <!-- KARTA 2: DISK HEALTH & DEFRAG (Z neonowym okrągłym zegarem 98% HEALTH) -->
+                            <Border Grid.Column="1" Background="#0F1022" CornerRadius="12" BorderBrush="#2F2552" BorderThickness="1.5" Padding="20,16">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Nagłówek -->
+                                    <TextBlock Grid.Row="0" Text="DISK HEALTH &amp; DEFRAG" FontSize="13" FontWeight="Black" Foreground="#CBD5E1" Margin="0,0,0,10" />
+
+                                    <!-- Środek: Okrągły neonowy zegar 98% HEALTH -->
+                                    <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <!-- Podwójny pierścień neonowy -->
+                                            <Grid Width="120" Height="120" HorizontalAlignment="Center">
+                                                <Ellipse Stroke="#261E42" StrokeThickness="8" Width="112" Height="112" />
+                                                <!-- Łuk 98% -->
+                                                <Path Stroke="#06B6D4" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Data="M 60,4 A 56,56 0 1 1 54,4.3" />
+                                                <Ellipse Stroke="#A855F7" StrokeThickness="2" Width="92" Height="92" StrokeDashArray="3 3" />
+                                                
+                                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <TextBlock Text="98%" FontSize="24" FontWeight="Black" Foreground="#FFFFFF" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="HEALTH" FontSize="9" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Statystyki pod zegarem -->
+                                            <StackPanel Margin="0,12,0,0" HorizontalAlignment="Center">
+                                                <TextBlock Text="● 98% HEALTH" FontSize="11" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                                <TextBlock Text="● PERFORMANCE: PEAK" FontSize="11" FontWeight="Bold" Foreground="#06B6D4" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                                <TextBlock Text="● SPACE FREE: 240 GB" FontSize="11" FontWeight="Bold" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Dolny przycisk TRIM / DEFRAG -->
+                                    <Button Grid.Row="2" Content="⚡ WYKONAJ TRIM / DEFRAG" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Stretch" Padding="0,8" FontSize="12" Click="RunTrimNow_Click" Margin="0,10,0,0" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- ==================== DOLNY RZĄD: 3 WIDŻETY (LIVE METRICS, HARDWARE DIAGNOSTICS & THROUGHPUT) ==================== -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22*" /> <!-- LIVE SYSTEM METRICS & SECURITY ALERTS -->
+                                <ColumnDefinition Width="48*" /> <!-- HARDWARE DIAGNOSTICS (3 ZEGARY) -->
+                                <ColumnDefinition Width="30*" /> <!-- SYSTEM THROUGHPUT (MB/s) WAVEFORM -->
+                            </Grid.ColumnDefinitions>
+
+                            <!-- KARTA 1: LIVE SYSTEM METRICS & SECURITY ALERTS -->
+                            <Border Grid.Column="0" Background="#0F1022" CornerRadius="12" BorderBrush="#252445" BorderThickness="1.5" Padding="16,14" Margin="0,0,12,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Text="LIVE SYSTEM METRICS" FontSize="11.5" FontWeight="Black" Foreground="#CBD5E1" Margin="0,0,0,10" />
+
+                                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                        <Grid Margin="0,0,0,6">
+                                            <TextBlock Text="LIVE LOAD" FontSize="11" Foreground="#94A3B8" />
+                                            <TextBlock Text="3.4 GB/s" FontSize="11" FontWeight="Bold" Foreground="#06B6D4" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <TextBlock Text="GPU USAD" FontSize="11" Foreground="#94A3B8" />
+                                            <TextBlock Text="2.8 GB/s" FontSize="11" FontWeight="Bold" Foreground="#A855F7" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <TextBlock Text="PERFORMANCE" FontSize="11" Foreground="#94A3B8" />
+                                            <TextBlock Text="110 GB" FontSize="11" FontWeight="Bold" Foreground="#EC4899" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- SECURITY ALERTS -->
+                                    <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                                        <TextBlock Text="SECURITY ALERTS" FontSize="10.5" FontWeight="Black" Foreground="#64748B" Margin="0,0,0,6" />
+                                        <Border Background="#10B98115" BorderBrush="#10B981" BorderThickness="1" CornerRadius="6" Padding="8,5">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="🛡️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="0 ACTIVE THREATS" FontSize="11" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- KARTA 2: HARDWARE DIAGNOSTICS (3 Zegary: CPU LOAD, GPU PERFORMANCE, MEM USAGE) -->
+                            <Border Grid.Column="1" Background="#0F1022" CornerRadius="12" BorderBrush="#252445" BorderThickness="1.5" Padding="18,14" Margin="0,0,12,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="HARDWARE DIAGNOSTICS" FontSize="11.5" FontWeight="Black" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="24" Height="24" Padding="0" Margin="0,0,3,0">
+                                                <TextBlock Text="‹" FontSize="15" Foreground="#64748B" />
+                                            </Button>
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="24" Height="24" Padding="0">
+                                                <TextBlock Text="›" FontSize="15" Foreground="#64748B" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- 3 Kołowe Wskaźniki -->
+                                    <Grid Grid.Row="1" VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Zegar 1: CPU LOAD (Ryzen 7 7800X3D) -->
+                                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                            <Grid Width="76" Height="76" HorizontalAlignment="Center">
+                                                <Ellipse Stroke="#1E2338" StrokeThickness="6" Width="68" Height="68" />
+                                                <Path Stroke="#06B6D4" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Data="M 38,4 A 34,34 0 0 1 72,38" />
+                                                <TextBlock Text="24%" FontSize="15" FontWeight="Black" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                            <TextBlock Text="CPU LOAD" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,5,0,1" />
+                                            <TextBlock Text="TEMP: 48°C" FontSize="9" FontWeight="SemiBold" Foreground="#06B6D4" HorizontalAlignment="Center" />
+                                            <TextBlock Text="Ryzen 7800X3D" FontSize="8" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                                        </StackPanel>
+
+                                        <!-- Zegar 2: GPU PERF (RTX 4070 Ti SUPER) -->
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <Grid Width="76" Height="76" HorizontalAlignment="Center">
+                                                <Ellipse Stroke="#261E42" StrokeThickness="6" Width="68" Height="68" />
+                                                <Path Stroke="#A855F7" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Data="M 38,4 A 34,34 0 0 1 70,50" />
+                                                <TextBlock Text="35%" FontSize="15" FontWeight="Black" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                            <TextBlock Text="GPU PERF" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,5,0,1" />
+                                            <TextBlock Text="TEMP: 45°C" FontSize="9" FontWeight="SemiBold" Foreground="#C084FC" HorizontalAlignment="Center" />
+                                            <TextBlock Text="RTX 4070Ti S" FontSize="8" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                                        </StackPanel>
+
+                                        <!-- Zegar 3: MEM USAGE (32 GB DDR5) -->
+                                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                            <Grid Width="76" Height="76" HorizontalAlignment="Center">
+                                                <Ellipse Stroke="#2A1B38" StrokeThickness="6" Width="68" Height="68" />
+                                                <Path Stroke="#EC4899" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Data="M 38,4 A 34,34 0 0 1 68,28" />
+                                                <TextBlock Text="22%" FontSize="15" FontWeight="Black" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                            <TextBlock Text="MEM USAGE" FontSize="9.5" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,5,0,1" />
+                                            <TextBlock x:Name="RamStatusText" Text="7.2 GB / 32 GB" FontSize="9" FontWeight="SemiBold" Foreground="#F472B6" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DDR5 6000 MT/s" FontSize="8" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Link do pełnej diagnostyki -->
+                                    <Button Grid.Row="2" Content="🔍 Centrum Diagnostyczne &amp; Podzespoły ➔" Style="{StaticResource SecondaryButtonStyle}" FontSize="11" Padding="0,5" Click="NavToDrivers_Click" Margin="0,8,0,0" />
+                                </Grid>
+                            </Border>
+
+                            <!-- KARTA 3: SYSTEM THROUGHPUT (MB/s) WAVEFORM -->
+                            <Border Grid.Column="2" Background="#0F1022" CornerRadius="12" BorderBrush="#252445" BorderThickness="1.5" Padding="16,14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                        <TextBlock Text="SYSTEM THROUGHPUT (MB/s)" FontSize="11" FontWeight="Black" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="22" Height="22" Padding="0" Margin="0,0,2,0">
+                                                <TextBlock Text="‹" FontSize="14" Foreground="#64748B" />
+                                            </Button>
+                                            <Button Style="{StaticResource TitleBarButtonStyle}" Width="22" Height="22" Padding="0">
+                                                <TextBlock Text="›" FontSize="14" Foreground="#64748B" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Wykres falowy z dwiema krzywymi (Write - Fioletowa, Read - Cyan) -->
+                                    <Grid Grid.Row="1" VerticalAlignment="Center" Height="85">
+                                        <Border BorderBrush="#1A1C30" BorderThickness="0,1,0,1" Height="50" />
+                                        <Border BorderBrush="#1A1C30" BorderThickness="0,1,0,0" Height="25" />
+                                        
+                                        <!-- Fala Write (Fioletowa) -->
+                                        <Path Stroke="#A855F7" StrokeThickness="2.2" StrokeLineJoin="Round"
+                                              Data="M 0,55 C 25,50 45,38 70,42 C 95,46 115,30 140,34 C 165,38 190,12 215,18 C 240,24 265,20 290,25" />
+                                        
+                                        <!-- Fala Read (Cyan) -->
+                                        <Path Stroke="#06B6D4" StrokeThickness="2.2" StrokeLineJoin="Round"
+                                              Data="M 0,65 C 25,60 45,46 70,48 C 95,52 115,38 140,42 C 165,46 190,22 215,28 C 240,34 265,30 290,35" />
+                                    </Grid>
+
+                                    <!-- Stopka z prędkościami -->
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="6" Height="6" Fill="#06B6D4" Margin="0,0,5,0" />
+                                            <TextBlock Text="READ: 3.4 GB/s" FontSize="10" FontWeight="Bold" Foreground="#38BDF8" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Ellipse Width="6" Height="6" Fill="#A855F7" Margin="0,0,5,0" />
+                                            <TextBlock Text="WRITE: 2.8 GB/s" FontSize="10" FontWeight="Bold" Foreground="#C084FC" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 1: CZYSZCZENIE CACHE / ŚMIECI ==================== -->
+                    <Grid x:Name="ViewCleaner" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Pasek akcji modułu czyszczenia -->
+                        <Border Grid.Row="0" Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="SelectAllCheckBox" Content="Zaznacz wszystkie" IsChecked="True" VerticalAlignment="Center" Click="SelectAllCheckBox_Click" Margin="0,0,12,0" />
+                                    <Button Content="⚡ Tylko shadery GPU &amp; cache" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" Margin="0,0,8,0" Click="SelectOnlyCache_Click" />
+                                    <Button Content="Odznacz wszystko" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" Click="DeselectAll_Click" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#1C2738" BorderBrush="#0078D4" BorderThickness="1" CornerRadius="6" Padding="14,6" Margin="0,0,10,0">
+                                        <TextBlock x:Name="AutoCleanSummaryText" Text="Zaznaczono: 0 B (0 el.)" FontSize="14" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Button Content="🔄 Odśwież i przelicz" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Padding="12,8" Click="MasterScanAll_Click" />
+                                    <Button Content="🧹 Wyczyść zaznaczone śmieci" Style="{StaticResource DangerButtonStyle}" Click="CleanSelectedCache_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Lista elementów czyszczenia (Czysty, nowoczesny układ bez uciążliwego skanowania per-wiersz) -->
+                        <Border Grid.Row="1" Background="#14141C" CornerRadius="8" BorderBrush="#20202C" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="CleanItemsControl" Margin="12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:CleanItem}">
+                                            <Border Background="#1A1A24" CornerRadius="8" BorderBrush="#262634" BorderThickness="1" Margin="0,0,0,8" Padding="16,14">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanClean}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                                    
+                                                    <Border Grid.Column="1" Background="#222232" CornerRadius="8" Width="44" Height="44" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                        <TextBlock Text="{Binding Icon}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                            <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                                            <Border Background="#1E293B" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Category}" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Description}" FontSize="13" Foreground="#94A3B8" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="#555568" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                                    </StackPanel>
+
+                                                    <Border Grid.Column="3" Background="{Binding BadgeColor}" CornerRadius="4" Padding="8,4" VerticalAlignment="Center" Margin="0,0,20,0">
+                                                        <TextBlock Text="{Binding BadgeText}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="140">
+                                                        <TextBlock Text="{Binding FormattedSize}" FontSize="18" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Right" />
+                                                        <TextBlock Text="{Binding Status}" FontSize="12" Foreground="#888898" HorizontalAlignment="Right" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 2: EKSPLORATOR PARTYCJII (DYSKI & GIGANTY) ==================== -->
+                    <Grid x:Name="ViewExplorer" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Pasek 1: Wybór partycji & Ścieżka -->
+                        <Border Grid.Row="0" Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Przyciski partycji -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,16,0">
+                                    <Button Content="C:\" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Margin="0,0,6,0" Tag="C:\" Click="SwitchPartition_Click" />
+                                    <Button Content="D:\" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Margin="0,0,6,0" Tag="D:\" Click="SwitchPartition_Click" />
+                                    <Button Content="E:\" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Margin="0,0,6,0" Tag="E:\" Click="SwitchPartition_Click" />
+                                    <Button Content="F:\" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Tag="F:\" Click="SwitchPartition_Click" />
+                                </StackPanel>
+
+                                <!-- Ścieżka tekstowa -->
+                                <TextBox Grid.Column="1" x:Name="CurrentPathTextBox" Background="#0F0F14" Foreground="#FFFFFF" BorderBrush="#2E2E3C" BorderThickness="1" Padding="10,6" FontSize="14" KeyDown="CurrentPathTextBox_KeyDown" VerticalAlignment="Center" />
+
+                                <Button Grid.Column="2" Content="➔ Przejdź" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" Margin="8,0,0,0" Click="NavigatePath_Click" />
+                                <Button Grid.Column="3" Content="⬆️ W górę" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" Margin="8,0,0,0" Click="NavigateUp_Click" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Pasek 2: Filtry wieku & Akcje usuwania -->
+                        <Border Grid.Row="1" Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="🔍 Pliki giganty (> 500 MB)" Style="{StaticResource PrimaryButtonStyle}" Padding="12,6" Margin="0,0,14,0" Click="FindLargeFiles_Click" />
+                                    <TextBlock Text="Filtr wieku:" FontSize="13" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <Button Content="Wszystkie" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="0" Click="SelectByAge_Click" />
+                                    <Button Content="> 7 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="7" Click="SelectByAge_Click" />
+                                    <Button Content="> 30 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="30" Click="SelectByAge_Click" />
+                                    <Button Content="> 90 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="90" Click="SelectByAge_Click" />
+                                    <Button Content="> 1 rok" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,10,0" Tag="365" Click="SelectByAge_Click" />
+                                    <Button Content="Odznacz" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Click="DeselectExplorer_Click" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="RecycleBinCheckBox" Content="🗑️ Przenoś do Kosza" IsChecked="True" VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="Gdy zaznaczone, usunięte pliki trafią do Kosza (bezpiecznie)" />
+                                    <Border Background="#1C2738" BorderBrush="#0078D4" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,0,12,0">
+                                        <TextBlock x:Name="ExplorerSelectedSummaryText" Text="Zaznaczono: 0 B (0 el.)" FontSize="13" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Button Content="🗑️ Usuń zaznaczone pliki" Style="{StaticResource DangerButtonStyle}" Click="DeleteSelectedExplorerFiles_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Lista plików w eksploratorze z tarczą bezpieczeństwa -->
+                        <Border Grid.Row="2" Background="#14141C" CornerRadius="8" BorderBrush="#20202C" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="ExplorerItemsControl" Margin="10">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:FileSystemItem}">
+                                            <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Margin="0,0,0,6" Padding="12,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="34" />
+                                                        <ColumnDefinition Width="34" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="220" />
+                                                        <ColumnDefinition Width="130" />
+                                                        <ColumnDefinition Width="150" />
+                                                        <ColumnDefinition Width="120" />
+                                                        <ColumnDefinition Width="80" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanDelete}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding TypeIcon}" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding ParentDirectory}" FontSize="13" Foreground="#888898" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="{Binding Path}" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding FormattedSize}" FontSize="14" FontWeight="Bold" Foreground="#E0E0E0" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                    <TextBlock Grid.Column="5" Text="{Binding FormattedDate}" FontSize="13" Foreground="#9E9EAA" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                                    <Border Grid.Column="6" Background="{Binding AgeBadgeBackground}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                        <TextBlock Text="{Binding RelativeAgeText}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding AgeBadgeColor}" />
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Button Content="➔" ToolTip="Wejdź do folderu" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" Margin="0,0,4,0" Tag="{Binding Path}" Click="EnterFolder_Click" Visibility="{Binding IsDirectory, Converter={x:Null}}" />
+                                                        <Button Content="📂" ToolTip="Pokaż w Eksploratorze" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" Tag="{Binding Path}" Click="OpenExplorerPath_Click" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 3: SPRZĘT & CENTRUM STEROWNIKÓW (WHQL + PERYFERIA) ==================== -->
+                    <Grid x:Name="ViewDrivers" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- Karta specyfikacji stacji -->
+                            <RowDefinition Height="Auto" /> <!-- Pasek akcji i centrów producentów -->
+                            <RowDefinition Height="*" />    <!-- Główna zawartość z urządzeniami i WHQL -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Karta specyfikacji podzespołów -->
+                        <Border Grid.Row="0" Background="#121A28" CornerRadius="8" BorderBrush="#0078D4" BorderThickness="1" Padding="16,12" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="🖥️" FontSize="22" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Wykryta Stacja Robocza &amp; Kompleksowe Centrum Sterowników" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                    <Border Background="#2E7D32" CornerRadius="4" Padding="6,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="SYSTEM &amp; PERYFERIA AKTYWNE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF" />
+                                    </Border>
+                                </StackPanel>
+
+                                <UniformGrid Grid.Row="1" Columns="3">
+                                    <StackPanel Margin="0,0,10,0">
+                                        <TextBlock Text="• CPU: AMD Ryzen 7 7800X3D (8C/16T, 5.0 GHz)" FontSize="13" Foreground="#E2E8F0" Margin="0,2" />
+                                        <TextBlock Text="• GPU: NVIDIA GeForce RTX 4070 Ti SUPER (16GB)" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" Margin="0,2" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,10,0">
+                                        <TextBlock Text="• Płyta: ASRock B650E PG Riptide WiFi (BIOS: 2.02)" FontSize="13" Foreground="#E2E8F0" Margin="0,2" />
+                                        <TextBlock Text="• Pamięć RAM: 32 GB DDR5 Dual @ 6000 MT/s (EXPO)" FontSize="13" Foreground="#E2E8F0" Margin="0,2" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="• Słuchawki: MCHOSE X9 USB (C-Media 7.1 Surround)" FontSize="13" FontWeight="Bold" Foreground="#A78BFA" Margin="0,2" />
+                                        <TextBlock Text="• Sieć: Killer E3100G 2.5G LAN + Wi-Fi 6E / BT 5.2" FontSize="13" Foreground="#E2E8F0" Margin="0,2" />
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Pasek akcji i szybkich centrów producentów -->
+                        <Border Grid.Row="1" Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="12,8" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="🔄 Skanuj urządzenia PnP &amp; WHQL" Style="{StaticResource PrimaryButtonStyle}" Click="SearchAllDrivers_Click" Margin="0,0,8,0" Padding="12,6" FontSize="13" />
+                                    <Button Content="⬇️ Zainstaluj zaznaczone WHQL" Style="{StaticResource DangerButtonStyle}" Click="InstallDriverUpdates_Click" Margin="0,0,8,0" Padding="12,6" FontSize="13" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="🎧 MCHOSE Hub" Style="{StaticResource SecondaryButtonStyle}" Click="OpenMchoseHub_Click" Margin="0,0,6,0" Padding="10,5" FontSize="12" ToolTip="Pobierz oficjalne oprogramowanie MCHOSE Audio Hub &amp; Firmware dla słuchawek X9" />
+                                    <Button Content="🎮 NVIDIA App" Style="{StaticResource SecondaryButtonStyle}" Click="OpenNvidiaApp_Click" Margin="0,0,6,0" Padding="10,5" FontSize="12" ToolTip="Otwórz aplikację NVIDIA z najnowszymi sterownikami Game-Ready" />
+                                    <Button Content="🌐 Killer Suite" Style="{StaticResource SecondaryButtonStyle}" Click="OpenKillerSuite_Click" Margin="0,0,6,0" Padding="10,5" FontSize="12" ToolTip="Pobierz sterowniki Killer Performance Suite dla karty sieciowej 2.5 Gbps" />
+                                    <Button Content="⚡ AMD Chipset" Style="{StaticResource SecondaryButtonStyle}" Click="OpenAmdChipset_Click" Margin="0,0,6,0" Padding="10,5" FontSize="12" ToolTip="Oficjalne sterowniki chipsetu AMD AM5 &amp; 3D V-Cache" />
+                                    <Button Content="🎛️ Menedżer Urządzeń" Style="{StaticResource SecondaryButtonStyle}" Click="OpenDeviceManager_Click" Padding="10,5" FontSize="12" ToolTip="Otwórz Menedżer Urządzeń Windows (devmgmt.msc)" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Zawartość przewijana: Wykryte urządzenia fizyczne + Aktualizacje WHQL -->
+                        <Border Grid.Row="2" Background="#14141C" CornerRadius="8" BorderBrush="#20202C" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="14">
+
+                                    <!-- ==================== SEKCJA 1: ⚠️ CO NALEŻY POPRAWIĆ W TWOIM KOMPUTERZE ==================== -->
+                                    <Border Background="#191B28" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="10" Padding="16,14" Margin="0,0,0,18">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="⚠️" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="CENTRUM DIAGNOSTYCZNE: CO NALEŻY POPRAWIĆ W TWOIM KOMPUTERZE" FontSize="15" FontWeight="Bold" Foreground="#FBBF24" VerticalAlignment="Center" />
+                                                <Border Background="#F59E0B25" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="6 REKOMENDACJI SYSTEMOWYCH" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="Aplikacja przeanalizowała stan podzespołów Twojego PC, rejestr błędów PnP oraz konfigurację pamięci i płyty głównej. Poniżej znajdują się wykryte nieoptymalności i sugerowane działania naprawcze:" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                            <UniformGrid Columns="3" Margin="-4,0">
+                                                <!-- KARTA 1: BŁĄD CODE 28 -->
+                                                <Border Background="#131520" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#EF444420" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🔴 BŁĄD CODE 28" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="AMD Sensor Fusion / MicroPEP" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Urządzenie ACPI\AMDIF031\0 nie posiada załadowanego sterownika w systemie Windows. Może to wpływać na czujniki płyty i zarządzanie energią AM5." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="⚡ Pobierz AMD Chipset INF" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="11" Click="OpenAmdChipset_Click" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- KARTA 2: BŁĄD CODE 43 BLUETOOTH -->
+                                                <Border Background="#131520" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#F59E0B20" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟡 BŁĄD CODE 43" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="MediaTek Bluetooth Adapter" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Urządzenie USB\VID_0E8D&amp;PID_0608 zgłosiło błąd sprzętowy i zostało zatrzymane przez system. Wymagany restart stosu bthserv lub reinstalacja." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="🔄 Zrestartuj usługę Bluetooth" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="RestartBluetoothService_Click" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- KARTA 3: KILLER ETHERNET -->
+                                                <Border Background="#131520" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#F59E0B20" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟡 AKTUALIZACJA" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="Killer E3100G 2.5G LAN" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Zainstalowany sterownik 1.0.2.14. Dostępna nowsza wersja pakietu Killer Performance Suite v3.1424 z akceleracją pakietów sieciowych gier." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="🌐 Pobierz pakiet Killer Suite" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenKillerSuite_Click" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- KARTA 4: RAM EXPO PROFIL -->
+                                                <Border Background="#131520" BorderBrush="#4F46E5" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#4F46E520" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟢 WYDAJNOŚĆ" FontSize="10" FontWeight="Bold" Foreground="#818CF8" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="Pamięć RAM DDR5 EXPO Profil" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Moduły pamięci 32 GB pracują na bazowym zegarze 4800 MT/s JEDEC. Aktywacja profilu EXPO (6000 MT/s) w BIOS ASRock da +10-15% FPS dla Ryzen 7 7800X3D." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Border Grid.Row="2" Background="#1E2235" CornerRadius="4" Padding="8,4">
+                                                            <TextBlock Text="Włącz EXPO w BIOS (Klawisz Del / F2)" FontSize="10.5" Foreground="#A5B4FC" HorizontalAlignment="Center" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- KARTA 5: BIOS AGESA -->
+                                                <Border Background="#131520" BorderBrush="#4F46E5" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#4F46E520" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟢 OPTYMALIZACJA" FontSize="10" FontWeight="Bold" Foreground="#818CF8" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="Płyta ASRock B650E (BIOS v2.02)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Płyta posiada starszy BIOS 2.02. Nowsza kompilacja UEFI wprowadza mikrokod AGESA 1.2.0.2a zoptymalizowany pod kątem krzywych PBO i opóźnień pamięci." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="🔍 Sprawdź BIOS ASRock" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenAsrockBios_Click" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- KARTA 6: TRIM NVME -->
+                                                <Border Background="#131520" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="#10B98120" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟢 STAN ZDROWY" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="1" Text="Kingston KC3000 NVMe 2TB" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1" Text="Nośnik SSD PCIe 4.0 jest w 100% sprawny (SMART: OK). Aby utrzymać fabryczną prędkość zapisu 7000 MB/s, zalecana jest regularna optymalizacja ReTrim." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="⚡ Wykonaj ReTrim SSD Teraz" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="RunTrimNow_Click" />
+                                                    </Grid>
+                                                </Border>
+                                            </UniformGrid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ==================== SEKCJA 2: 🖥️ KOMPLEKSOWA INWENTARYZACJA PODZESPOŁÓW PC ==================== -->
+                                    <Border Background="#181926" BorderBrush="#262A3E" BorderThickness="1" CornerRadius="10" Padding="16,14" Margin="0,0,0,18">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <TextBlock Text="🖥️" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="KOMPLEKSOWA INWENTARYZACJA WSZYSTKICH PODZESPOŁÓW PC (STATUSY &amp; PARAMETRY)" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                                <Border Background="#10B98120" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="100% WYKRYTO" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
+                                                </Border>
+                                            </StackPanel>
+
+                                            <UniformGrid Columns="4" Margin="-4,0">
+                                                <!-- CPU -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🧠 PROCESOR (CPU)" FontSize="11" FontWeight="Bold" Foreground="#818CF8" Margin="0,0,0,4" />
+                                                        <TextBlock Text="AMD Ryzen 7 7800X3D" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Rdzenie / Wątki: 8C / 16T" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Taktowanie: do 5.0 GHz Boost" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Pamięć L3: 96MB 3D V-Cache" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Wirtualizacja: SVM Aktywna" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- dGPU -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🎮 DEDYKOWANE GPU" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,0,4" />
+                                                        <TextBlock Text="NVIDIA RTX 4070 Ti SUPER" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Pamięć VRAM: 16 GB GDDR6X" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Sterownik: 32.0.16.1088 (v610.88)" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Magistrala: PCIe 4.0 x16" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Resizable BAR: Włączony" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- iGPU -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🖼️ ZINTEGROWANE GPU" FontSize="11" FontWeight="Bold" Foreground="#A78BFA" Margin="0,0,0,4" />
+                                                        <TextBlock Text="AMD Radeon(TM) Graphics" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Architektura: RDNA2 (Raphael)" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Jednostki CU: 2 rdzenie GPU" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Sterownik: 32.0.21030.2001" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Wyjście: Aktywne w tle" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- PŁYTA GŁÓWNA -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🖲️ PŁYTA GŁÓWNA &amp; BIOS" FontSize="11" FontWeight="Bold" Foreground="#FBBF24" Margin="0,0,0,4" />
+                                                        <TextBlock Text="ASRock B650E PG Riptide" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Chipset: AMD B650E AM5" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Wersja BIOS: 2.02 (UEFI)" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• PCIe 5.0: Obsługa M.2 &amp; GPU" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Secure Boot: Aktywny" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- RAM -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="⚡ PAMIĘĆ RAM" FontSize="11" FontWeight="Bold" Foreground="#34D399" Margin="0,0,0,4" />
+                                                        <TextBlock Text="32 GB DDR5 Dual-Channel" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Moduły: 2x 16 GB (6400 Series)" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Taktowanie: 4800 MT/s (JEDEC)" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Profil: Obsługa AMD EXPO" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Stan: 100% Sprawna" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- SSD NVME -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="💾 NOŚNIK SYSTEMOWY NVMe" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,0,4" />
+                                                        <TextBlock Text="Kingston KC3000 2048 GB" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Interfejs: PCIe 4.0 x4 NVMe" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Odczyt / Zapis: do 7000 MB/s" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Partycje: C: 150GB, D: 1.8TB" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• SMART Health: 100% Sprawny" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- SIEĆ -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🌐 KARTY SIECIOWE" FontSize="11" FontWeight="Bold" Foreground="#818CF8" Margin="0,0,0,4" />
+                                                        <TextBlock Text="Killer 2.5G LAN + Wi-Fi 6E" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Ethernet: Killer E3100G 2.5 Gbps" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Bezprzewodowa: Wi-Fi 6E AX1675x" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• VPN: Tailscale Tunnel" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Status: Połączono z siecią" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- AUDIO -->
+                                                <Border Background="#12131C" BorderBrush="#222536" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🎧 DŹWIĘK &amp; PERYFERIA" FontSize="11" FontWeight="Bold" Foreground="#F472B6" Margin="0,0,0,4" />
+                                                        <TextBlock Text="MCHOSE X9 7.1 + Realtek" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="• Słuchawki: MCHOSE X9 USB (C-Media)" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                                        <TextBlock Text="• Karta płyty: Realtek ALC1220 HD" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Grafika: NVIDIA HD Audio" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Silnik: THX Spatial Audio" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </UniformGrid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ==================== SEKCJA 3: LIVE PNP INVENTORY & STEROWNIKI ==================== -->
+                                    <StackPanel Margin="0,0,0,18">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="WYKRYTE URZĄDZENIA FIZYCZNE, PERYFERIA I STEROWNIKI SPRZĘTOWE:" FontSize="13" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center" />
+                                            <Border Background="#1E293B" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="LIVE PNP INVENTORY" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <ItemsControl x:Name="PnpDevicesControl">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:PnpDeviceItem}">
+                                                    <Border Background="#191A26" BorderBrush="{Binding UpdateBadgeColor}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,12,12" Width="530" MinHeight="106">
+                                                        <Grid>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                            </Grid.RowDefinitions>
+
+                                                            <!-- Rząd 1: Ikona, Pełna Nazwa Urządzenia (z zawijaniem), Status Badge i Kategoria pionowo -->
+                                                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <Border Grid.Column="0" Background="#242538" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0" VerticalAlignment="Top">
+                                                                    <TextBlock Text="{Binding CategoryIcon}" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                </Border>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="0,0,10,0">
+                                                                    <TextBlock Text="{Binding DeviceName}" FontWeight="Bold" FontSize="13.5" Foreground="#F1F5F9" TextWrapping="Wrap" LineHeight="18" />
+                                                                    <TextBlock Text="{Binding Manufacturer}" FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right">
+                                                                    <Border Background="{Binding UpdateBadgeBg}" BorderBrush="{Binding UpdateBadgeColor}" BorderThickness="1" CornerRadius="4" Padding="7,3" Margin="0,0,0,4" HorizontalAlignment="Right">
+                                                                        <TextBlock Text="{Binding UpdateStatusBadge}" FontSize="10" FontWeight="Bold" Foreground="{Binding UpdateBadgeColor}" />
+                                                                    </Border>
+                                                                    <Border Background="#1E293B" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right">
+                                                                        <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8" />
+                                                                    </Border>
+                                                                </StackPanel>
+                                                            </Grid>
+
+                                                            <!-- Rząd 2: Wersja sterownika -->
+                                                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="50,2,0,6">
+                                                                <TextBlock Text="Sterownik:" FontSize="12" Foreground="#888898" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding DriverVersion}" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                            </StackPanel>
+
+                                                            <!-- Rząd 3: Kanał aktualizacji i przycisk -->
+                                                            <Grid Grid.Row="2" Margin="50,2,0,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                                    <TextBlock Text="●" Foreground="{Binding StatusColor}" Margin="0,0,6,0" FontSize="10" VerticalAlignment="Center" />
+                                                                    <TextBlock Text="{Binding UpdateMethod}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                                <Button Grid.Column="1" Content="{Binding ActionButtonText}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Tag="{Binding ActionTarget}" Click="PnpDeviceAction_Click" VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <!-- SEKCJA 2: Certyfikowane Aktualizacje WHQL (Windows Update) -->
+                                    <StackPanel>
+                                        <TextBlock Text="CERTYFIKOWANE AKTUALIZACJE STEROWNIKÓW WHQL (WINDOWS UPDATE):" FontSize="13" FontWeight="Bold" Foreground="#81C784" Margin="0,0,0,10" />
+
+                                        <ItemsControl x:Name="DriverUpdatesControl">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type services:DriverUpdateItem}">
+                                                    <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="14,12" Margin="0,0,0,8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding CategoryIcon}" FontSize="24" VerticalAlignment="Center" Margin="0,0,14,0" Width="32" TextAlignment="Center" />
+
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,14,0">
+                                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" TextWrapping="Wrap" />
+                                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                                    <Border Background="#252535" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                                                        <TextBlock Text="{Binding Category}" FontSize="12" Foreground="#64B5F6" FontWeight="SemiBold" />
+                                                                    </Border>
+                                                                    <TextBlock Text="{Binding ReleaseDate, StringFormat={}Data wydania: {0}}" FontSize="12" Foreground="#888898" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </StackPanel>
+
+                                                            <TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding StatusColor}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 4: NARZĘDZIA & MAGAZYN (POŁĄCZONE BEZ DUPLIKATÓW) ==================== -->
+                    <Grid x:Name="ViewTools" Visibility="Collapsed">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,0,8,0">
+
+                                <!-- KARTA 1: ASYSTENT MIGRACJI DANYCH NA DYSK D/E (NTFS JUNCTION) -->
+                                <Border Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="18" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,12">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🔗" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Asystent Przenoszenia Danych na Dysk D:/E: (Dowiązania NTFS Junction)" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="Przenosi fizyczne gigabajty z dysku C: na inną partycję, tworząc przezroczyste dla Windows dowiązanie NTFS (mklink /J). Aplikacje nadal działają bezbłędnie myśląc, że pliki są na C:!" FontSize="13" Foreground="#94A3B8" Margin="34,0,0,14" TextWrapping="Wrap" LineHeight="19" />
+
+                                        <ItemsControl x:Name="SymlinkPresetsControl">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type services:SymlinkPreset}">
+                                                    <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="14,10" Margin="0,0,0,8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="130" />
+                                                                <ColumnDefinition Width="130" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="24" VerticalAlignment="Center" Margin="0,0,14,0" Width="32" TextAlignment="Center" />
+
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
+                                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                                <TextBlock Text="{Binding SourcePath, StringFormat={}Źródło: {0}}" FontSize="12" Foreground="#888898" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                                                <TextBlock Text="{Binding SuggestedDestPath, StringFormat={}Cel: {0}}" FontSize="12" Foreground="#64B5F6" TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+
+                                                            <TextBlock Grid.Column="2" Text="{Binding FormattedSize}" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding StatusText}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding StatusColor}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
+
+                                                            <Button Grid.Column="4" Content="Przenieś i stwórz Symlink" Style="{StaticResource PrimaryButtonStyle}" FontSize="13" Padding="12,6" Tag="{Binding}" Click="ExecutePresetRelocation_Click" IsEnabled="{Binding CanRelocate}" VerticalAlignment="Center" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- KARTA 2: SPRZĄTACZ PROJEKTÓW DEWELOPERSKICH -->
+                                <Border Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="18" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,12">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="💻" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Sprzątacz Zbędnych Pakietów Deweloperskich (node_modules, .venv, bin/obj)" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="Przeszukuje foldery projektów pod kątem ciężkich paczek. Usuwa tylko pakiety – Twój kod źródłowy pozostaje w 100% bezpieczny!" FontSize="13" Foreground="#94A3B8" Margin="34,0,0,14" LineHeight="19" />
+
+                                        <Border Background="#121218" CornerRadius="6" BorderBrush="#20202C" BorderThickness="1" Padding="12,10" Margin="0,0,0,12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                                                    <TextBlock Text="Folder projektów:" FontSize="13" Foreground="#888898" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBox x:Name="DevRootPathTextBox" Text="D:\Coco" Background="#181824" Foreground="#FFFFFF" BorderBrush="#2E2E3C" BorderThickness="1" Padding="8,5" FontSize="13" Width="260" VerticalAlignment="Center" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                                                    <TextBlock Text="Filtr nieaktywności:" FontSize="13" Foreground="#888898" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <ComboBox x:Name="DevInactiveComboBox" SelectedIndex="0" Background="#181824" Foreground="#FFFFFF" Padding="8,4" FontSize="13" VerticalAlignment="Center">
+                                                        <ComboBoxItem Content="Wszystkie projekty" Tag="0" />
+                                                        <ComboBoxItem Content="> 30 dni" Tag="30" />
+                                                        <ComboBoxItem Content="> 60 dni" Tag="60" />
+                                                        <ComboBoxItem Content="> 90 dni" Tag="90" />
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="2" Content="🔍 Skanuj pakiety" Style="{StaticResource PrimaryButtonStyle}" Click="ScanDevArtifacts_Click" Margin="0,0,10,0" />
+                                                <Button Grid.Column="3" Content="🧹 Wyczyść zaznaczone pakiety" Style="{StaticResource DangerButtonStyle}" HorizontalAlignment="Right" Click="CleanDevArtifacts_Click" />
+                                            </Grid>
+                                        </Border>
+
+                                        <ItemsControl x:Name="DevArtifactsControl">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type services:DevArtifactItem}">
+                                                    <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Margin="0,0,0,8" Padding="14,10">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="140" />
+                                                                <ColumnDefinition Width="150" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding TypeIcon}" FontSize="22" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding ProjectName}" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                                    <Border Background="#2A2A38" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                                                        <TextBlock Text="{Binding ArtifactType}" FontSize="12" FontWeight="Bold" Foreground="#64B5F6" />
+                                                                    </Border>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding FullPath}" FontSize="12" Foreground="#7A7A88" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                                                            </StackPanel>
+
+                                                            <TextBlock Grid.Column="3" Text="{Binding RelativeAgeText}" FontSize="13" Foreground="#FFB74D" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
+                                                            <TextBlock Grid.Column="4" Text="{Binding FormattedSize}" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- KARTA 3: ZAAWANSOWANY TUNING SYSTEMU & DYSKÓW -->
+                                <Border Background="#151520" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="18">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,12">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🛠️" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="Zaawansowany Tuning Systemu (Hibernacja, VHDX, CompactOS)" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Hibernacja -->
+                                        <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="14,12" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="💤 Zarządzanie Plikiem Hibernacji (hiberfil.sys)" FontSize="15" FontWeight="Bold" Foreground="#E2E4EE" VerticalAlignment="Center" />
+                                                        <Border x:Name="HibernationBadgeBorder" Background="#362410" BorderBrush="#78350F" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                            <TextBlock x:Name="HibernationStatusBadge" Text="● WŁĄCZONA (~12.5 GB)" FontSize="11" FontWeight="Bold" Foreground="#FFB74D" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="Zajmuje ~12.5 GB na dysku C:. Możesz wyłączyć lub zmniejszyć o połowę zachowując Fast Startup." FontSize="13" Foreground="#9497AB" Margin="0,3,0,0" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Wyłącz (~12.5 GB)" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0" Click="DisableHibernation_Click" />
+                                                    <Button Content="Tryb zredukowany (~6 GB)" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="ReduceHibernation_Click" />
+                                                    <Button Content="Włącz pełną" Style="{StaticResource SecondaryButtonStyle}" Click="EnableHibernation_Click" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Kompaktowanie VHDX -->
+                                        <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="14,12" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="🐳 Kompaktowanie Dysków VHDX (Docker &amp; WSL)" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                    <TextBlock Text="Obcina puste gigabajty z plików docker_data.vhdx oraz ext4.vhdx po usunięciu kontenerów." FontSize="13" Foreground="#94A3B8" Margin="0,3,0,0" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="📉 Kompaktuj Docker VHDX" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="ShrinkDockerVhdx_Click" />
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- CompactOS -->
+                                        <Border Background="#1A1A24" CornerRadius="6" BorderBrush="#262634" BorderThickness="1" Padding="14,12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="🗜️ Bezstratna Kompresja NTFS (CompactOS / XPRESS8K)" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                    <TextBlock Text="Wybierz folder. Zostanie skompresowany o 30-50% bez pakowania do ZIP – pliki działają normalnie!" FontSize="13" Foreground="#94A3B8" Margin="0,3,0,0" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="🗜️ Wybierz folder do kompresji" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="CompactFolder_Click" />
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 5: CENTRUM PROGRAMÓW & AKTUALIZATOR (100 APLIKACJI) ==================== -->
+                    <Grid x:Name="ViewApps" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- Pasek nagłówka i statusu folderu -->
+                            <RowDefinition Height="Auto" /> <!-- Pasek filtrów, wyszukiwarki i akcji masowych -->
+                            <RowDefinition Height="*" />    <!-- Lista 100 aplikacji -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Pasek informacyjny i docelowy folder -->
+                        <Border Grid.Row="0" Background="#111B2C" CornerRadius="8" BorderBrush="#0078D4" BorderThickness="1" Padding="16,12" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="📥" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Centrum Oprogramowania &amp; Automatycznych Aktualizacji" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        <Border Background="#0E7090" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="WINGET NATIVE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="Kompaktowy hub programistyczny, homelab, AI (ChatGPT, Antigravity) oraz narzędzia graficzne dla Windows 11. Cicha instalacja, brak adware, auto-aktualizacje winget." FontSize="13" Foreground="#94A3B8" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                        <TextBlock Text="📁 Domyślna ścieżka instalacji:" FontSize="12" Foreground="#88889C" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="AppsTargetFolderText" Text="D:\Programy" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" />
+                                        <Button Content="⚙️ Zmień w Ustawieniach" Style="{StaticResource SecondaryButtonStyle}" Padding="8,2" FontSize="11" Margin="12,0,0,0" Click="NavToSettings_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#143820" BorderBrush="#166534" BorderThickness="1" CornerRadius="4" Padding="8,5" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock Text="● ZAWSZE NAJNOWSZE" FontSize="11" FontWeight="Bold" Foreground="#81C784" />
+                                    </Border>
+                                    <Button Content="🔄 Sprawdź wersje" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="RefreshAppsStatus_Click" />
+                                    <Button Content="⚡ ZAKTUALIZUJ WSZYSTKIE DO NAJNOWSZYCH" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" Click="UpgradeAllInstalledApps_Click" ToolTip="Automatycznie pobiera i bezszelestnie aktualizuje wszystkie programy na komputerze do najnowszych wersji" />
+                                    <Button Content="📥 Zainstaluj zaznaczone" Style="{StaticResource PrimaryButtonStyle}" Background="#15803D" BorderBrush="#166534" Click="InstallSelectedApps_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Pasek wyszukiwania i kategorii -->
+                        <Border Grid.Row="1" Background="#14141E" CornerRadius="8" BorderBrush="#222230" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="AppsSearchTextBox" Background="#1C1C28" Foreground="#FFFFFF" BorderBrush="#2C2C3E" BorderThickness="1" Padding="10,6" FontSize="13" TextChanged="AppsSearchTextBox_TextChanged" VerticalAlignment="Center" ToolTip="Wpisz nazwę programu, technologię lub kategorię..." />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <Button Content="Zaznacz widoczne" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Margin="0,0,6,0" Click="SelectVisibleApps_Click" />
+                                        <Button Content="Odznacz wszystkie" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Click="DeselectAllApps_Click" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Kafelki kategorii -->
+                                <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                                    <Button Content="Wszystkie (140+)" Tag="All" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="🖥️ Serwer Domowy &amp; Homelab" Tag="Serwer Domowy" Style="{StaticResource PrimaryButtonStyle}" Background="#0369A1" BorderBrush="#0284C7" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="🤖 AI &amp; Antigravity" Tag="AI" Style="{StaticResource PrimaryButtonStyle}" Background="#6D28D9" BorderBrush="#7C3AED" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="💻 Programowanie &amp; Dev" Tag="Programowanie" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="🎨 Grafika &amp; Wideo" Tag="Grafika" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="⚡ Narzędzia Systemu" Tag="Systemowe" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="🌐 Przeglądarki" Tag="Przeglądarki" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="💬 Komunikacja" Tag="Komunikacja" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="🎮 Gry &amp; Rozrywka" Tag="Gry" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                    <Button Content="📄 Biuro &amp; Bezpieczeństwo" Tag="Biuro" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Lista aplikacji z wirtualizacją -->
+                        <Border Grid.Row="2" Background="#12121A" CornerRadius="8" BorderBrush="#20202A" BorderThickness="1" Padding="6">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="AppsItemsControl">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:AppPackageItem}">
+                                            <Border Background="#161622" BorderBrush="#242434" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="6" Width="480" MinHeight="110">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    
+                                                    <!-- Rząd 1: CheckBox, Ikona, Nazwa, Kategoria -->
+                                                    <Grid Grid.Row="0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        
+                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                            <Border Background="#202030" CornerRadius="6" Width="36" Height="36" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            </Border>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13.5" Foreground="#FFFFFF" TextWrapping="Wrap" LineHeight="17" />
+                                                            <TextBlock Text="{Binding Id}" FontSize="10" Foreground="#666677" Margin="0,2,0,0" />
+                                                        </StackPanel>
+                                                        
+                                                        <!-- Kategoria -->
+                                                        <Border Grid.Column="2" Background="#1E293B" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                            <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8" />
+                                                        </Border>
+                                                    </Grid>
+
+                                                    <!-- Rząd 2: Opis -->
+                                                    <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="12" Foreground="#88889C" TextWrapping="Wrap" Margin="46,6,0,8" MaxHeight="38" TextTrimming="CharacterEllipsis" />
+
+                                                    <!-- Rząd 3: Status i Przycisk akcji -->
+                                                    <Grid Grid.Row="2" Margin="46,0,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="●" Foreground="{Binding StatusColor}" Margin="0,0,6,0" FontSize="11" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding Status}" Foreground="{Binding StatusColor}" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="220" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                        <Button Grid.Column="1" Content="{Binding ActionButtonText}" IsEnabled="{Binding CanAction}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Click="InstallSingleApp_Click" Tag="{Binding}" Visibility="{Binding ActionButtonVisible, Converter={StaticResource BoolToVis}}" />
+                                                    </Grid>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 6: USTAWIENIA SYSTEMU & MODUŁY ROZSZERZONE ==================== -->
+                    <Grid x:Name="ViewSettings" Visibility="Collapsed">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="6,0,10,0">
+                                <!-- Nagłówek -->
+                                <Border Background="#111B2C" CornerRadius="8" BorderBrush="#0078D4" BorderThickness="1" Padding="18,14" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <TextBlock Text="⚙️" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Ustawienia Globalne &amp; Moduły Propozycji Rozwoju" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="Zarządzaj domyślną lokalizacją instalacji programów, automatyzacją optymalizacji oraz uruchamiaj zaawansowane audyty gotowe pod obsługę klientów." FontSize="13" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- KARTA 1: Ścieżka instalacji aplikacji -->
+                                <Border Background="#161622" CornerRadius="8" BorderBrush="#242434" BorderThickness="1" Padding="18,16" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="📁 Domyślny Katalog Instalacji Aplikacji (Winget Custom Location)" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,6" />
+                                        <TextBlock Text="Wszystkie 100 programów z Centrum Oprogramowania będą instalowane do tej ścieżki za pomocą przełącznika --location. Zapobiega to zapełnianiu dysku C:\ i trzyma programy na wybranej partycji (np. D:\ lub E:\)." FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="SettingsInstallPathTextBox" Background="#1E1E2C" Foreground="#FFFFFF" BorderBrush="#323246" BorderThickness="1" Padding="12,8" FontSize="14" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Content="📂 Przeglądaj..." Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" VerticalAlignment="Center" Click="BrowseInstallFolder_Click" />
+                                            <Button Grid.Column="2" Content="💾 Zapisz ustawienie" Style="{StaticResource PrimaryButtonStyle}" Margin="10,0,0,0" VerticalAlignment="Center" Click="SaveInstallFolder_Click" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- KARTA 2: Opcje automatyzacji -->
+                                <Border Background="#161622" CornerRadius="8" BorderBrush="#242434" BorderThickness="1" Padding="18,16" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="⚡ Opcje Automatyzacji i Bezpieczeństwa" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12" />
+                                        
+                                        <CheckBox x:Name="OptSilentInstallCheck" Content="Cicha instalacja programów w tle (flagi --silent, brak uciążliwych instalatorów)" IsChecked="True" FontSize="14" Foreground="#D0D0E0" Margin="0,0,0,10" Click="SettingOption_Changed" />
+                                        <CheckBox x:Name="OptAutoCheckUpdatesCheck" Content="Sprawdzaj dostępność aktualizacji oprogramowania winget w tle" IsChecked="True" FontSize="14" Foreground="#D0D0E0" Margin="0,0,0,10" Click="SettingOption_Changed" />
+                                        <CheckBox x:Name="OptRecycleBinCheck" Content="Bezpieczne usuwanie: przenoś zbędne pliki do Kosza zamiast trwałego niszczenia" IsChecked="True" FontSize="14" Foreground="#D0D0E0" Click="SettingOption_Changed" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- KARTA 3: 4 GOTOWE MODUŁY KLIENTSKIE & PROPOZYCJE ROZWOJU -->
+                                <Border Background="#161622" CornerRadius="8" BorderBrush="#242434" BorderThickness="1" Padding="18,16" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Text="💎" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Zaawansowane Moduły Diagnostyczne &amp; Narzędzia Klienckie" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                            <Border Background="#2E7D32" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="PRODUKCYJNE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="Dedykowane narzędzia do profesjonalnej obsługi komputerów klientów, audytów wydajności i utwardzania Windows 11." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,16" />
+
+                                        <UniformGrid Columns="2">
+                                            <!-- Moduł 1: Raport audytu -->
+                                            <Border Background="#1A1A28" BorderBrush="#2C2C3E" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Grid.Row="0">
+                                                        <TextBlock Text="📑 Komercyjny Raport Audytowy (HTML/PDF)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="Generuje estetyczny raport stanu PC klienta z marką procesora, pamięcią, stanem wolnego miejsca na dyskach i wyczyszczonymi śmieciami." FontSize="12" Foreground="#88889C" TextWrapping="Wrap" Margin="0,6,0,12" />
+                                                    </StackPanel>
+                                                    <Button Grid.Row="2" Content="📑 Generuj Raport Klienta (HTML)" Style="{StaticResource PrimaryButtonStyle}" FontSize="13" Padding="12,7" Click="GenerateAuditReport_Click" />
+                                                </Grid>
+                                            </Border>
+
+                                             <!-- Moduł 2: Tarcza Prywatności Windows 11 -->
+                                             <Border Background="#1A1B28" BorderBrush="#282A3E" BorderThickness="1" CornerRadius="8" Padding="16" Margin="8,0,0,12">
+                                                 <Grid>
+                                                     <Grid.RowDefinitions>
+                                                         <RowDefinition Height="Auto" />
+                                                         <RowDefinition Height="*" />
+                                                         <RowDefinition Height="Auto" />
+                                                     </Grid.RowDefinitions>
+                                                     <StackPanel Grid.Row="0">
+                                                         <Grid Margin="0,0,0,6">
+                                                             <Grid.ColumnDefinitions>
+                                                                 <ColumnDefinition Width="*" />
+                                                                 <ColumnDefinition Width="Auto" />
+                                                             </Grid.ColumnDefinitions>
+                                                             <TextBlock Text="🛡️ Tarcza Prywatności Windows 11" FontWeight="Bold" FontSize="14" Foreground="#E2E4EE" VerticalAlignment="Center" />
+                                                             <Border x:Name="PrivacyShieldBadgeBorder" Grid.Column="1" Background="#143820" BorderBrush="#166534" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                                 <TextBlock x:Name="PrivacyShieldStatusBadge" Text="● WŁĄCZONA (ON)" FontSize="10" FontWeight="Bold" Foreground="#81C784" />
+                                                             </Border>
+                                                         </Grid>
+                                                         <TextBlock Text="Wyłącza telemetrię DiagTrack, śledzenie reklamowe Windows, zbędne usługi diagnostyczne i uwalnia dodatkowe zasoby procesora i dysku." FontSize="12" Foreground="#9497AB" TextWrapping="Wrap" Margin="0,4,0,12" />
+                                                     </StackPanel>
+                                                     <Button x:Name="PrivacyShieldToggleButton" Grid.Row="2" Content="🛡️ Przełącz Tarczę Prywatności" Style="{StaticResource PrimaryButtonStyle}" Background="#4F46E5" FontSize="13" Padding="12,7" Click="TogglePrivacyShield_Click" />
+                                                 </Grid>
+                                             </Border>
+
+                                             <!-- Moduł 3: Czujnik Pamięci Windows (Storage Sense) -->
+                                             <Border Background="#1A1B28" BorderBrush="#282A3E" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+                                                 <Grid>
+                                                     <Grid.RowDefinitions>
+                                                         <RowDefinition Height="Auto" />
+                                                         <RowDefinition Height="*" />
+                                                         <RowDefinition Height="Auto" />
+                                                     </Grid.RowDefinitions>
+                                                     <StackPanel Grid.Row="0">
+                                                         <Grid Margin="0,0,0,6">
+                                                             <Grid.ColumnDefinitions>
+                                                                 <ColumnDefinition Width="*" />
+                                                                 <ColumnDefinition Width="Auto" />
+                                                             </Grid.ColumnDefinitions>
+                                                             <TextBlock Text="🧹 Czujnik Pamięci (Storage Sense)" FontWeight="Bold" FontSize="14" Foreground="#E2E4EE" VerticalAlignment="Center" />
+                                                             <Border x:Name="StorageSenseBadgeBorder" Grid.Column="1" Background="#143820" BorderBrush="#166534" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                                 <TextBlock x:Name="StorageSenseStatusBadge" Text="● WŁĄCZONY (ON)" FontSize="10" FontWeight="Bold" Foreground="#81C784" />
+                                                             </Border>
+                                                         </Grid>
+                                                         <TextBlock Text="Automatyczne oczyszczanie zbędnych plików tymczasowych i zawartości Kosza w tle Windows 11." FontSize="12" Foreground="#9497AB" TextWrapping="Wrap" Margin="0,4,0,12" />
+                                                     </StackPanel>
+                                                     <Button x:Name="StorageSenseToggleButton" Grid.Row="2" Content="🧹 Przełącz Czujnik Pamięci" Style="{StaticResource SecondaryButtonStyle}" FontSize="13" Padding="12,7" Click="ToggleStorageSense_Click" />
+                                                 </Grid>
+                                             </Border>
+
+                                            <!-- Moduł 4: Diagnostyka NVMe S.M.A.R.T. -->
+                                            <Border Background="#1A1A28" BorderBrush="#2C2C3E" BorderThickness="1" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Grid.Row="0">
+                                                        <TextBlock Text="🩺 Diagnostyka Zdrowia NVMe SSD (S.M.A.R.T.)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF" />
+                                                        <TextBlock Text="Odczytuje żywotność komórek pamięci, zużycie (Wear Leveling), temperaturę pracy kontrolera oraz liczbę zapisanych terabajtów (TBW)." FontSize="12" Foreground="#88889C" TextWrapping="Wrap" Margin="0,6,0,12" />
+                                                    </StackPanel>
+                                                    <Button Grid.Row="2" Content="🩺 Sprawdź Kondycję NVMe" Style="{StaticResource SecondaryButtonStyle}" FontSize="13" Padding="12,7" Click="CheckNvmeHealth_Click" />
+                                                </Grid>
+                                            </Border>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+
+                <!-- 3. PASEK PODSUMOWANIA & KONSOLA DZIENNIKA (LOG) -->
+                <Grid Grid.Row="2" Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Czysty, nienarzucający się pasek stanu na dole -->
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="GlobalStatusText" Text="Disk Optimizer Suite gotowy do działania." FontSize="14" Foreground="#A0A0B0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="ScanAllButton" Content="🔄 Odśwież stan systemu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Click="ScanAllButton_Click" />
+                            <Button x:Name="ToggleLogButton" Content="📋 Pokaż dziennik zdarzeń" Style="{StaticResource SecondaryButtonStyle}" Click="ToggleLogButton_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Konsola logu zdarzeń -->
+                    <Border Grid.Row="1" x:Name="LogDrawerBorder" Height="140" Background="#0C0C10" BorderBrush="#1F1F26" BorderThickness="1" CornerRadius="6" Margin="0,10,0,0" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="12,6,12,4">
+                                <TextBlock Text="DZIENNIK ZDARZEŃ W CZASIE RZECZYWISTYM" FontSize="12" FontWeight="Bold" Foreground="#555566" />
+                                <Button Content="Wyczyść log" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Padding="8,3" FontSize="12" Click="ClearLog_Click" />
+                            </Grid>
+                            <TextBox Grid.Row="1" x:Name="LogTextBox" Background="Transparent" Foreground="#A4B2BC" FontFamily="Consolas, monospace" FontSize="13" BorderThickness="0" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Margin="12,0,12,8" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== NOWOCZESNE OKNO MODALNE (MODAL OVERLAY) ==================== -->
+        <Grid x:Name="ModalOverlay" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="9999">
+            <!-- Półprzezroczyste przyciemnione tło -->
+            <Border Background="#D008080E" MouseDown="ModalBackdrop_MouseDown" />
+
+            <!-- Nowoczesna karta modalna -->
+            <Border Width="580" 
+                    MaxWidth="660"
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Background="#181824" 
+                    BorderBrush="#35354A" 
+                    BorderThickness="1" 
+                    CornerRadius="12" 
+                    Padding="28,24">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="12" Opacity="0.85" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /> <!-- Nagłówek: Ikona + Tytuł -->
+                        <RowDefinition Height="*" />    <!-- Treść komunikatu -->
+                        <RowDefinition Height="Auto" /> <!-- Przyciski akcji -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Nagłówek modala -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,18">
+                        <Border x:Name="ModalIconBorder" Background="#252538" CornerRadius="10" Width="52" Height="52" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ModalIconText" Text="❓" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="ModalTitleText" Text="Tytuł komunikatu" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" TextWrapping="Wrap" />
+                            <TextBlock x:Name="ModalCategoryText" Text="Disk Optimizer Pro" FontSize="12" Foreground="#88889C" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Treść wiadomości -->
+                    <ScrollViewer Grid.Row="1" MaxHeight="320" VerticalScrollBarVisibility="Auto" Margin="0,0,0,26">
+                        <TextBlock x:Name="ModalMessageText" 
+                                   Text="Treść komunikatu..." 
+                                   FontSize="15" 
+                                   Foreground="#D0D0E0" 
+                                   LineHeight="24" 
+                                   TextWrapping="Wrap" />
+                    </ScrollViewer>
+
+                    <!-- Przyciski akcji -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="ModalCancelButton" 
+                                Content="Anuluj" 
+                                Style="{StaticResource SecondaryButtonStyle}" 
+                                Padding="20,10" 
+                                Margin="0,0,12,0" 
+                                Click="ModalCancel_Click" />
+                        <Button x:Name="ModalConfirmButton" 
+                                Content="Potwierdź" 
+                                Style="{StaticResource PrimaryButtonStyle}" 
+                                Padding="24,10" 
+                                Click="ModalConfirm_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== EKRAN OPTYMALIZACJI SYSTEMU (PEŁNOEKRANOWY STYL 30S) ==================== -->
+        <Grid x:Name="FullOptimizedOverlay" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="9998">
+            <Border Background="#F20A0C14" MouseDown="CloseOptimizedOverlay_Click" />
+            <Border Width="760" MaxWidth="840" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="#141724" BorderBrush="#10B981" BorderThickness="2" CornerRadius="16" Padding="32,26">
+                <Border.Effect>
+                    <DropShadowEffect Color="#10B981" BlurRadius="45" ShadowDepth="0" Opacity="0.35" />
+                </Border.Effect>
+                <StackPanel HorizontalAlignment="Center">
+                    <!-- Glowing Icon -->
+                    <Grid Width="96" Height="96" Margin="0,0,0,16" HorizontalAlignment="Center">
+                        <Ellipse Fill="#10B98115" Stroke="#10B981" StrokeThickness="2" />
+                        <TextBlock Text="🛡️" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Text="TWÓJ SYSTEM JEST W PEŁNI ZOPTYMALIZOWANY!" FontSize="23" FontWeight="ExtraBold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,6" TextAlignment="Center" />
+                    <TextBlock Text="Procedura 1-Klik z powodzeniem wyczyściła zbędne pamięci podręczne i shadery GPU, odświeżyła bufor resolvera DNS, wykonała optymalizację TRIM dla nośników SSD i uwolniła roboczą pamięć RAM." FontSize="14" Foreground="#94A3B8" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="680" Margin="0,0,0,22" LineHeight="21" />
+
+                    <!-- Grid 4 wyników -->
+                    <UniformGrid Columns="4" Margin="0,0,0,18">
+                        <Border Background="#1A1E30" BorderBrush="#262D48" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="4">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="ŚMIECI W CACHE" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                <TextBlock Text="0 B" FontSize="20" FontWeight="ExtraBold" Foreground="#10B981" HorizontalAlignment="Center" Margin="0,4" />
+                                <TextBlock Text="100% Czysto" FontSize="11" Foreground="#34D399" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#1A1E30" BorderBrush="#262D48" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="4">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="SHADERY GPU" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                <TextBlock Text="0 B" FontSize="20" FontWeight="ExtraBold" Foreground="#10B981" HorizontalAlignment="Center" Margin="0,4" />
+                                <TextBlock Text="Zoptymalizowane" FontSize="11" Foreground="#34D399" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#1A1E30" BorderBrush="#262D48" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="4">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="ZWOLNIONE MIEJSCE" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="OverlayFreedDiskText" Text="1.54 GB" FontSize="20" FontWeight="ExtraBold" Foreground="#38BDF8" HorizontalAlignment="Center" Margin="0,4" />
+                                <TextBlock Text="Dysk C: / Kosz / Temp" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#1A1E30" BorderBrush="#262D48" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="4">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="UWOLNIONY RAM" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="OverlayFreedRamText" Text="4.2 GB" FontSize="20" FontWeight="ExtraBold" Foreground="#A78BFA" HorizontalAlignment="Center" Margin="0,4" />
+                                <TextBlock Text="EmptyWorkingSet" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Pasek bezpieczeństwa -->
+                    <Border Background="#0E1F1A" BorderBrush="#10B98140" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,0,0,20">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="✓ DNS: Wyczyszczony" FontSize="12" FontWeight="SemiBold" Foreground="#34D399" Margin="0,0,16,0" />
+                            <TextBlock Text="•" FontSize="12" Foreground="#64748B" Margin="0,0,16,0" />
+                            <TextBlock Text="✓ SSD TRIM: Wykonany (Kingston NVMe)" FontSize="12" FontWeight="SemiBold" Foreground="#34D399" Margin="0,0,16,0" />
+                            <TextBlock Text="•" FontSize="12" Foreground="#64748B" Margin="0,0,16,0" />
+                            <TextBlock Text="✓ CBS &amp; DISM: Ochrona 100% aktywna" FontSize="12" FontWeight="SemiBold" Foreground="#34D399" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Timer info & Przyciski -->
+                    <StackPanel HorizontalAlignment="Center">
+                        <Border Background="#1E2438" CornerRadius="20" Padding="14,5" Margin="0,0,0,16" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⏱️" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock x:Name="OverlayTimerText" Text="Ekran optymalizacji aktywny (pozostało: 30s)..." FontSize="12" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="✓ Przejdź do pulpitu (Esc)" Style="{StaticResource PrimaryButtonStyle}" FontSize="14" Padding="22,10" Margin="0,0,12,0" Click="CloseOptimizedOverlay_Click" />
+                            <Button Content="🔍 Sprawdź podzespoły i co poprawić ➔" Style="{StaticResource SecondaryButtonStyle}" FontSize="14" Padding="22,10" Click="OverlayNavToDiagnostics_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

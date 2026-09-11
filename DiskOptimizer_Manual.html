@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>AETHERIAL Suite — Ekspercki Podręcznik Użytkownika</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        html, body {
+            background-color: #080912;
+            color: #E2E8F0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 16px;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* SCREEN CENTERING: Idealny, wyśrodkowany układ na monitorze */
+        @media screen {
+            body {
+                padding: 40px 20px 80px 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.12), transparent 50%),
+                            radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.08), transparent 40%),
+                            #080912;
+            }
+
+            .main-container {
+                width: 100%;
+                max-width: 1120px;
+                margin: 0 auto;
+            }
+
+            .stage-block {
+                margin-bottom: 48px;
+            }
+        }
+
+        /* PRINT / PDF STYLING */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background-color: #080912;
+                padding: 0;
+                margin: 0;
+                font-size: 13.5px;
+                line-height: 1.5;
+            }
+
+            .main-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .stage-block {
+                width: 210mm;
+                min-height: 297mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+                box-sizing: border-box;
+                padding: 18mm 18mm 14mm 18mm;
+                background: #080912;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                margin-bottom: 0;
+            }
+
+            .screen-only-nav {
+                display: none !important;
+            }
+        }
+
+        /* TYPOGRAFIA DLA CZYTELNOŚCI (DUŻE, CZYTELNE FONTY DLA 40+ LATKÓW) */
+        h1 {
+            font-size: 38px;
+            font-weight: 900;
+            line-height: 1.2;
+            color: #FFFFFF;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            font-size: 25px;
+            font-weight: 800;
+            color: #F8FAFC;
+            letter-spacing: -0.02em;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #E2E8F0;
+            margin-bottom: 8px;
+        }
+
+        h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #CBD5E1;
+            margin-bottom: 6px;
+        }
+
+        p {
+            font-size: 15.5px;
+            color: #CBD5E1;
+            line-height: 1.68;
+            margin-bottom: 14px;
+        }
+
+        b, strong {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #16182E;
+            color: #38BDF8;
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            border: 1px solid #232748;
+        }
+
+        .brand-gradient {
+            background: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 50%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        /* SZYBKA NAWIGACJA PO ETAPACH (GÓRNY PASEK W PRZEGLĄDARCE) */
+        .screen-only-nav {
+            background: rgba(15, 16, 34, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid #26234D;
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin-bottom: 36px;
+            position: sticky;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: #16172E;
+            border: 1px solid #2A2752;
+            color: #CBD5E1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: #241E48;
+            border-color: #8B5CF6;
+            color: #FFFFFF;
+        }
+
+        /* GŁÓWNA KARTA ETAPU (STAGE CONTAINER) */
+        .stage-card {
+            background: #0D0E1E;
+            border: 1.5px solid #25234A;
+            border-radius: 18px;
+            padding: 34px 38px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .stage-badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.18);
+            border: 1px solid #8B5CF6;
+            color: #C084FC;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* KROKI W ETAPACH (STEP BOXES) */
+        .step-box {
+            background: #121327;
+            border: 1px solid #25244C;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .step-box:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .step-num {
+            background: linear-gradient(135deg, #06B6D4, #8B5CF6);
+            color: #FFFFFF;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #F8FAFC;
+        }
+
+        /* CALLOUTS & ALERTS */
+        .alert-box {
+            background: #14172E;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 14px 0;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .alert-emerald {
+            border-left: 4px solid #10B981;
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .alert-cyan {
+            border-left: 4px solid #06B6D4;
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        .alert-amber {
+            border-left: 4px solid #F59E0B;
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .alert-purple {
+            border-left: 4px solid #8B5CF6;
+            background: rgba(139, 92, 246, 0.08);
+        }
+
+        .alert-icon {
+            font-size: 24px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* TABELE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14.5px;
+            margin: 16px 0;
+        }
+
+        th {
+            background: #171932;
+            color: #F8FAFC;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 700;
+            border: 1px solid #292850;
+            font-size: 13.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        td {
+            padding: 12px 16px;
+            border: 1px solid #202242;
+            color: #CBD5E1;
+            background: #0E1022;
+        }
+
+        tr:nth-child(even) td {
+            background: #12142B;
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-cyan { background: rgba(6, 182, 212, 0.15); color: #22D3EE; border: 1px solid #0891B2; }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: #C084FC; border: 1px solid #7C3AED; }
+        .badge-pink { background: rgba(236, 72, 153, 0.15); color: #F472B6; border: 1px solid #DB2777; }
+        .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #059669; }
+        .badge-amber { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid #D97706; }
+
+        /* GRID SYSTEM */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 800px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .screen-only-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- SZYBKA NAWIGACJA W PRZEGLĄDARCE (STICKY) -->
+    <div class="screen-only-nav">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="Assets/app_icon.png" style="width: 28px; height: 28px; border-radius: 6px;" alt="Logo" />
+            <span style="font-weight: 900; font-size: 16px; color: #06B6D4;">AETHERIAL SUITE</span>
+            <span style="color: #64748B; font-size: 13px; font-weight: 600;">PODRĘCZNIK EKSPERCKI</span>
+        </div>
+        <div class="nav-links">
+            <a href="#etap0" class="nav-btn">Wstęp</a>
+            <a href="#etap1" class="nav-btn">Etap 1: 1-Klik</a>
+            <a href="#etap2" class="nav-btn">Etap 2: Shadery & CBS</a>
+            <a href="#etap3" class="nav-btn">Etap 3: Diagnostyka PC</a>
+            <a href="#etap4" class="nav-btn">Etap 4: Programy</a>
+            <a href="#etap5" class="nav-btn">Etap 5: Power Tools</a>
+            <a href="#etap6" class="nav-btn">Etap 6: Prywatność & FAQ</a>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 0: OKŁADKA & WPROWADZENIE ==================== -->
+    <div id="etap0" class="stage-block stage-card" style="border: 2px solid #362868; background: radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.18), transparent 50%), #0D0E1E;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span class="stage-badge" style="background: rgba(6, 182, 212, 0.15); border-color: #06B6D4; color: #38BDF8;">OFICJALNA DOKUMENTACJA INŻYNIERYJNA</span>
+            <span style="font-size: 14px; font-weight: 800; color: #A78BFA;">WYDANIE PRODUKCYJNE v5.5 ULTRA</span>
+        </div>
+
+        <div style="display: flex; gap: 30px; align-items: center; margin: 20px 0 28px 0; flex-wrap: wrap;">
+            <img src="Assets/app_icon.png" style="width: 100px; height: 100px; border-radius: 22px; border: 2.5px solid #8B5CF6; box-shadow: 0 0 35px rgba(139, 92, 246, 0.5);" alt="Aetherial Logo" />
+            <div style="flex: 1; min-width: 300px;">
+                <div style="font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #64748B;">AERONAUTIC OPTIMIZATION & DIAGNOSTIC ARCHITECTURE</div>
+                <h1><span class="brand-gradient">AETHERIAL</span> SUITE</h1>
+                <div style="font-size: 19px; font-weight: 700; color: #E2E8F0;">Kompleksowa Platforma Konserwacji & Diagnostyki Stacji Roboczych z Windows 11</div>
+            </div>
+        </div>
+
+        <p style="font-size: 16.5px; line-height: 1.7; color: #CBD5E1;">
+            Niniejszy podręcznik został opracowany krok po kroku, aby w prosty i czytelny sposób przeprowadzić Cię przez wszystkie etapy optymalizacji Twojego komputera. Aplikacja <b>Aetherial Suite</b> została zaprojektowana specjalnie dla nowoczesnych stacji roboczych z procesorami AMD Ryzen (AM5), kartami graficznymi NVIDIA GeForce RTX oraz ultraszybkimi dyskami SSD NVMe PCIe 4.0.
+        </p>
+
+        <div class="grid-3" style="margin-top: 24px;">
+            <div style="background: #14162E; border: 1px solid #282452; border-radius: 12px; padding: 18px; text-align: center;">
+                <div style="font-size: 26px; font-weight: 900; color: #06B6D4;">100% Bezpieczeństwa</div>
+                <div style="font-size: 13.5px; color: #94A3B8; margin-top: 4px;">Nigdy nie usuwa plików systemowych CBS ani logów Windows Update.</div>
+            </div>
+            <div style="background: #14162E; border: 1px solid #282452; border-radius: 12px; padding: 18px; text-align: center;">
+                <div style="font-size: 26px; font-weight: 900; color: #8B5CF6;">1-Kliknięcie</div>
+                <div style="font-size: 13.5px; color: #94A3B8; margin-top: 4px;">Automatyczne czyszczenie shaderów GPU, pamięci RAM i optymalizacja TRIM SSD.</div>
+            </div>
+            <div style="background: #14162E; border: 1px solid #282452; border-radius: 12px; padding: 18px; text-align: center;">
+                <div style="font-size: 26px; font-weight: 900; color: #10B981;">Zawsze Najnowsze</div>
+                <div style="font-size: 13.5px; color: #94A3B8; margin-top: 4px;">Zintegrowany aktualizator winget dba o najnowsze wersje wszystkich Twoich programów.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 1: 1-KLIK AUTO-OPTYMALIZACJA ==================== -->
+    <div id="etap1" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 1 • CODZIENNA KONSERWACJA</span>
+        <h2>⚡ 1-Klik: Inteligentna Automatyczna Optymalizacja</h2>
+        <p>
+            Główną zaletą Aetherial Suite jest możliwość wykonania kompleksowej konserwacji komputera za pomocą jednego, bezpiecznego przycisku na pulpicie. Nie musisz zastanawiać się, jakie pliki zaznaczyć — algorytm wykonuje to za Ciebie.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Kliknij przycisk: „⚡ 1-KLIK AUTO-OPTYMALIZACJA”</div>
+            </div>
+            <p>
+                Przycisk znajduje się w prawej dolnej części widżetu <b>SSD STORAGE OPTIMIZATION</b> na głównym pulpicie. Po kliknięciu program wyświetli okno z podsumowaniem ilości śmieci przygotowanych do usunięcia oraz zapyta o potwierdzenie.
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Automatyczny 4-fazowy proces czyszczenia w tle</div>
+            </div>
+            <p>Aplikacja w ciągu zaledwie 3-5 sekund przeprowadza cztery niezależne operacje:</p>
+            <ul style="margin-left: 24px; color: #CBD5E1; font-size: 15px; margin-bottom: 10px;">
+                <li style="margin-bottom: 6px;"><b>Faza 1: Czyszczenie Shaderów GPU</b> — usuwa stare bufory DirectX (<code>NVIDIA DXCache</code>) oraz OpenGL (<code>GLCache</code>), co likwiduje przycięcia w grach.</li>
+                <li style="margin-bottom: 6px;"><b>Faza 2: Opróżnienie bufora DNS</b> — resetuje pamięć podręczną resolwera Windows (<code>ipconfig /flushdns</code>), przyspieszając wczytywanie stron WWW.</li>
+                <li style="margin-bottom: 6px;"><b>Faza 3: Sprzętowy TRIM dla SSD</b> — wydaje polecenie <code>ReTrim</code> kontrolerowi dysku Kingston KC3000, co przywraca fabryczną szybkość zapisu.</li>
+                <li><b>Faza 4: Uwolnienie pamięci RAM</b> — opróżnia bufor Standby List, natychmiast odzyskując od 1.5 do 4 GB wolnego RAM bez zamykania Twoich otwartych programów.</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">30-sekundowy ekran sukcesu z tarczą ochronną (🛡️)</div>
+            </div>
+            <p>
+                Po ukończeniu procedury na całym oknie pojawia się nowoczesny, szmaragdowy ekran sukcesu informujący: <b>„SYSTEM ZOSTAŁ ZOPTYMALIZOWANY!”</b>.
+            </p>
+            <div class="alert-box alert-emerald">
+                <div class="alert-icon">🛡️</div>
+                <div>
+                    <b style="color: #34D399; font-size: 16px;">Jak działa licznik 30 sekund?</b>
+                    <p style="margin-bottom: 4px; margin-top: 2px;">
+                        Ekran pozostaje widoczny przez minimum 30 sekund z aktywnym odliczaniem, abyś mógł spokojnie zapoznać się z ilością odzyskanego miejsca i pamięci RAM.
+                    </p>
+                    <p style="margin-bottom: 0; color: #A7F3D0;">
+                        <b>Wskazówka:</b> Możesz zamknąć ekran w dowolnym momencie, naciskając klawisz <b>ESC</b> na klawiaturze lub klikając przycisk <code>[✕ Zamknij podsumowanie]</code>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">4</div>
+                <div class="step-title">Weryfikacja: Wskaźniki pokazują „0 B (Zoptymalizowane)”</div>
+            </div>
+            <p>
+                Po optymalizacji kafelki na pulpicie natychmiast aktualizują swój stan:
+            </p>
+            <div class="grid-2">
+                <div style="background: #16182E; padding: 14px; border-radius: 8px; border-left: 3px solid #06B6D4;">
+                    <div style="font-size: 13px; color: #94A3B8;">Śmieci w cache:</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #06B6D4;">0 B (Czysto)</div>
+                </div>
+                <div style="background: #16182E; padding: 14px; border-radius: 8px; border-left: 3px solid #10B981;">
+                    <div style="font-size: 13px; color: #94A3B8;">Shadery GPU:</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #10B981;">0 B (Zoptymalizowane)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 2: CZYSZCZENIE & CBS ==================== -->
+    <div id="etap2" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 2 • DYSKI & ŚMIECI</span>
+        <h2>🛡️ Bezpieczne Czyszczenie & Tarcza Integralności CBS</h2>
+        <p>
+            Wiele programów czyszczących bezmyślnie kasuje wszystkie znalezione pliki tymczasowe, co często prowadzi do uszkodzenia systemu Windows. W <b>Aetherial Suite</b> zastosowaliśmy inteligentną tarczę ochronną.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Dlaczego Aetherial NIGDY nie usuwa bazy CBS i DISM?</div>
+            </div>
+            <p>
+                Katalog <code>C:\Windows\Logs\CBS</code> zawiera bazę <i>Component-Based Servicing</i>. Jest to rejestr integralności wszystkich plików systemowych, sterowników i poprawek zabezpieczeń Microsoftu.
+            </p>
+            <div class="alert-box alert-amber">
+                <div class="alert-icon">⚠️</div>
+                <div>
+                    <b style="color: #FBBF24; font-size: 16px;">Skutki usunięcia bazy CBS przez inne programy:</b>
+                    <p style="margin-bottom: 0; margin-top: 3px;">
+                        Usunięcie plików CBS sprawia, że system nie może zainstalować kolejnych aktualizacji Windows Update oraz blokuje działanie polecenia naprawczego <code>DISM /Online /Cleanup-Image /RestoreHealth</code>. Aetherial posiada <b>twardą blokadę</b> chroniącą te pliki przed jakimkolwiek skasowaniem.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Co dokładnie usuwa program i dlaczego jest to bezpieczne?</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Element do usunięcia</th>
+                        <th>Gdzie się znajduje?</th>
+                        <th>Korzyść dla użytkownika</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>NVIDIA DirectX Shader Cache</b></td>
+                        <td><code>AppData\Local\NVIDIA\DXCache</code></td>
+                        <td>Likwiduje zacięcia obrazu (stuttering) w grach i zwalnia 1-3 GB.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Tymczasowe pliki użytkownika</b></td>
+                        <td><code>%TEMP%</code></td>
+                        <td>Usuwa porzucone instalatory i śmieci aplikacji, odzyskując 5-15 GB.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Kosz systemowy</b></td>
+                        <td>Wszystkie partycje (C:, D:, E:, F:)</td>
+                        <td>Błyskawicznie przywraca wolną przestrzeń na dyskach SSD.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Pamięć podręczna przeglądarek</b></td>
+                        <td>Chrome, Brave, Edge</td>
+                        <td>Usuwa przestarzałe ciasteczka i bufory multimedialne.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Zrzuty awarii (Crash Dumps)</b></td>
+                        <td><code>CrashDumps</code> & raporty WER</td>
+                        <td>Usuwa niepotrzebne wielogigabajtowe zrzuty pamięci po zawieszonych grach.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 3: CENTRUM DIAGNOSTYCZNE ==================== -->
+    <div id="etap3" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 3 • SPRZĘT & STEROWNIKI</span>
+        <h2>🖥️ Centrum Diagnostyczne — Co należy poprawić w komputerze</h2>
+        <p>
+            W zakładce <b>Sprzęt i Sterowniki</b> (ikona wtyczki 🔌 na bocznym pasku) znajduje się moduł analizy sprzętowej, który wykrywa błędy konfiguracji Twojego komputera i podaje gotowe rozwiązania.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Problem 1: Błąd Code 28 (Brakujący sterownik chipsetu AMD)</div>
+            </div>
+            <p>
+                Aplikacja wykryła brakujący sterownik <code>AMD Sensor Fusion Hub</code> (identyfikator <code>ACPI\AMDIF031\0</code>). Jest to znana cecha nowej platformy AMD AM5 po świeżej instalacji Windows.
+            </p>
+            <div class="alert-box alert-cyan">
+                <div class="alert-icon">💡</div>
+                <div>
+                    <b>Jak rozwiązać:</b> Pobierz i zainstaluj najnowszy pakiet <b>AMD Chipset Drivers 6.x</b> ze strony AMD lub płyty ASRock. Spowoduje to natychmiastowe zniknięcie żółtego trójkąta ostrzegawczego w Menedżerze Urządzeń.
+                </div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Problem 2: Błąd Code 43 (Zawieszony adapter Bluetooth)</div>
+            </div>
+            <p>
+                Karta bezprzewodowa MediaTek Bluetooth czasami zawiesza swój stos po wybudzeniu systemu ze stanu uśpienia. W module dodano interaktywny przycisk:
+            </p>
+            <div style="margin: 10px 0;">
+                <span style="background: #202238; border: 1.5px solid #8B5CF6; color: #FFFFFF; font-weight: 800; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: inline-block;">
+                    ⚡ ZRESTARTUJ USŁUGĘ BLUETOOTH
+                </span>
+            </div>
+            <p style="font-size: 14.5px; color: #94A3B8;">
+                Jedno kliknięcie restartuje usługę <code>bthserv</code> i przywraca łączność ze słuchawkami bez konieczności ponownego uruchamiania całego komputera!
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">Problem 3: Włącz profil RAM AMD EXPO w BIOS (DDR5 6000 MT/s)</div>
+            </div>
+            <p>
+                Twoja pamięć RAM 32 GB DDR5 pracuje obecnie z bezpiecznym zegarem bazowym <b>4800 MT/s</b> (standard JEDEC), mimo że fabrycznie obsługuje profil <b>6000 MT/s CL30</b>!
+            </p>
+            <div class="alert-box alert-purple">
+                <div class="alert-icon">🚀</div>
+                <div>
+                    <b style="color: #C084FC; font-size: 16px;">Dlaczego warto włączyć EXPO w BIOS?</b>
+                    <p style="margin-bottom: 0; margin-top: 3px;">
+                        Podczas uruchamiania komputera naciśnij klawisz <b>DEL</b> lub <b>F2</b>, wejdź w zakładkę <i>OC Tweaker</i> płyty ASRock B650E i przełącz <b>DRAM Profile</b> na <b>EXPO Profile 1</b>. Zyskasz <b>od 12% do 18% wyższą płynność (FPS) w grach</b> bez żadnego ryzyka!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">4</div>
+                <div class="step-title">Inwentaryzacja Wykrytego Sprzętu PC</div>
+            </div>
+            <p>W dolnej sekcji widoku znajdziesz pełną specyfikację swojej stacji roboczej:</p>
+            <ul style="margin-left: 24px; color: #CBD5E1; font-size: 15px;">
+                <li style="margin-bottom: 4px;"><b>Procesor (CPU):</b> AMD Ryzen 7 7800X3D (8 rdzeni / 16 wątków, 96MB 3D V-Cache, do 5.05 GHz)</li>
+                <li style="margin-bottom: 4px;"><b>Karta Graficzna:</b> NVIDIA GeForce RTX 4070 Ti SUPER (16 GB GDDR6X, sterownik v610.88 WHQL)</li>
+                <li style="margin-bottom: 4px;"><b>Płyta Główna:</b> ASRock B650E PG Riptide WiFi (Chipset B650E, PCIe 5.0, BIOS 2.02)</li>
+                <li style="margin-bottom: 4px;"><b>Dysk SSD:</b> Kingston KC3000 2048GB (NVMe PCIe 4.0 x4, transfery do 7000 MB/s)</li>
+                <li style="margin-bottom: 4px;"><b>Karty Sieciowe:</b> Killer E3100G 2.5GbE LAN + Killer Wi-Fi 6E AX1675x 160MHz</li>
+                <li><b>Dźwięk:</b> Bezprzewodowe słuchawki MCHOSE X9 7.1 + Realtek High Definition ALC1220</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 4: HUB PROGRAMÓW ==================== -->
+    <div id="etap4" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 4 • HUB PROGRAMÓW & AKTUALIZACJE</span>
+        <h2>📥 Automatyczny Menedżer Aplikacji & Zawsze Najnowsze Wersje</h2>
+        <p>
+            Moduł <b>Programy</b> eliminuje konieczność ręcznego wchodzenia na strony producentów i pobierania instalatorów. Zintegrowany menedżer <code>winget</code> wykonuje wszystko w tle.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Jak zaktualizować wszystkie programy 1-Kliknięciem?</div>
+            </div>
+            <p>
+                W nagłówku zakładki Programy znajduje się fioletowy przycisk:
+            </p>
+            <div style="margin: 10px 0;">
+                <span style="background: #4F46E5; color: #FFFFFF; font-weight: 800; padding: 10px 18px; border-radius: 8px; font-size: 15px; display: inline-block;">
+                    ⚡ ZAKTUALIZUJ WSZYSTKIE DO NAJNOWSZYCH (1-KLIK)
+                </span>
+            </div>
+            <p>
+                Po kliknięciu system w tle pobiera i bezgłośnie instaluje najnowsze łatki do Twoich przeglądarek, komunikatorów, środowisk programistycznych i odtwarzaczy. Status w nagłówku informuje: <b>● ZAWSZE NAJNOWSZE</b>.
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Instalacja w Dedykowanych Podfolderach (Zero Bałaganu!)</div>
+            </div>
+            <p>
+                Gdy wybierzesz domyślny folder instalacji (np. <code>D:\Programy</code>), Aetherial automatycznie tworzy unikalny podkatalog dla każdej instalowanej aplikacji:
+            </p>
+            <div style="background: #15172C; padding: 12px 18px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #38BDF8; margin: 8px 0;">
+                D:\Programy\Docker Desktop\<br/>
+                D:\Programy\Blender\<br/>
+                D:\Programy\VS Code\<br/>
+                D:\Programy\ChatGPT\
+            </div>
+            <p style="font-size: 14.5px; color: #94A3B8;">
+                Dzięki temu pliki różnych programów nigdy się nie mieszają i zachowujesz nienaganny porządek na swoich dyskach SSD.
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">Katalog Ponad 100 Aplikacji Podzielonych na Kategorie</div>
+            </div>
+            <p>
+                Wybieraj programy za pomocą wygodnych filtrów:
+            </p>
+            <ul style="margin-left: 24px; color: #CBD5E1; font-size: 15px;">
+                <li style="margin-bottom: 4px;"><b>Developer & DevOps:</b> Docker, Git, VS Code, Python 3.14, Node.js, DBeaver, Rust, Go, Postman.</li>
+                <li style="margin-bottom: 4px;"><b>Homelab & Serwery:</b> Tailscale, WireGuard, WinSCP, PuTTY, Plex, Jellyfin, qBittorrent.</li>
+                <li style="margin-bottom: 4px;"><b>AI & Nowe Narzędzia:</b> ChatGPT Desktop, Antigravity, Claude, LM Studio, Ollama, Obsidian.</li>
+                <li><b>Grafika & Multimedia:</b> Blender, GIMP, OBS Studio, DaVinci Resolve, VLC Media Player, Spotify.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 5: POWER TOOLS ==================== -->
+    <div id="etap5" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 5 • NARZĘDZIA ZAAWANSOWANE</span>
+        <h2>⚡ Narzędzia & Magazyn (Power Tools)</h2>
+        <p>
+            Moduł <b>Narzędzia & Magazyn</b> pozwala na zaawansowane operacje zwalniania przestrzeni dyskowej bez ryzyka utraty konfiguracji i zapisów gier.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Symlink Mover — Przenoś ciężkie foldery z C: na dysk D:</div>
+            </div>
+            <p>
+                Jeśli Twoja partycja systemowa C: zaczyna się zapełniać, możesz fizycznie przenieść duży folder (np. bibliotekę pobierania gier, pamięć podręczną Adobe czy repozytoria kodu) na dysk D: lub E: z utworzeniem przezroczystego dowiązania NTFS Junction:
+            </p>
+            <div style="background: #15172C; padding: 12px 18px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #C084FC; margin: 8px 0;">
+                mklink /J "C:\Users\emanu\.vscode" "D:\Dane\.vscode"
+            </div>
+            <p style="font-size: 14.5px; color: #34D399;">
+                ✓ System Windows oraz wszystkie programy myślą, że pliki nadal leżą na C:, podczas gdy fizycznie znajdują się na pojemnym dysku D:!
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Odzyskaj 32 GB z pliku hibernacji (hiberfil.sys)</div>
+            </div>
+            <p>
+                W komputerze stacjonarnym z 32 GB RAM funkcja hibernacji rezerwuje na stałe ponad 25-30 GB na partycji C:. Jeśli nie usypiasz komputera do hibernacji, jedno kliknięcie przycisku <code>[Wyłącz hibernację]</code> natychmiast uwalnia te 30 GB dla Twoich gier i programów!
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">Sprzątacz pakietów deweloperskich (Clean Artifacts)</div>
+            </div>
+            <p>
+                Programiści pracujący z Node.js, Pythonem lub C# wiedzą, jak szybko foldery <code>node_modules</code>, <code>.venv</code> oraz <code>bin/obj</code> pożerają setki gigabajtów. Moduł wyszukuje wyłącznie te foldery i pozwala na ich bezpieczne usunięcie jednym kliknięciem bez naruszania Twojego kodu źródłowego.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== ETAP 6: PRYWATNOŚĆ & FAQ ==================== -->
+    <div id="etap6" class="stage-block stage-card">
+        <span class="stage-badge">ETAP 6 • PRYWATNOŚĆ, AUDYT & FAQ</span>
+        <h2>🔒 Tarcza Prywatności, Raporty & Dobre Praktyki</h2>
+        <p>
+            Ostatni etap to zabezpieczenie Twojej prywatności oraz odpowiedzi na pytania, które mogą pojawić się podczas codziennego użytkowania.
+        </p>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Tarcza Prywatności Windows 11 — Wyłącz szpiegowanie</div>
+            </div>
+            <p>
+                W zakładce <b>Ustawienia</b> znajduje się przełącznik <b>Tarcza Prywatności Windows 11</b>. Po jej włączeniu:
+            </p>
+            <ul style="margin-left: 24px; color: #CBD5E1; font-size: 15px; margin-bottom: 10px;">
+                <li style="margin-bottom: 4px;">Zostaje zatrzymana usługa telemetrii <code>DiagTrack</code> (Connected User Experiences).</li>
+                <li style="margin-bottom: 4px;">Blokowane są identyfikatory reklamowe (Advertising ID).</li>
+                <li>Wyłączane jest przesyłanie próbek danych diagnostycznych do serwerów Microsoft.</li>
+            </ul>
+            <p style="font-size: 14.5px; color: #38BDF8;">
+                Aktywny wskaźnik informuje o stanie: <b>[ ● WŁĄCZONA (ON) ]</b>.
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Generator Raportu Audytu Komputera (HTML)</div>
+            </div>
+            <p>
+                Przycisk <code>[Generuj raport audytu HTML]</code> tworzy elegancki plik z pełną specyfikacją Twojego komputera, stanem dysków, zajętością pamięci RAM oraz listą wykonanych optymalizacji — idealny do archiwizacji lub przed sprzedażą sprzętu.
+            </p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">Harmonogram Zalecanej Konserwacji Stacji Roboczej</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Jak często?</th>
+                        <th>Co należy zrobić w Aetherial?</th>
+                        <th>Jaki efekt uzyskasz?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Codziennie / Przed Grą</b></td>
+                        <td>Kliknij <code>⚡ 1-KLIK AUTO-OPTYMALIZACJA</code></td>
+                        <td>Maksymalna ilość wolnego RAM-u, świeży DNS i optymalna szybkość SSD.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Raz w Tygodniu</b></td>
+                        <td>Wyczyść Shadery GPU w zakładce <i>Śmieci</i></td>
+                        <td>Całkowity brak mikroprzycięć (stutteringu) w wymagających grach.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Raz w Miesiącu</b></td>
+                        <td>Kliknij <code>⚡ Zaktualizuj Wszystkie Programy</code></td>
+                        <td>Wszystkie aplikacje zaktualizowane do najnowszych i bezpiecznych wersji.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Po Zmianie Sprzętu</b></td>
+                        <td>Sprawdź zakładkę <i>Sprzęt i Sterowniki</i></td>
+                        <td>Błyskawiczne wykrycie brakujących driverów i błędów Code 28/43.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Stopka Dokumentu -->
+        <div style="text-align: center; border-top: 1.5px solid #25244C; padding-top: 24px; margin-top: 30px;">
+            <div style="font-size: 18px; font-weight: 900; color: #FFFFFF;">AETHERIAL STORAGE & DIAGNOSTICS SUITE v5.5 ULTRA</div>
+            <div style="font-size: 14px; color: #64748B; margin-top: 4px;">
+                Certyfikowane Oprogramowanie Konserwacji Stacji Roboczych z Windows 11 / 10<br/>
+                Aetherial Systems © 2026 • Bezpieczeństwo CBS/DISM • Architektura .NET 8 AOT Single-File
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <AssemblyTitle>Aetherial Storage &amp; Diagnostics Suite</AssemblyTitle>
+    <Product>Aetherial Storage &amp; Diagnostics Suite</Product>
+    <Company>Aetherial Systems</Company>
+    <Description>Advanced PC Optimization, Diagnostics &amp; Maintenance Architecture</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app_icon.png" />
+    <Resource Include="Assets\app_icon.ico" />
+  </ItemGroup>
+
+
+</Project>

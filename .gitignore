@@ -1,0 +1,30 @@
+# Build & Publish output
+bin/
+obj/
+publish/
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+
+# Visual Studio & IDE cache
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+
+# Compiled binaries and debug symbols (>100MB executables)
+*.exe
+*.dll
+*.pdb
+
+# Crash dumps & runtime logs
+*.log
+crash.log
+
+# Temporary and OS files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
