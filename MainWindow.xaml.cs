@@ -1173,6 +1173,9 @@ public partial class MainWindow : Window
                 case "amd":
                     DriverUpdaterService.OpenAmdChipsetDrivers();
                     break;
+                case "install_mediatek":
+                    InstallMediaTekDrivers_Click(sender, e);
+                    break;
                 case "devmgmt":
                     DriverUpdaterService.OpenDeviceManager();
                     break;
@@ -1807,5 +1810,29 @@ public partial class MainWindow : Window
         AppendLog("▶ Uruchamianie procedury ReTrim dla partycji SSD...");
         var (ok, _) = await DiskHelper.RunProcessAsync("powershell", "-NoProfile -Command \"Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }\"", AppendLog);
         await ShowAlertAsync("SSD TRIM", "Procedura sprzętowej optymalizacji TRIM została pomyślnie zrealizowana dla wszystkich dysków SSD!", "Świetnie", "⚡", isSuccess: ok);
+    }
+
+    private async void InstallMediaTekDrivers_Click(object sender, RoutedEventArgs e)
+    {
+        AppendLog("▶ Uruchamianie instalatora sterowników MediaTek Wi-Fi 6E i Bluetooth...");
+        bool launched = DriverUpdaterService.InstallMediaTekDrivers(AppendLog);
+        if (launched)
+        {
+            await ShowAlertAsync(
+                "Instalator Sterowników MediaTek",
+                "Uruchomiono instalację sterowników MediaTek Wi-Fi 6E (mtkwl6ex.inf) oraz Bluetooth (mtkbtfilter.inf) z uprawnieniami administratora.\n\nPo kliknięciu 'Tak' w oknie UAC sterowniki zostaną zainstalowane w systemie.",
+                "Zrozumiałem",
+                "📶",
+                isSuccess: true);
+        }
+        else
+        {
+            await ShowAlertAsync(
+                "Instalator Sterowników",
+                "Nie udało się automatycznie uruchomić instalatora. Skrypt 'Zainstaluj_Sterowniki_MediaTek.bat' znajduje się w folderze Pobrane.",
+                "OK",
+                "⚠️",
+                isSuccess: false);
+        }
     }
 }

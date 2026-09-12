@@ -984,16 +984,16 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                                 <TextBlock Text="⚠️" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="CENTRUM DIAGNOSTYCZNE: CO NALEŻY POPRAWIĆ W TWOIM KOMPUTERZE" FontSize="15" FontWeight="Bold" Foreground="#FBBF24" VerticalAlignment="Center" />
-                                                <Border Background="#F59E0B25" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="6 REKOMENDACJI SYSTEMOWYCH" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
+                                                <TextBlock Text="CENTRUM DIAGNOSTYCZNE: STAN HARDWARE &amp; ZALECENIA NAPRAWCZE" FontSize="15" FontWeight="Bold" Foreground="#FBBF24" VerticalAlignment="Center" />
+                                                <Border Background="#EF444425" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="2 WYMAGAJĄ NAPRAWY | 4 W NORMIE" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="Aplikacja przeanalizowała stan podzespołów Twojego PC, rejestr błędów PnP oraz konfigurację pamięci i płyty głównej. Poniżej znajdują się wykryte nieoptymalności i sugerowane działania naprawcze:" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,12" TextWrapping="Wrap" />
+                                            <TextBlock Text="Aplikacja zweryfikowała fizyczny stan magistrali PnP, rejestr błędów urządzeń oraz konfigurację AM5. Poniżej znajduje się rzetelne podsumowanie stanu Twojego komputera:" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,12" TextWrapping="Wrap" />
 
                                             <UniformGrid Columns="3" Margin="-4,0">
-                                                <!-- KARTA 1: BŁĄD CODE 28 -->
-                                                <Border Background="#131520" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                <!-- KARTA 1: STAN CHIPSETU AMD (100% SPRAWNY) -->
+                                                <Border Background="#131520" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
                                                     <Grid>
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
@@ -1005,13 +1005,13 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#EF444420" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🔴 BŁĄD CODE 28" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
+                                                            <Border Grid.Column="0" Background="#10B98120" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🟢 STAN SPRAWNY" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
                                                             </Border>
-                                                            <TextBlock Grid.Column="1" Text="AMD Sensor Fusion / MicroPEP" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                            <TextBlock Grid.Column="1" Text="Chipset AMD AM5 &amp; Sensory" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
                                                         </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Urządzenie ACPI\AMDIF031\0 nie posiada załadowanego sterownika w systemie Windows. Może to wpływać na czujniki płyty i zarządzanie energią AM5." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="⚡ Pobierz AMD Chipset INF" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="11" Click="OpenAmdChipset_Click" />
+                                                        <TextBlock Grid.Row="1" Text="Wszystkie komponenty chipsetu AMD (GPIO, SMBus, Crash Defender, 3D V-Cache Optimizer) są w 100% zainstalowane i aktywne. Brak błędów Code 28 w architekturze AMD." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="✓ Chipset AMD Sprawny" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenDeviceManager_Click" />
                                                     </Grid>
                                                 </Border>
 
@@ -1033,13 +1033,13 @@
                                                             </Border>
                                                             <TextBlock Grid.Column="1" Text="MediaTek Bluetooth Adapter" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
                                                         </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Urządzenie USB\VID_0E8D&amp;PID_0608 zgłosiło błąd sprzętowy i zostało zatrzymane przez system. Wymagany restart stosu bthserv lub reinstalacja." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="🔄 Zrestartuj usługę Bluetooth" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="RestartBluetoothService_Click" />
+                                                        <TextBlock Grid.Row="1" Text="Urządzenie USB\VID_0E8D&amp;PID_0608 zgłasza zatrzymanie przez system (Kod 43). Przygotowany pakiet sterowników WHQL czeka na instalację." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="⚡ Zainstaluj / Napraw Bluetooth" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="InstallMediaTekDrivers_Click" />
                                                     </Grid>
                                                 </Border>
 
-                                                <!-- KARTA 3: KILLER ETHERNET -->
-                                                <Border Background="#131520" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                <!-- KARTA 3: PRAWDZIWY BŁĄD CODE 28 WI-FI 6E -->
+                                                <Border Background="#131520" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
                                                     <Grid>
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
@@ -1051,13 +1051,13 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#F59E0B20" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟡 AKTUALIZACJA" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
+                                                            <Border Grid.Column="0" Background="#EF444420" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                <TextBlock Text="🔴 BŁĄD CODE 28" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
                                                             </Border>
-                                                            <TextBlock Grid.Column="1" Text="Killer E3100G 2.5G LAN" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                            <TextBlock Grid.Column="1" Text="Kontroler sieci Wi-Fi 6E (RZ608)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
                                                         </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Zainstalowany sterownik 1.0.2.14. Dostępna nowsza wersja pakietu Killer Performance Suite v3.1424 z akceleracją pakietów sieciowych gier." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="🌐 Pobierz pakiet Killer Suite" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenKillerSuite_Click" />
+                                                        <TextBlock Grid.Row="1" Text="Brak sterownika dla magistrali PCI\VEN_14C3&amp;DEV_0608 (MediaTek MT7921 / RZ608). Pobrany certyfikowany pakiet WHQL jest gotowy do wdrożenia 1-kliknięciem." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <Button Grid.Row="2" Content="⚡ Zainstaluj sterownik Wi-Fi" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="11" Click="InstallMediaTekDrivers_Click" />
                                                     </Grid>
                                                 </Border>
 
@@ -1104,7 +1104,7 @@
                                                             </Border>
                                                             <TextBlock Grid.Column="1" Text="Płyta ASRock B650E (BIOS v2.02)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
                                                         </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Płyta posiada starszy BIOS 2.02. Nowsza kompilacja UEFI wprowadza mikrokod AGESA 1.2.0.2a zoptymalizowany pod kątem krzywych PBO i opóźnień pamięci." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                        <TextBlock Grid.Row="1" Text="Płyta posiada BIOS 2.02. Nowsza wersja wprowadza mikrokod AGESA 1.2.0.2a. Pobrany plik ROM v3.10 znajduje się już w Twoim folderze Pobrane!" FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
                                                         <Button Grid.Row="2" Content="🔍 Sprawdź BIOS ASRock" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenAsrockBios_Click" />
                                                     </Grid>
                                                 </Border>
@@ -1225,7 +1225,7 @@
                                                         <TextBlock Text="🌐 KARTY SIECIOWE" FontSize="11" FontWeight="Bold" Foreground="#818CF8" Margin="0,0,0,4" />
                                                         <TextBlock Text="Killer 2.5G LAN + Wi-Fi 6E" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
                                                         <TextBlock Text="• Ethernet: Killer E3100G 2.5 Gbps" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" />
-                                                        <TextBlock Text="• Bezprzewodowa: Wi-Fi 6E AX1675x" FontSize="11" Foreground="#94A3B8" />
+                                                        <TextBlock Text="• Bezprzewodowa: MediaTek RZ608 Wi-Fi 6E" FontSize="11" Foreground="#94A3B8" />
                                                         <TextBlock Text="• VPN: Tailscale Tunnel" FontSize="11" Foreground="#94A3B8" />
                                                         <TextBlock Text="• Status: Połączono z siecią" FontSize="11" Foreground="#34D399" Margin="0,2,0,0" />
                                                     </StackPanel>

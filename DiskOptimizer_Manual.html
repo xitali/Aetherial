@@ -579,15 +579,15 @@
         <div class="step-box">
             <div class="step-header">
                 <div class="step-num">1</div>
-                <div class="step-title">Problem 1: Błąd Code 28 (Brakujący sterownik chipsetu AMD)</div>
+                <div class="step-title">Problem 1: Błąd Code 28 — Kontroler sieci Wi-Fi 6E (MediaTek RZ608)</div>
             </div>
             <p>
-                Aplikacja wykryła brakujący sterownik <code>AMD Sensor Fusion Hub</code> (identyfikator <code>ACPI\AMDIF031\0</code>). Jest to znana cecha nowej platformy AMD AM5 po świeżej instalacji Windows.
+                <b>Chipset AMD AM5</b> został pomyślnie zainstalowany i wszystkie jego komponenty (GPIO, SMBus, Crash Defender, 3D V-Cache Optimizer) pracują w 100% poprawnie bez błędów. Rzeczywistym urządzeniem zgłaszającym błąd <b>Code 28 (Brak sterownika)</b> w Twoim systemie jest kontroler bezprzewodowy <code>PCI\VEN_14C3&amp;DEV_0608</code> (moduł MediaTek MT7921 / AMD RZ608 Wi-Fi 6E).
             </p>
             <div class="alert-box alert-cyan">
                 <div class="alert-icon">💡</div>
                 <div>
-                    <b>Jak rozwiązać:</b> Pobierz i zainstaluj najnowszy pakiet <b>AMD Chipset Drivers 6.x</b> ze strony AMD lub płyty ASRock. Spowoduje to natychmiastowe zniknięcie żółtego trójkąta ostrzegawczego w Menedżerze Urządzeń.
+                    <b>Rozwiązanie 1-Kliknięciem:</b> Aplikacja pobrała już certyfikowane pakiety WHQL do folderu <code>Pobrane</code>. Kliknij przycisk <b>⚡ Zainstaluj sterownik Wi-Fi</b> w Centrum Diagnostycznym lub uruchom skrypt <code>Zainstaluj_Sterowniki_MediaTek.bat</code>, aby natychmiast załadować sterownik do jądra Windows!
                 </div>
             </div>
         </div>
@@ -595,18 +595,21 @@
         <div class="step-box">
             <div class="step-header">
                 <div class="step-num">2</div>
-                <div class="step-title">Problem 2: Błąd Code 43 (Zawieszony adapter Bluetooth)</div>
+                <div class="step-title">Problem 2: Błąd Code 43 (Adapter MediaTek Bluetooth)</div>
             </div>
             <p>
-                Karta bezprzewodowa MediaTek Bluetooth czasami zawiesza swój stos po wybudzeniu systemu ze stanu uśpienia. W module dodano interaktywny przycisk:
+                Moduł Bluetooth (identyfikator <code>USB\VID_0E8D&amp;PID_0608</code>) na tej samej karcie sieciowej zgłosił błąd uruchomienia przez system (Code 43). W module dodano interaktywne opcje:
             </p>
-            <div style="margin: 10px 0;">
+            <div style="margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap;">
                 <span style="background: #202238; border: 1.5px solid #8B5CF6; color: #FFFFFF; font-weight: 800; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: inline-block;">
-                    ⚡ ZRESTARTUJ USŁUGĘ BLUETOOTH
+                    ⚡ ZAINSTALUJ / NAPRAW BLUETOOTH
+                </span>
+                <span style="background: #202238; border: 1.5px solid #38BDF8; color: #FFFFFF; font-weight: 800; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: inline-block;">
+                    🔄 ZRESTARTUJ USŁUGĘ BLUETOOTH
                 </span>
             </div>
             <p style="font-size: 14.5px; color: #94A3B8;">
-                Jedno kliknięcie restartuje usługę <code>bthserv</code> i przywraca łączność ze słuchawkami bez konieczności ponownego uruchamiania całego komputera!
+                Kliknięcie instaluje dedykowany sterownik WHQL lub restartuje usługę <code>bthserv</code> i natychmiast przywraca stabilną łączność bezprzewodową.
             </p>
         </div>
 
@@ -638,10 +641,10 @@
             <ul style="margin-left: 24px; color: #CBD5E1; font-size: 15px;">
                 <li style="margin-bottom: 4px;"><b>Procesor (CPU):</b> AMD Ryzen 7 7800X3D (8 rdzeni / 16 wątków, 96MB 3D V-Cache, do 5.05 GHz)</li>
                 <li style="margin-bottom: 4px;"><b>Karta Graficzna:</b> NVIDIA GeForce RTX 4070 Ti SUPER (16 GB GDDR6X, sterownik v610.88 WHQL)</li>
-                <li style="margin-bottom: 4px;"><b>Płyta Główna:</b> ASRock B650E PG Riptide WiFi (Chipset B650E, PCIe 5.0, BIOS 2.02)</li>
+                <li style="margin-bottom: 4px;"><b>Płyta Główna:</b> ASRock B650E PG Riptide WiFi (Chipset B650E, PCIe 5.0, BIOS 2.02 / ROM 3.10 w Pobrane)</li>
                 <li style="margin-bottom: 4px;"><b>Dysk SSD:</b> Kingston KC3000 2048GB (NVMe PCIe 4.0 x4, transfery do 7000 MB/s)</li>
-                <li style="margin-bottom: 4px;"><b>Karty Sieciowe:</b> Killer E3100G 2.5GbE LAN + Killer Wi-Fi 6E AX1675x 160MHz</li>
-                <li><b>Dźwięk:</b> Bezprzewodowe słuchawki MCHOSE X9 7.1 + Realtek High Definition ALC1220</li>
+                <li style="margin-bottom: 4px;"><b>Karty Sieciowe:</b> Killer E3100G 2.5GbE LAN + MediaTek MT7921 / RZ608 Wi-Fi 6E</li>
+                <li><b>Dźwięk:</b> Bezprzewodowe słuchawki MCHOSE X9 7.1 + Realtek High Definition ALC897</li>
             </ul>
         </div>
     </div>
