@@ -298,6 +298,9 @@ public class FileSystemExplorerService
 
                 try
                 {
+                    DiskHelper.ValidateCleaningPath(item.Path);
+                    if (!File.Exists(item.Path) && !Directory.Exists(item.Path)) throw new FileNotFoundException("Element już nie istnieje.");
+                    if ((File.GetAttributes(item.Path) & FileAttributes.ReparsePoint) != 0) throw new IOException("Usuwanie dowiązań jest zablokowane.");
                     logger?.Invoke($"Usuwanie: {item.Path} (ostatnia edycja: {item.RelativeAgeText})...");
 
                     if (moveToRecycleBin)
@@ -305,23 +308,19 @@ public class FileSystemExplorerService
                         bool ok = SendToRecycleBin(item.Path);
                         if (ok)
                         {
-                            freed += item.SizeBytes;
                             count++;
                             logger?.Invoke($"  ✓ Przeniesiono do Kosza: {item.Name} ({item.FormattedSize})");
                         }
                         else
                         {
-                            logger?.Invoke($"  ⚠️ Błąd wysyłania do Kosza, próba trwałego usunięcia: {item.Name}");
-                            DeletePermanently(item);
-                            freed += item.SizeBytes;
-                            count++;
-                            logger?.Invoke($"  ✓ Trwale usunięto: {item.Name}");
+                            logger?.Invoke($"Nie przeniesiono do Kosza: {item.Name}. Plik pozostawiono bez trwałego usuwania.");
                         }
                     }
                     else
                     {
+                        long measuredSize = item.IsDirectory ? DiskHelper.GetDirectorySize(item.Path, ct).sizeBytes : new FileInfo(item.Path).Length;
                         DeletePermanently(item);
-                        freed += item.SizeBytes;
+                        freed += measuredSize;
                         count++;
                         logger?.Invoke($"  ✓ Trwale usunięto: {item.Name} ({item.FormattedSize})");
                     }

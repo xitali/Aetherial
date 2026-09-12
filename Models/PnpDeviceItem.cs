@@ -5,10 +5,10 @@ namespace DiskOptimizer.Models;
 
 public class PnpDeviceItem : INotifyPropertyChanged
 {
-    private string _status = "Sprawny i aktywny";
+    private string _status = "Nie odczytano";
     private string _statusColor = "#81C784";
     private bool _needsUpdate = false;
-    private string _updateStatusBadge = "✓ Zainstalowany (Aktualny)";
+    private string _updateStatusBadge = "Aktualność niezweryfikowana";
     private string _updateBadgeColor = "#81C784";
     private string _updateBadgeBg = "#143820";
 

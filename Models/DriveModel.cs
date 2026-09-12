@@ -13,13 +13,13 @@ public class DriveModel : INotifyPropertyChanged
     public string DriveLetter
     {
         get => _driveLetter;
-        set { _driveLetter = value; OnPropertyChanged(); }
+        set { _driveLetter = value; OnPropertyChanged(); OnPropertyChanged(nameof(DisplayName)); }
     }
 
     public string VolumeLabel
     {
         get => _volumeLabel;
-        set { _volumeLabel = value; OnPropertyChanged(); }
+        set { _volumeLabel = value; OnPropertyChanged(); OnPropertyChanged(nameof(DisplayName)); }
     }
 
     public long TotalBytes
@@ -27,7 +27,7 @@ public class DriveModel : INotifyPropertyChanged
         get => _totalBytes;
         set
         {
-            _totalBytes = value;
+            _totalBytes = Math.Max(0, value);
             OnPropertyChanged();
             OnPropertyChanged(nameof(UsedBytes));
             OnPropertyChanged(nameof(UsedPercent));
@@ -44,7 +44,7 @@ public class DriveModel : INotifyPropertyChanged
         get => _freeBytes;
         set
         {
-            _freeBytes = value;
+            _freeBytes = Math.Max(0, value);
             OnPropertyChanged();
             OnPropertyChanged(nameof(UsedBytes));
             OnPropertyChanged(nameof(UsedPercent));
@@ -58,7 +58,7 @@ public class DriveModel : INotifyPropertyChanged
     public long UsedBytes => Math.Max(0, TotalBytes - FreeBytes);
 
     public double UsedPercent => TotalBytes > 0 ? Math.Round((double)UsedBytes / TotalBytes * 100, 1) : 0;
-    public double FreePercent => TotalBytes > 0 ? Math.Round((double)FreeBytes / TotalBytes * 100, 1) : 0;
+    public double FreePercent => TotalBytes > 0 ? Math.Clamp(Math.Round((double)FreeBytes / TotalBytes * 100, 1), 0, 100) : 0;
 
     public string FormattedTotal => FormatBytes(TotalBytes);
     public string FormattedUsed => FormatBytes(UsedBytes);
@@ -77,10 +77,10 @@ public class DriveModel : INotifyPropertyChanged
 
     public static string FormatBytes(long bytes)
     {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
         int counter = 0;
-        decimal number = bytes;
-        while (Math.Round(number / 1024) >= 1)
+        decimal number = Math.Max(0, bytes);
+        while (number >= 1024 && counter < suffixes.Length - 1)
         {
             number /= 1024;
             counter++;

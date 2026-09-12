@@ -60,8 +60,7 @@ public class MemoryOptimizerService
                     if (proc.Id <= 4 || proc.ProcessName.Equals("System", StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    EmptyWorkingSet(proc.Handle);
-                    processed++;
+                    if (EmptyWorkingSet(proc.Handle) != 0) processed++;
                 }
                 catch
                 {
@@ -78,7 +77,7 @@ public class MemoryOptimizerService
         await Task.Delay(300, ct);
         var after = GetMemoryMetrics();
 
-        long freed = (long)(after.availBytes - before.availBytes);
+        long freed = after.availBytes >= before.availBytes ? (long)(after.availBytes - before.availBytes) : 0;
         if (freed < 0) freed = 0;
 
         logger?.Invoke($"✓ Zoptymalizowano pamięć RAM dla {processed} procesów.");

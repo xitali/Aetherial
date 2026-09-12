@@ -184,6 +184,24 @@ public static class DiskHelper
         return 0;
     }
 
+    // Reject destructive roots and links in every ancestor, not just the leaf.
+    public static string ValidateCleaningPath(string path)
+    {
+        string full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        string[] protectedRoots = { Path.GetPathRoot(full)!, Environment.GetFolderPath(Environment.SpecialFolder.Windows), Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) };
+        if (protectedRoots.Any(p => !string.IsNullOrWhiteSpace(p) && string.Equals(Path.TrimEndingDirectorySeparator(p), full, StringComparison.OrdinalIgnoreCase)))
+            throw new IOException("Nie można czyścić głównego folderu systemu, użytkownika ani dysku.");
+        string windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        string[] allowedWindowsCaches = { Path.Combine(windows, "Temp"), Path.Combine(windows, "SoftwareDistribution", "Download") };
+        if (full.StartsWith(windows + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+            !allowedWindowsCaches.Any(cache => full.Equals(cache, StringComparison.OrdinalIgnoreCase) || full.StartsWith(cache + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+            throw new IOException("Katalogi systemu Windows poza rozpoznanymi pamięciami podręcznymi są chronione.");
+        for (DirectoryInfo? current = new DirectoryInfo(full); current != null; current = current.Parent)
+            if (current.Exists && (current.Attributes & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("Czyszczenie przez dowiązanie jest zablokowane.");
+        return full;
+    }
+
     public static (long freedBytes, int deletedFiles) CleanDirectoryContents(
         string directoryPath, 
         Action<string>? logger = null, 
@@ -194,6 +212,8 @@ public static class DiskHelper
 
         long freedBytes = 0;
         int deletedFiles = 0;
+        directoryPath = ValidateCleaningPath(directoryPath);
+        if (daysOlderThan < 0) throw new ArgumentOutOfRangeException(nameof(daysOlderThan));
         var thresholdDate = DateTime.Now.AddDays(-daysOlderThan);
 
         var stack = new Stack<string>();
@@ -210,7 +230,7 @@ public static class DiskHelper
                 var dir = new DirectoryInfo(currentDir);
 
                 // Pomiń punkty reparse
-                if ((dir.Attributes & FileAttributes.ReparsePoint) != 0 && currentDir != directoryPath)
+                if ((dir.Attributes & FileAttributes.ReparsePoint) != 0)
                     continue;
 
                 foreach (var file in dir.EnumerateFiles())
@@ -218,6 +238,7 @@ public static class DiskHelper
                     if (ct.IsCancellationRequested) break;
                     try
                     {
+                        if ((file.Attributes & FileAttributes.ReparsePoint) != 0) continue;
                         if (daysOlderThan > 0 && file.LastWriteTime > thresholdDate)
                             continue;
 
@@ -274,7 +295,7 @@ public static class DiskHelper
         Action<string>? logger = null, 
         CancellationToken ct = default)
     {
-        var (ok, output, _) = await RunProcessDetailedAsync(fileName, arguments, logger, ct);
+        var (ok, output, _) = await RunProcessDetailedAsync(fileName, arguments, logger, ct).ConfigureAwait(false);
         return (ok, output);
     }
 
@@ -285,6 +306,7 @@ public static class DiskHelper
         CancellationToken ct = default)
     {
         var sb = new System.Text.StringBuilder();
+        var errors = new System.Text.StringBuilder();
         try
         {
             var psi = new ProcessStartInfo
@@ -312,17 +334,25 @@ public static class DiskHelper
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    lock (sb) sb.AppendLine(e.Data);
+                    lock (errors) errors.AppendLine(e.Data);
                     logger?.Invoke(e.Data);
                 }
             };
 
+            ct.ThrowIfCancellationRequested();
             process.Start();
+            using var cancellation = ct.Register(() =>
+            {
+                try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+                catch (InvalidOperationException) { }
+                catch (System.ComponentModel.Win32Exception) { }
+            });
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            await process.WaitForExitAsync(ct);
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
             string captured = sb.ToString().Trim();
+            if (process.ExitCode != 0 && errors.Length > 0) captured += Environment.NewLine + errors.ToString().Trim();
             return (process.ExitCode == 0, string.IsNullOrEmpty(captured) ? $"Kod zakończenia: {process.ExitCode}" : captured, process.ExitCode);
         }
         catch (Exception ex)
@@ -339,8 +369,9 @@ public static class DiskHelper
     {
         // PowerShell -EncodedCommand przyjmuje Base64 z ciągu Unicode (UTF-16LE)
         // Całkowicie eliminuje problemy ze znakami specjalnymi, polskimi literami i cudzysłowami
+        script = "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; [Console]::OutputEncoding=[System.Text.Encoding]::UTF8; " + script;
         byte[] bytes = System.Text.Encoding.Unicode.GetBytes(script);
         string encoded = Convert.ToBase64String(bytes);
-        return await RunProcessDetailedAsync("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}", logger, ct);
+        return await RunProcessDetailedAsync("powershell.exe", $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {encoded}", logger, ct).ConfigureAwait(false);
     }
 }

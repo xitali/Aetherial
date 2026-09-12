@@ -91,7 +91,7 @@ public class DiskScannerService
             new CleanItem
             {
                 Id = "windows_temp",
-                Title = "Pliki tymczasowe Windows (C:\\Windows\\Temp)",
+                Title = "Pliki tymczasowe Windows",
                 Description = "Tymczasowe pliki generowane przez usługi systemowe Windows.",
                 Category = "Szybkie czyszczenie",
                 Icon = "🗂️",

@@ -20,7 +20,14 @@ publish/
 *.pdb
 *.deps.json
 *.runtimeconfig.json
-brief.md
+.artifacts/
+release/
+TestResults/
+appsettings.json
+Raport_*.html
+*.zip
+*.msix
+*.nupkg
 
 # Crash dumps & runtime logs
 *.log

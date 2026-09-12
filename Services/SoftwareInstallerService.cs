@@ -467,10 +467,10 @@ public class SoftwareInstallerService
 
             if (app.Id == "7zip.7zip" && (File.Exists(Path.Combine(progFiles, @"7-Zip\7z.exe")) || File.Exists(Path.Combine(progFiles86, @"7-Zip\7z.exe")))) return true;
             if (app.Id == "Google.Chrome" && File.Exists(Path.Combine(progFiles, @"Google\Chrome\Application\chrome.exe"))) return true;
-            if (app.Id == "Valve.Steam" && (File.Exists(Path.Combine(progFiles86, @"Steam\steam.exe")) || File.Exists(Path.Combine(progFiles, @"Steam\steam.exe")) || Directory.Exists(@"D:\Steam") || Directory.Exists(@"E:\Steam"))) return true;
+            if (app.Id == "Valve.Steam" && (File.Exists(Path.Combine(progFiles86, @"Steam\steam.exe")) || File.Exists(Path.Combine(progFiles, @"Steam\steam.exe")))) return true;
             if (app.Id == "Discord.Discord" && (Directory.Exists(Path.Combine(localApp, @"Discord")) || Directory.Exists(Path.Combine(appData, @"discord")))) return true;
             if (app.Id == "Docker.DockerDesktop" && (File.Exists(Path.Combine(progFiles, @"Docker\Docker\Docker Desktop.exe")) || Directory.Exists(Path.Combine(localApp, @"Docker")))) return true;
-            if (app.Id.Contains("Antigravity") && (Directory.Exists(Path.Combine(localApp, @"Programs\Antigravity")) || Directory.Exists(@"D:\Coco"))) return true;
+            if (app.Id.Contains("Antigravity") && File.Exists(Path.Combine(localApp, @"Programs\Antigravity\Antigravity.exe"))) return true;
             if (app.Id == "Git.Git" && (File.Exists(Path.Combine(progFiles, @"Git\bin\git.exe")) || File.Exists(Path.Combine(progFiles, @"Git\cmd\git.exe")))) return true;
             if (app.Id.Contains("Python") && (Directory.Exists(Path.Combine(localApp, @"Programs\Python")) || File.Exists(@"C:\Windows\py.exe"))) return true;
             if (app.Id == "Tailscale.Tailscale" && Directory.Exists(Path.Combine(progFiles, @"Tailscale"))) return true;
@@ -487,7 +487,7 @@ public class SoftwareInstallerService
         return false;
     }
 
-    public async Task<bool> InstallAppAsync(AppPackageItem app, string? targetLocation, Action<string>? logger = null, CancellationToken ct = default)
+    public async Task<bool> InstallAppAsync(AppPackageItem app, string? targetLocation, Action<string>? logger = null, CancellationToken ct = default, bool silent = true)
     {
         app.IsBusy = true;
         app.Status = "Pobieranie i instalacja...";
@@ -497,7 +497,7 @@ public class SoftwareInstallerService
         bool isMsStore = !app.Id.Contains('.') && app.Id.Length == 12;
         string args = isMsStore
             ? $"install --id \"{app.Id}\" --source msstore --accept-package-agreements --accept-source-agreements"
-            : $"install --id \"{app.Id}\" --exact --silent --accept-package-agreements --accept-source-agreements";
+            : $"install --id \"{app.Id}\" --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
 
         if (!isMsStore && !string.IsNullOrWhiteSpace(targetLocation))
         {
@@ -514,7 +514,11 @@ public class SoftwareInstallerService
             logger?.Invoke($"  📁 Dedykowany podkatalog programu: {appSpecificFolder}");
         }
 
-        var (ok, output, exitCode) = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct);
+        (bool ok, string output, int exitCode) result;
+        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); }
+        catch (OperationCanceledException) { app.Status = "Anulowano"; throw; }
+        finally { app.IsBusy = false; }
+        var (ok, output, exitCode) = result;
 
         app.IsBusy = false;
 
@@ -558,7 +562,7 @@ public class SoftwareInstallerService
         }
     }
 
-    public async Task<bool> UpgradeAppAsync(AppPackageItem app, Action<string>? logger = null, CancellationToken ct = default)
+    public async Task<bool> UpgradeAppAsync(AppPackageItem app, Action<string>? logger = null, CancellationToken ct = default, bool silent = true)
     {
         app.IsBusy = true;
         app.Status = "Aktualizowanie...";
@@ -568,9 +572,13 @@ public class SoftwareInstallerService
         bool isMsStore = !app.Id.Contains('.') && app.Id.Length == 12;
         string args = isMsStore
             ? $"upgrade --id \"{app.Id}\" --source msstore --accept-package-agreements --accept-source-agreements"
-            : $"upgrade --id \"{app.Id}\" --exact --silent --accept-package-agreements --accept-source-agreements";
+            : $"upgrade --id \"{app.Id}\" --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
 
-        var (ok, output, exitCode) = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct);
+        (bool ok, string output, int exitCode) result;
+        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); }
+        catch (OperationCanceledException) { app.Status = "Anulowano"; throw; }
+        finally { app.IsBusy = false; }
+        var (ok, output, exitCode) = result;
 
         app.IsBusy = false;
 

@@ -41,6 +41,12 @@ public class CompactOsService
             return false;
         }
 
+        vhdxPath = Path.GetFullPath(vhdxPath);
+        if (!vhdxPath.EndsWith(".vhdx", StringComparison.OrdinalIgnoreCase) || vhdxPath.IndexOfAny(new[] { '"', '\r', '\n' }) >= 0 || !DiskHelper.IsAdministrator())
+        {
+            logger?.Invoke("Kompaktowanie wymaga pliku VHDX oraz uprawnień Administratora.");
+            return false;
+        }
         logger?.Invoke($"=== Rozpoczynam kompaktowanie dysku VHDX ({Path.GetFileName(vhdxPath)}) ===");
         logger?.Invoke("1. Zatrzymywanie instancji WSL (wsl --shutdown)...");
         await DiskHelper.RunProcessAsync("wsl", "--shutdown", logger, ct);
@@ -50,7 +56,7 @@ public class CompactOsService
         try
         {
             string scriptContent = $"select vdisk file=\"{vhdxPath}\"\r\nattach vdisk readonly\r\ncompact vdisk\r\ndetach vdisk\r\n";
-            await File.WriteAllTextAsync(scriptPath, scriptContent, System.Text.Encoding.ASCII, ct);
+            await File.WriteAllTextAsync(scriptPath, scriptContent, System.Text.Encoding.Unicode, ct);
 
             logger?.Invoke("2. Uruchamianie procedury diskpart compact vdisk...");
             var (ok, _) = await DiskHelper.RunProcessAsync("diskpart", $"/s \"{scriptPath}\"", logger, ct);
@@ -61,6 +67,7 @@ public class CompactOsService
                 return true;
             }
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             logger?.Invoke($"❌ Błąd diskpart: {ex.Message}");

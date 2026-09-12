@@ -7,7 +7,7 @@ namespace DiskOptimizer.Services;
 
 public class DevArtifactItem : INotifyPropertyChanged
 {
-    private bool _isSelected = true;
+    private bool _isSelected = false;
 
     public string ProjectName { get; set; } = string.Empty;
     public string ProjectPath { get; set; } = string.Empty;
@@ -47,6 +47,15 @@ public class DevProjectsService
         "node_modules", ".venv", "venv", "bin", "obj", "target"
     };
 
+    private static bool IsVerifiedArtifact(DirectoryInfo project, string name) => name.ToLowerInvariant() switch
+    {
+        "node_modules" => File.Exists(Path.Combine(project.FullName, "package.json")),
+        ".venv" or "venv" => File.Exists(Path.Combine(project.FullName, name, "pyvenv.cfg")),
+        "bin" or "obj" => project.EnumerateFiles("*.csproj").Any() || project.EnumerateFiles("*.fsproj").Any() || project.EnumerateFiles("*.vbproj").Any(),
+        "target" => File.Exists(Path.Combine(project.FullName, "Cargo.toml")),
+        _ => false
+    };
+
     public async Task<List<DevArtifactItem>> ScanDevProjectsAsync(
         string rootDirectory, 
         int minDaysInactive = 0, 
@@ -82,7 +91,8 @@ public class DevProjectsService
                         {
                             if (ct.IsCancellationRequested) break;
 
-                            if (ArtifactNames.Contains(subDir.Name))
+                            if ((subDir.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                            if (ArtifactNames.Contains(subDir.Name) && IsVerifiedArtifact(di, subDir.Name))
                             {
                                 // To jest folder artefaktu (np. node_modules, .venv)
                                 if (minDaysInactive == 0 || di.LastWriteTime <= threshold)
@@ -100,7 +110,7 @@ public class DevProjectsService
                                             SizeBytes = size,
                                             ProjectLastModified = di.LastWriteTime,
                                             RelativeAgeText = ageText,
-                                            IsSelected = true
+                                            IsSelected = false
                                         });
                                     }
                                 }
@@ -139,9 +149,12 @@ public class DevProjectsService
                     logger?.Invoke($"Usuwanie artefaktu {item.ArtifactType} z projektu '{item.ProjectName}'...");
                     if (Directory.Exists(item.FullPath))
                     {
+                        var artifact = new DirectoryInfo(DiskHelper.ValidateCleaningPath(item.FullPath));
+                        if (artifact.Parent == null || !IsVerifiedArtifact(artifact.Parent, artifact.Name)) throw new IOException("Nie potwierdzono rodzaju artefaktu.");
                         var (fBytes, _) = DiskHelper.CleanDirectoryContents(item.FullPath, null, 0, ct);
-                        Directory.Delete(item.FullPath, true);
-                        freed += item.SizeBytes;
+                        freed += fBytes;
+                        ct.ThrowIfCancellationRequested();
+                        Directory.Delete(item.FullPath, false);
                         count++;
                         logger?.Invoke($"  ✓ Usunięto {item.ArtifactType} ({item.FormattedSize}). Kod źródłowy projektu pozostał nienaruszony!");
                     }

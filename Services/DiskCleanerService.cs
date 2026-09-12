@@ -29,13 +29,15 @@ public class DiskCleanerService
 
             if (item.ActionType == CleanActionType.RecycleBin)
             {
-                long prevSize = item.SizeBytes;
-                int prevCount = item.ItemCount;
+                var before = DiskHelper.QueryRecycleBin();
+                long prevSize = before.sizeBytes;
+                int prevCount = (int)Math.Min(int.MaxValue, before.itemCount);
                 bool ok = DiskHelper.EmptyRecycleBin();
                 if (ok)
                 {
-                    freedBytes = prevSize;
-                    deletedFiles = prevCount;
+                    var after = DiskHelper.QueryRecycleBin();
+                    freedBytes = Math.Max(0, prevSize - after.sizeBytes);
+                    deletedFiles = Math.Max(0, prevCount - (int)Math.Min(int.MaxValue, after.itemCount));
                     logger?.Invoke($"  ✓ Kosz systemowy opróżniony ({DriveModel.FormatBytes(freedBytes)}).");
                 }
                 else
@@ -46,20 +48,16 @@ public class DiskCleanerService
             else if (item.ActionType == CleanActionType.Command && !string.IsNullOrEmpty(item.Command))
             {
                 logger?.Invoke($"  Uruchamianie: {item.Command} {item.CommandArgs}...");
+                long beforeSize = Directory.Exists(item.Path) ? DiskHelper.GetDirectorySize(item.Path, ct).sizeBytes : 0;
                 var (ok, _) = await DiskHelper.RunProcessAsync(item.Command, item.CommandArgs ?? "", logger, ct);
                 
                 if (ok)
                 {
-                    freedBytes = item.SizeBytes;
+                    long afterSize = Directory.Exists(item.Path) ? DiskHelper.GetDirectorySize(item.Path, ct).sizeBytes : beforeSize;
+                    freedBytes = Math.Max(0, beforeSize - afterSize);
                     logger?.Invoke($"  ✓ Zakończono pomyślnie polecenie: {item.Command}.");
                 }
-                else if (!string.IsNullOrEmpty(item.Path) && Directory.Exists(item.Path))
-                {
-                    logger?.Invoke($"  Polecenie nie powiodło się, próba bezpośredniego usunięcia plików z: {item.Path}...");
-                    var (fBytes, fCount) = await Task.Run(() => DiskHelper.CleanDirectoryContents(item.Path, logger, 0, ct), ct);
-                    freedBytes = fBytes;
-                    deletedFiles = fCount;
-                }
+                else throw new IOException("Polecenie czyszczenia nie powiodło się.");
             }
             else if (item.ActionType == CleanActionType.SpecialAction)
             {
@@ -85,10 +83,11 @@ public class DiskCleanerService
                     logger?.Invoke("  Krok 1: Próba usunięcia nieużywanych obrazów i kontenerów (docker system prune)...");
                     try
                     {
-                        var (pruneOk, pruneOut) = await DiskHelper.RunProcessAsync("docker", "system prune -a --volumes -f", logger, ct);
+                        var (pruneOk, pruneOut) = await DiskHelper.RunProcessAsync("docker", "builder prune -f", logger, ct);
                         if (pruneOk) logger?.Invoke("  ✓ Docker system prune wykonany pomyślnie.");
                         else logger?.Invoke("  ℹ️ Demon Docker nie jest aktywny lub brak zbędnych kontenerów.");
                     }
+                    catch (OperationCanceledException) { throw; }
                     catch (Exception pEx)
                     {
                         logger?.Invoke($"  ℹ️ Pomijanie prune: {pEx.Message}");
@@ -100,6 +99,7 @@ public class DiskCleanerService
                         logger?.Invoke($"  Krok 2: Kompaktowanie wirtualnego dysku VHDX ({Path.GetFileName(item.Path)})...");
                         var compactSvc = new CompactOsService();
                         bool shrinkOk = await compactSvc.ShrinkVhdxAsync(item.Path, logger, ct);
+                        if (!shrinkOk) throw new IOException("Nie udało się skompaktować dysku VHDX.");
                         long sizeAfter = File.Exists(item.Path) ? new FileInfo(item.Path).Length : 0;
                         long vhdxFreed = Math.Max(0, sizeBefore - sizeAfter);
                         if (vhdxFreed > 0)
@@ -112,7 +112,7 @@ public class DiskCleanerService
                         {
                             freedBytes = 0;
                             deletedFiles = 0;
-                            logger?.Invoke("  ✓ Przestrzeń dysku VHDX została zoptymalizowana.");
+                            logger?.Invoke("Kompaktowanie zakończone; nie zmierzono zmniejszenia pliku VHDX.");
                         }
                     }
                 }
@@ -121,23 +121,21 @@ public class DiskCleanerService
                     if (DiskHelper.IsAdministrator())
                     {
                         logger?.Invoke($"  Wyłączanie hibernacji (powercfg /h off)...");
+                        long beforeSize = DiskHelper.GetFileSize(item.Path);
                         var (ok, _) = await DiskHelper.RunProcessAsync("powercfg", "/h off", logger, ct);
                         if (ok)
                         {
-                            freedBytes = item.SizeBytes;
-                            deletedFiles = 1;
+                            freedBytes = Math.Max(0, beforeSize - DiskHelper.GetFileSize(item.Path));
+                            deletedFiles = File.Exists(item.Path) ? 0 : 1;
                             logger?.Invoke($"  ✓ Hibernacja wyłączona! Plik hiberfil.sys usunięty.");
                         }
                     }
-                    else
-                    {
-                        logger?.Invoke($"  ⚠️ Wyłączenie hibernacji wymaga uruchomienia programu jako Administrator!");
-                    }
+                    else throw new IOException("Wyłączenie hibernacji wymaga uprawnień Administratora.");
                 }
             }
             else if (item.ActionType == CleanActionType.DeleteFiles && !string.IsNullOrEmpty(item.Path))
             {
-                var (fBytes, fCount) = await Task.Run(() => DiskHelper.CleanDirectoryContents(item.Path, logger, 0, ct), ct);
+                var (fBytes, fCount) = await Task.Run(() => DiskHelper.CleanDirectoryContents(item.Path, logger, item.Id is "user_temp" or "windows_temp" ? 1 : 0, ct), ct);
                 freedBytes = fBytes;
                 deletedFiles = fCount;
                 logger?.Invoke($"  ✓ Usunięto {deletedFiles} plików ({DriveModel.FormatBytes(freedBytes)}).");
@@ -147,7 +145,12 @@ public class DiskCleanerService
             item.SizeBytes = Math.Max(0, item.SizeBytes - freedBytes);
             item.Status = freedBytes > 0 
                 ? $"Wyczyszczono: {DriveModel.FormatBytes(freedBytes)}"
-                : (item.SizeBytes == 0 ? "Czysto (0 B)" : "Pliki w użyciu przez aktywny proces");
+                : (item.SizeBytes == 0 ? "Czysto (0 B)" : "Nie zwolniono miejsca; sprawdź dziennik operacji");
+        }
+        catch (OperationCanceledException)
+        {
+            item.Status = "Anulowano czyszczenie";
+            throw;
         }
         catch (Exception ex)
         {
@@ -172,8 +175,8 @@ public class DiskCleanerService
 
     public async Task<bool> RunDockerPruneAsync(Action<string>? logger = null, CancellationToken ct = default)
     {
-        logger?.Invoke("▶ Uruchamianie czyszczenia Dockera: docker system prune -f --volumes...");
-        var (ok, output) = await DiskHelper.RunProcessAsync("docker", "system prune -f --volumes", logger, ct);
+        logger?.Invoke("▶ Uruchamianie czyszczenia Dockera: docker builder prune -f...");
+        var (ok, output) = await DiskHelper.RunProcessAsync("docker", "builder prune -f", logger, ct);
         if (ok)
         {
             logger?.Invoke("✓ Docker system prune zakończony pomyślnie!");
@@ -199,7 +202,7 @@ public class DiskCleanerService
             "reduced" => "/h /type reduced",
             "full" => "/h /type full",
             "on" => "/h on",
-            _ => "/h on"
+            _ => throw new ArgumentException("Nieznany tryb hibernacji.", nameof(mode))
         };
 
         logger?.Invoke($"▶ Wykonywanie: powercfg {args}...");

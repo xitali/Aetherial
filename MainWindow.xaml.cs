@@ -39,15 +39,22 @@ public partial class MainWindow : Window
 
     private List<AppPackageItem> _allApps = new();
     private string _selectedCategory = "All";
-    private string _currentExplorerPath = @"C:\";
+    private static string SystemDrive => Path.GetPathRoot(Environment.SystemDirectory)!;
+    private string _currentExplorerPath = SystemDrive;
     private bool _isBusy = false;
     private DispatcherTimer? _optimizedTimer;
     private int _optimizedCountdown = 30;
-    private bool _isSystemOptimized = false;
+    private bool _settingsUiReady;
+    private int _explorerRequest;
+    private bool _hasCompletedScan;
+    private bool _hardwareRefreshInProgress;
+    private bool _diagnosticsRefreshInProgress;
+    private readonly DispatcherTimer _metricsTimer = new() { Interval = TimeSpan.FromSeconds(15) };
 
     public MainWindow()
     {
         InitializeComponent();
+        App.ApplyTheme(_settingsService.Current.Theme == "Light");
 
         DrivesItemsControl.ItemsSource = Drives;
         CleanItemsControl.ItemsSource = CleanItems;
@@ -65,6 +72,8 @@ public partial class MainWindow : Window
         OptSilentInstallCheck.IsChecked = _settingsService.Current.SilentInstall;
         OptAutoCheckUpdatesCheck.IsChecked = _settingsService.Current.AutoCheckUpdates;
         OptRecycleBinCheck.IsChecked = _settingsService.Current.RecycleBinDefault;
+        RecycleBinCheckBox.IsChecked = _settingsService.Current.RecycleBinDefault;
+        _settingsUiReady = true;
 
         Loaded += MainWindow_Loaded;
         StateChanged += (s, e) =>
@@ -78,63 +87,86 @@ public partial class MainWindow : Window
     {
         try
         {
-            var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
-            if (TopUptimeText != null)
-                TopUptimeText.Text = $"{uptime.Days}D {uptime.Hours:D2}H";
-        }
-        catch { }
-
-        RefreshDrives();
-        InitializeDefaultItems();
-        await LoadSymlinkPresetsAsync();
-        UpdateRamMetricsDisplay();
-        InitializeAppsCatalog();
-        UpdateSystemToggleStates();
-
-        AppendLog("Aetherial Storage & Diagnostics Suite v5.5 Enterprise uruchomiony w trybie Administratora.");
-
-        // Załaduj partycję C:\ w Eksploratorze
-        await NavigateToFolderAsync(@"C:\");
-
-        // Wstępne skanowanie w tle
-        await ScanAllItemsAsync();
-
-        // Dynamiczna diagnostyka sprzętowa w tle
-        _ = RefreshDiagnosticsAsync();
-
-        // Wstępne wykrywanie urządzeń PnP w tle
-        _ = Task.Run(async () =>
-        {
-            var pnpList = await _driverService.GetConnectedPnpDevicesAsync(null);
-            Dispatcher.Invoke(() =>
-            {
-                PnpDevices.Clear();
-                foreach (var d in pnpList) PnpDevices.Add(d);
-            });
-        });
-
-        // Wstępne wyszukiwanie aktualizacji sterowników w tle
-        _ = Task.Run(async () =>
-        {
-            var updates = await _driverService.SearchDriverUpdatesAsync(null);
-            Dispatcher.Invoke(() =>
-            {
-                foreach (var u in updates) DriverUpdates.Add(u);
-            });
-        });
-
-        // Wstępne sprawdzanie zainstalowanych aplikacji w tle (jeśli włączone w ustawieniach)
-        if (_settingsService.Current.AutoCheckUpdates)
-        {
-            _ = Task.Run(async () =>
+            RefreshDrives();
+            InitializeDefaultItems();
+            InitializeAppsCatalog();
+            UpdateSystemToggleStates();
+            RefreshLiveMetrics();
+            _metricsTimer.Tick += (_, _) => RefreshLiveMetrics();
+            _metricsTimer.Start();
+            Closed += (_, _) => { _metricsTimer.Stop(); _optimizedTimer?.Stop(); _modalTcs?.TrySetResult(false); };
+            AppendLog($"Aetherial Suite {typeof(App).Assembly.GetName().Version} • Administrator: {(DiskHelper.IsAdministrator() ? "tak" : "nie")}");
+            await LoadSymlinkPresetsAsync();
+            await NavigateToFolderAsync(SystemDrive);
+            await Task.WhenAll(ScanAllItemsAsync(), RefreshDiagnosticsAsync(), RefreshHardwareInventoryAsync(), RefreshDashboardHardwareAsync());
+            if (_settingsService.Current.AutoCheckUpdates)
             {
                 await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
-                Dispatcher.Invoke(ApplyAppsFilter);
-            });
+                ApplyAppsFilter();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Błąd inicjalizacji: {ex.Message}");
+            GlobalStatusText.Text = "Nie ukończono wszystkich odczytów. Spróbuj odświeżyć dane.";
         }
     }
 
+    private void RefreshLiveMetrics()
+    {
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+        TopUptimeText.Text = $"{uptime.Days} d {uptime.Hours:D2} h {uptime.Minutes:D2} min";
+        UpdateRamMetricsDisplay();
+        if (!_isBusy) RefreshDrives();
+    }
+
+    private async Task RefreshHardwareInventoryAsync()
+    {
+        if (_hardwareRefreshInProgress) return;
+        _hardwareRefreshInProgress = true;
+        try
+        {
+            var devices = await _driverService.GetConnectedPnpDevicesAsync(AppendLog);
+            PnpDevices.Clear();
+            foreach (var device in devices) PnpDevices.Add(device);
+            HardwareInventorySummaryText.Text = $"{devices.Count} urządzeń • odczyt {DateTime.Now:HH:mm}";
+            var updates = await _driverService.SearchDriverUpdatesAsync(AppendLog);
+            DriverUpdates.Clear();
+            foreach (var update in updates) DriverUpdates.Add(update);
+        }
+        catch (Exception ex) { HardwareInventorySummaryText.Text = "Odczyt niedostępny — spróbuj ponownie"; AppendLog($"Nie ukończono odczytu urządzeń: {ex.Message}"); }
+        finally { _hardwareRefreshInProgress = false; }
+    }
+
+    private async Task RefreshDashboardHardwareAsync()
+    {
+        var (ok, output, _) = await DiskHelper.RunPowerShellScriptAsync("$ErrorActionPreference='Stop'; $cpu=Get-CimInstance Win32_Processor; $gpu=Get-CimInstance Win32_VideoController; $net=Get-NetAdapter | Where-Object Status -eq 'Up'; [pscustomobject]@{Cpu=($cpu.Name -join ', ');Gpu=($gpu.Name -join ', ');Network=($net.Name -join ', ')} | ConvertTo-Json -Compress", AppendLog);
+        if (!ok)
+        {
+            DashboardCpuText.Text = DashboardGpuText.Text = DashboardNetworkText.Text = "Brak odczytu — spróbuj odświeżyć";
+            return;
+        }
+        try
+        {
+            using var data = System.Text.Json.JsonDocument.Parse(output);
+            DashboardCpuText.Text = data.RootElement.GetProperty("Cpu").GetString() ?? "Brak odczytu";
+            DashboardGpuText.Text = data.RootElement.GetProperty("Gpu").GetString() ?? "Brak odczytu";
+            var network = data.RootElement.GetProperty("Network").GetString();
+            DashboardNetworkText.Text = string.IsNullOrWhiteSpace(network) ? "Brak aktywnych kart" : network;
+        }
+        catch (Exception ex) { AppendLog($"Nieprawidłowy odczyt metryk: {ex.Message}"); }
+        DashboardSecurityText.Text = "Stan ochrony: sprawdź Zabezpieczenia Windows";
+    }
+
     // ==================== PASEK TYTUŁOWY (CUSTOM TITLE BAR) ====================
+
+    private void ToggleTheme_Click(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.Current;
+        settings.Theme = settings.Theme == "Light" ? "Dark" : "Light";
+        App.ApplyTheme(settings.Theme == "Light");
+        _settingsService.SaveSettings(settings);
+    }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
@@ -166,7 +198,8 @@ public partial class MainWindow : Window
 
     public Task<bool> ShowConfirmAsync(string title, string message, string confirmText = "Tak, wykonaj", string cancelText = "Anuluj", bool isDanger = false, string icon = "❓")
     {
-        _modalTcs = new TaskCompletionSource<bool>();
+        _modalTcs?.TrySetResult(false);
+        _modalTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         ModalIconText.Text = icon;
         ModalTitleText.Text = title;
         ModalMessageText.Text = message;
@@ -181,7 +214,8 @@ public partial class MainWindow : Window
 
     public Task ShowAlertAsync(string title, string message, string buttonText = "Rozumiem", string icon = "ℹ️", bool isSuccess = false)
     {
-        _modalTcs = new TaskCompletionSource<bool>();
+        _modalTcs?.TrySetResult(false);
+        _modalTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         ModalIconText.Text = icon;
         ModalTitleText.Text = title;
         ModalMessageText.Text = message;
@@ -363,38 +397,38 @@ public partial class MainWindow : Window
 
         if (DashShadersText != null)
         {
-            if (shaderBytes > 0 && !_isSystemOptimized)
+            if (shaderBytes > 0)
             {
                 DashShadersText.Text = $"{DriveModel.FormatBytes(shaderBytes)} (Gotowe do usunięcia)";
-                DashShadersText.Foreground = (Brush)(new BrushConverter().ConvertFrom("#4ADE80") ?? Brushes.Green);
+                DashShadersText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             }
             else
             {
-                DashShadersText.Text = "0 B (Zoptymalizowane)";
-                DashShadersText.Foreground = (Brush)(new BrushConverter().ConvertFrom("#10B981") ?? Brushes.Green);
+                DashShadersText.Text = _hasCompletedScan ? "0 B w sprawdzonych lokalizacjach" : "Oczekiwanie na skan";
+                DashShadersText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             }
         }
 
         if (DashCacheText != null)
         {
-            if (totalCleanable > 0 && !_isSystemOptimized)
+            if (totalCleanable > 0)
             {
                 DashCacheText.Text = DriveModel.FormatBytes(totalCleanable);
-                DashCacheText.Foreground = (Brush)(new BrushConverter().ConvertFrom("#38BDF8") ?? Brushes.Cyan);
+                DashCacheText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             }
             else
             {
-                DashCacheText.Text = "0 B (Czysto)";
-                DashCacheText.Foreground = (Brush)(new BrushConverter().ConvertFrom("#10B981") ?? Brushes.Green);
+                DashCacheText.Text = _hasCompletedScan ? "0 B w sprawdzonych lokalizacjach" : "Oczekiwanie na skan";
+                DashCacheText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             }
         }
 
         // Dynamiczna aktualizacja wyglądu karty 1-Klik
-        bool isOpt = _isSystemOptimized || (totalCleanable == 0 && shaderBytes == 0);
+        bool isOpt = _hasCompletedScan && totalCleanable == 0;
         if (Dash1ClickCardBorder != null)
         {
             Dash1ClickCardBorder.BorderBrush = (Brush)(new BrushConverter().ConvertFrom(isOpt ? "#10B981" : "#0078D4") ?? Brushes.Blue);
-            Dash1ClickCardBorder.Background = (Brush)(new BrushConverter().ConvertFrom(isOpt ? "#0D1E18" : "#111B2C") ?? Brushes.Black);
+            Dash1ClickCardBorder.SetResourceReference(Border.BackgroundProperty, "CardBgBrush");
         }
         if (Dash1ClickBadge != null)
         {
@@ -402,11 +436,11 @@ public partial class MainWindow : Window
         }
         if (Dash1ClickBadgeText != null)
         {
-            Dash1ClickBadgeText.Text = isOpt ? "✓ 100% ZOPTYMALIZOWANY" : "ZALECANE";
+            Dash1ClickBadgeText.Text = isOpt ? "BRAK WYKRYTEGO CACHE" : "SPRAWDŹ ZAKRES";
         }
         if (Dash1ClickButton != null)
         {
-            Dash1ClickButton.Content = isOpt ? "✓ ZOPTYMALIZOWANY (0 B)" : "⚡ 1-KLIK AUTO-OPTYMALIZACJA";
+            Dash1ClickButton.Content = isOpt ? "Skanuj ponownie" : "Wyczyść wybrane elementy";
         }
     }
 
@@ -414,7 +448,8 @@ public partial class MainWindow : Window
 
     private async Task NavigateToFolderAsync(string folderPath)
     {
-        if (!Directory.Exists(folderPath)) return;
+        if (!Directory.Exists(folderPath)) { GlobalStatusText.Text = "Folder nie istnieje lub jest niedostępny."; return; }
+        int request = ++_explorerRequest;
 
         _currentExplorerPath = folderPath;
         CurrentPathTextBox.Text = folderPath;
@@ -422,6 +457,8 @@ public partial class MainWindow : Window
 
         ExplorerItems.Clear();
         var items = await _explorerService.GetFolderContentsAsync(folderPath);
+        if (request != _explorerRequest) return;
+        ExplorerItems.Clear();
 
         foreach (var item in items)
         {
@@ -450,7 +487,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            string root = Path.GetPathRoot(_currentExplorerPath) ?? @"C:\";
+            string root = Path.GetPathRoot(_currentExplorerPath) ?? SystemDrive;
             await NavigateToFolderAsync(root);
         }
     }
@@ -486,12 +523,15 @@ public partial class MainWindow : Window
 
     private async void FindLargeFiles_Click(object sender, RoutedEventArgs e)
     {
-        string root = Path.GetPathRoot(_currentExplorerPath) ?? @"C:\";
+        int request = ++_explorerRequest;
+        string root = Path.GetPathRoot(_currentExplorerPath) ?? SystemDrive;
         GlobalStatusText.Text = $"⏳ Szukanie plików > 500 MB na partycji {root}...";
         AppendLog($"Rozpoczęto skanowanie partycji {root} pod kątem plików > 500 MB...");
 
         ExplorerItems.Clear();
         var largeFiles = await _explorerService.FindLargeFilesAsync(root, 500 * 1024 * 1024);
+        if (request != _explorerRequest) return;
+        ExplorerItems.Clear();
 
         foreach (var item in largeFiles)
         {
@@ -560,15 +600,16 @@ public partial class MainWindow : Window
             AppendLog($"Rozpoczynam migrację presetu: {preset.Title}...");
 
             bool ok = await _symlinkService.RelocateAndCreateJunctionAsync(
-                preset.SourcePath, 
-                preset.SuggestedDestPath, 
+                preset.SourcePath,
+                preset.SuggestedDestPath,
                 AppendLog);
 
             if (ok)
             {
                 await _symlinkService.RefreshPresetStatusAsync(preset);
+                SymlinkPresetsControl.Items.Refresh();
                 RefreshDrives();
-                await ShowAlertAsync("Migracja ukończona", "Migracja zakończona sukcesem! Miejsce na dysku C: zostało uwolnione.", "Świetnie", "🎉", isSuccess: true);
+                await ShowAlertAsync("Migracja ukończona", "Utworzono dowiązanie do nowej lokalizacji. Kopia źródłowa .aetherial-backup pozostaje na dysku. Sprawdź działanie aplikacji przed jej ręcznym usunięciem.", "Świetnie", "🎉", isSuccess: true);
             }
         }
     }
@@ -620,7 +661,7 @@ public partial class MainWindow : Window
         long size = selected.Sum(i => i.SizeBytes);
         var confirm = await ShowConfirmAsync(
             "Potwierdzenie czyszczenia deweloperskiego",
-            $"Czy na pewno chcesz usunąć {selected.Count} folderów pakietów (node_modules, .venv, bin/obj)?\n\nZwolnione miejsce: {DriveModel.FormatBytes(size)}\n\nTwój kod źródłowy projektów pozostanie w 100% nienaruszony.",
+            $"Czy na pewno chcesz usunąć {selected.Count} folderów pakietów (node_modules, .venv, bin/obj)?\n\nZwolnione miejsce: {DriveModel.FormatBytes(size)}\n\nSprawdź listę folderów. Operacja usuwa ich całą zawartość; odtworzenie pakietów wymaga menedżera zależności.",
             "Tak, usuń pakiety",
             "Anuluj",
             isDanger: true,
@@ -635,9 +676,9 @@ public partial class MainWindow : Window
         UpdateSummaries();
 
         // Usuń wyczyszczone z listy
-        foreach (var item in selected) DevArtifactItems.Remove(item);
+        foreach (var item in selected.Where(i => !Directory.Exists(i.FullPath))) DevArtifactItems.Remove(item);
 
-        await ShowAlertAsync("Pakiety wyczyszczone", $"Wyczyszczono pakiety!\nZwolniono: {DriveModel.FormatBytes(freed)} w {count} projektach.", "Świetnie", "🎉", isSuccess: true);
+        await ShowAlertAsync("Wynik czyszczenia", $"Usunięto {count} folderów. Zwolniono: {DriveModel.FormatBytes(freed)}. Pozostałe lub niedostępne foldery pozostają na liście.", "Zamknij", "ℹ️", isSuccess: count == selected.Count);
     }
 
     // ==================== WIDOK 5: WYDAJNOŚĆ & RAM ====================
@@ -732,6 +773,7 @@ public partial class MainWindow : Window
                 }
             }
 
+            _hasCompletedScan = true;
             UpdateSummaries();
             long total = CleanItems.Where(i => i.IsSelected && i.CanClean).Sum(i => i.SizeBytes);
             GlobalStatusText.Text = $"Gotowe. Wykryto {DriveModel.FormatBytes(total)} w pamięci podręcznej i shaderach.";
@@ -761,20 +803,19 @@ public partial class MainWindow : Window
     {
         if (_isBusy) return;
 
-        var cleanableItems = CleanItems.Where(i => i.CanClean && i.SizeBytes > 0).ToList();
+        if (!_hasCompletedScan) { await ScanAllItemsAsync(); return; }
+        var cleanableItems = CleanItems.Where(i => i.IsSelected && i.CanClean && i.SizeBytes > 0).ToList();
+        if (cleanableItems.Count == 0) { await ScanAllItemsAsync(); return; }
         long cacheBytes = cleanableItems.Sum(i => i.SizeBytes);
 
         var confirm = await ShowConfirmAsync(
             "Inteligentna automatyczna optymalizacja 1-kliknięciem",
-            $"Ta operacja natychmiast wykona pełną konserwację Twojego komputera:\n\n" +
-            $"• Usunie ponad {DriveModel.FormatBytes(cacheBytes)} zbędnych plików i shaderów GPU (NVIDIA DXCache / GLCache)\n" +
-            $"• Opróżni Kosz systemowy i pliki raportów błędów\n" +
-            $"• Oczyści pamięci podręczne przeglądarek i bufory tymczasowe\n" +
-            $"• Natychmiast zoptymalizuje i uwolni roboczą pamięć RAM (32 GB DDR5)\n\n" +
-            $"Wszystkie Twoje osobiste pliki, dokumenty oraz otwarte programy są w 100% bezpieczne. Czy chcesz kontynuować?",
+            $"Operacja usunie zaznaczone kategorie: {cleanableItems.Count}, szacunkowo {DriveModel.FormatBytes(cacheBytes)}.\n\n" +
+            string.Join("\n", cleanableItems.Select(i => "• " + i.Title)) +
+            "\n\nSprawdź zaznaczenie, szczególnie Kosz i Pobrane. Usuniętych plików może nie dać się odzyskać. Pamięć podręczna zostanie odtworzona przez aplikacje.",
             "⚡ Optymalizuj system teraz",
             "Anuluj",
-            isDanger: false,
+            isDanger: true,
             icon: "⚡");
 
         if (!confirm) return;
@@ -802,19 +843,7 @@ public partial class MainWindow : Window
                 grandFiles += files;
             }
 
-            // 2. Czyszczenie bufora DNS resolvera Windows
-            GlobalStatusText.Text = "⚡ Czyszczenie bufora DNS resolvera Windows...";
-            AppendLog("▶ Czyszczenie lokalnego bufora DNS (ipconfig /flushdns)...");
-            await DiskHelper.RunProcessAsync("ipconfig", "/flushdns", AppendLog);
-
-            // 3. Sprzętowa optymalizacja TRIM dla dysków SSD
-            GlobalStatusText.Text = "⚡ Optymalizacja komórek SSD NVMe (TRIM)...";
-            AppendLog("▶ Uruchamianie procedury ReTrim dla partycji SSD...");
-            await DiskHelper.RunPowerShellScriptAsync("Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }", AppendLog);
-
-            // 4. Optymalizacja RAM
-            GlobalStatusText.Text = "⚡ Optymalizacja pamięci operacyjnej RAM...";
-            var (ramFreed, ramCount) = await _memoryService.OptimizeRamAsync(AppendLog);
+            long ramFreed = 0; // Ta operacja obejmuje wyłącznie zaznaczone pliki.
 
             // 5. Reskanowanie wyczyszczonych elementów
             foreach (var item in cleanableItems)
@@ -831,19 +860,19 @@ public partial class MainWindow : Window
             AppendLog($"✓ AUTOMATYCZNA OPTYMALIZACJA ZAKOŃCZONA SUKCESEM!");
             AppendLog($"✓ Zwolnione miejsce na dyskach: {DriveModel.FormatBytes(grandFreed)} ({grandFiles} plików)");
             AppendLog($"✓ Uwolniona pamięć RAM: {DriveModel.FormatBytes(ramFreed)}");
-            AppendLog($"✓ Odświeżony bufor DNS & procedura ReTrim SSD zakończona!");
+            AppendLog("Szczegóły pominiętych lub niedostępnych plików znajdują się w dzienniku.");
             AppendLog("===============================================================");
 
             GlobalStatusText.Text = $"System zoptymalizowany! Zwolniono {DriveModel.FormatBytes(grandFreed)} i {DriveModel.FormatBytes(ramFreed)} RAM.";
 
             // Aktywacja stanu Zoptymalizowanego oraz pełnoekranowego okna sukcesu (min. 30 sek)
-            _isSystemOptimized = true;
+            _hasCompletedScan = true;
             UpdateSummaries();
 
             if (OverlayFreedDiskText != null)
-                OverlayFreedDiskText.Text = DriveModel.FormatBytes(grandFreed > 0 ? grandFreed : 1610000000);
+                OverlayFreedDiskText.Text = DriveModel.FormatBytes(grandFreed);
             if (OverlayFreedRamText != null)
-                OverlayFreedRamText.Text = DriveModel.FormatBytes(ramFreed > 0 ? ramFreed : 3800000000);
+                OverlayFreedRamText.Text = DriveModel.FormatBytes(ramFreed);
 
             _optimizedCountdown = 30;
             if (OverlayTimerText != null)
@@ -1032,9 +1061,8 @@ public partial class MainWindow : Window
         if (sender is Button btn && btn.Tag is CleanItem item)
         {
             btn.IsEnabled = false;
-            await _scanner.ScanItemAsync(item);
-            UpdateSummaries();
-            btn.IsEnabled = true;
+            try { await _scanner.ScanItemAsync(item); UpdateSummaries(); }
+            finally { btn.IsEnabled = true; }
         }
     }
 
@@ -1055,20 +1083,11 @@ public partial class MainWindow : Window
 
     private async void SearchDriverUpdates_Click(object sender, RoutedEventArgs e)
     {
+        if (_hardwareRefreshInProgress) return;
         LogDrawerBorder.Visibility = Visibility.Visible;
-        GlobalStatusText.Text = "⏳ Wyszukiwanie certyfikowanych sterowników WHQL...";
-        AppendLog("=== Rozpoczęto wyszukiwanie certyfikowanych sterowników WHQL (Windows Update API) ===");
-
-        DriverUpdates.Clear();
-        var updates = await _driverService.SearchDriverUpdatesAsync(AppendLog);
-
-        foreach (var u in updates)
-        {
-            DriverUpdates.Add(u);
-        }
-
-        GlobalStatusText.Text = $"Znaleziono {updates.Count} dostępnych aktualizacji sterowników WHQL.";
-        AppendLog($"✓ Zakończono wyszukiwanie. Dostępne aktualizacje: {updates.Count}.");
+        GlobalStatusText.Text = "Wyszukiwanie aktualizacji sterowników...";
+        await RefreshHardwareInventoryAsync();
+        GlobalStatusText.Text = $"Zakończono odczyt. Widoczne aktualizacje: {DriverUpdates.Count}.";
     }
 
     private async void InstallDriverUpdates_Click(object sender, RoutedEventArgs e)
@@ -1107,7 +1126,7 @@ public partial class MainWindow : Window
         }
 
         GlobalStatusText.Text = $"Instalacja ukończona: {success} zainstalowano, {failed} błędów.";
-        await ShowAlertAsync("Wynik instalacji", $"Instalacja sterowników zakończona!\nPomyślnie zainstalowano: {success}\nBłędy: {failed}", "Świetnie", "✅", isSuccess: true);
+        await ShowAlertAsync("Wynik instalacji", $"Instalacja sterowników zakończona!\nPomyślnie zainstalowano: {success}\nBłędy: {failed}", "Zamknij", "ℹ️", isSuccess: failed == 0);
     }
 
     private void OpenNvidiaApp_Click(object sender, RoutedEventArgs e)
@@ -1149,15 +1168,7 @@ public partial class MainWindow : Window
         // 1. Odśwież Centrum Diagnostyczne (Dynamiczny stan sprzętu)
         await RefreshDiagnosticsAsync();
 
-        // 2. Odśwież urządzenia PnP
-        PnpDevices.Clear();
-        var pnpList = await _driverService.GetConnectedPnpDevicesAsync(AppendLog);
-        foreach (var d in pnpList) PnpDevices.Add(d);
-
-        // 3. Odśwież certyfikowane WHQL
-        DriverUpdates.Clear();
-        var updates = await _driverService.SearchDriverUpdatesAsync(AppendLog);
-        foreach (var u in updates) DriverUpdates.Add(u);
+        await Task.WhenAll(RefreshHardwareInventoryAsync(), RefreshDashboardHardwareAsync());
 
         GlobalStatusText.Text = $"Diagnostyka: {DiagnosticItems.Count} zbadanych | Urządzenia PnP: {PnpDevices.Count} | WHQL: {DriverUpdates.Count}";
         AppendLog($"✓ Gotowe. Centrum Diagnostyczne: {DiagnosticItems.Count} pozycji, {PnpDevices.Count} urządzeń PnP, {DriverUpdates.Count} aktualizacji WHQL.");
@@ -1165,6 +1176,8 @@ public partial class MainWindow : Window
 
     public async Task RefreshDiagnosticsAsync()
     {
+        if (_diagnosticsRefreshInProgress) return;
+        _diagnosticsRefreshInProgress = true;
         try
         {
             var items = await _driverService.GetDynamicDiagnosticItemsAsync(AppendLog);
@@ -1178,35 +1191,49 @@ public partial class MainWindow : Window
 
                 int problemCount = items.Count(i => i.IsProblem);
                 int healthyCount = items.Count - problemCount;
+                HardwareSummaryText.Text = $"{items.Count} odczytów • {problemCount} ostrzeżeń • {DateTime.Now:HH:mm}";
+                DashboardHealthText.Text = items.Count == 0 ? "Brak odczytu" : $"{problemCount} ostrzeżeń / {items.Count} odczytów";
 
-                if (problemCount == 0)
+                bool unavailable = items.Count == 0 || items.Any(i => i.Id == "unavailable" || i.BadgeText == "Brak danych");
+                if (unavailable)
+                {
+                    DashboardHealthText.Text = "Diagnostyka niedostępna";
+                    DiagnosticsMainBorder.SetResourceReference(Border.BorderBrushProperty, "CardBorderBrush");
+                    DiagnosticsIconText.Text = "—";
+                    DiagnosticsHeaderTitle.Text = "NIE UZYSKANO WYNIKU DIAGNOSTYKI";
+                    DiagnosticsBadgeText.Text = "BRAK DANYCH";
+                    DiagnosticsSubtitleText.Text = "Odczyt nie potwierdza sprawności urządzeń. Sprawdź dziennik i ponów skan.";
+                }
+                else if (problemCount == 0)
                 {
                     DiagnosticsMainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
                     DiagnosticsIconText.Text = "🟢";
-                    DiagnosticsHeaderTitle.Text = "CENTRUM DIAGNOSTYCZNE: STAN HARDWARE W 100% SPRAWNY";
-                    DiagnosticsHeaderTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
-                    DiagnosticsBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B98120"));
-                    DiagnosticsBadgeText.Text = "0 BŁĘDÓW • SYSTEM W PEŁNI ZOPTYMALIZOWANY";
-                    DiagnosticsBadgeText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
-                    DiagnosticsSubtitleText.Text = "Aplikacja zweryfikowała fizyczny stan magistrali PnP, łączność Wi-Fi 6E / Bluetooth, profil EXPO oraz sterowniki AM5. Wszystkie podzespoły działają bez zakłóceń!";
+                    DiagnosticsHeaderTitle.Text = items.Count == 0 ? "BRAK WYNIKÓW DIAGNOSTYKI" : "NIE WYKRYTO PROBLEMÓW W WYKONANYCH TESTACH";
+                    DiagnosticsHeaderTitle.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    DiagnosticsBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
+                    DiagnosticsBadgeText.Text = $"{items.Count} ODCZYTÓW • {problemCount} OSTRZEŻEŃ";
+                    DiagnosticsBadgeText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    DiagnosticsSubtitleText.Text = "Wynik dotyczy wyłącznie poniższych odczytów. Brak ostrzeżeń nie oznacza pełnego testu sprawności sprzętu.";
                 }
                 else
                 {
                     DiagnosticsMainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F59E0B"));
                     DiagnosticsIconText.Text = "⚠️";
                     DiagnosticsHeaderTitle.Text = "CENTRUM DIAGNOSTYCZNE: STAN HARDWARE & ZALECENIA NAPRAWCZE";
-                    DiagnosticsHeaderTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FBBF24"));
-                    DiagnosticsBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF444425"));
+                    DiagnosticsHeaderTitle.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    DiagnosticsBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     DiagnosticsBadgeText.Text = $"{problemCount} WYMAGA NAPRAWY | {healthyCount} W NORMIE";
-                    DiagnosticsBadgeText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F87171"));
-                    DiagnosticsSubtitleText.Text = "Aplikacja zweryfikowała fizyczny stan magistrali PnP, rejestr błędów urządzeń oraz konfigurację AM5. Poniżej znajduje się rzetelne podsumowanie stanu Twojego komputera:";
+                    DiagnosticsBadgeText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    DiagnosticsSubtitleText.Text = "Poniżej znajdują się wyniki odczytów Windows oraz zalecenia dla wykrytych urządzeń.";
                 }
             });
         }
         catch (Exception ex)
         {
+            DashboardHealthText.Text = "Odczyt niedostępny";
             AppendLog($"Błąd odświeżania Centrum Diagnostycznego: {ex.Message}");
         }
+        finally { _diagnosticsRefreshInProgress = false; }
     }
 
     private void DiagnosticAction_Click(object sender, RoutedEventArgs e)
@@ -1309,8 +1336,10 @@ public partial class MainWindow : Window
 
     private void AppendLog(string message)
     {
+        if (Dispatcher.HasShutdownStarted) return;
         Dispatcher.Invoke(() =>
         {
+            if (LogTextBox.Text.Length > 100000) LogTextBox.Clear();
             string line = $"[{DateTime.Now:HH:mm:ss}] {message}";
             LogTextBox.AppendText(line + Environment.NewLine);
             LogTextBox.ScrollToEnd();
@@ -1330,9 +1359,9 @@ public partial class MainWindow : Window
         string search = AppsSearchTextBox?.Text?.Trim().ToLowerInvariant() ?? "";
         var filtered = _allApps.Where(a =>
             (_selectedCategory == "All" || a.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrEmpty(search) || 
-             a.Name.ToLowerInvariant().Contains(search) || 
-             a.Description.ToLowerInvariant().Contains(search) || 
+            (string.IsNullOrEmpty(search) ||
+             a.Name.ToLowerInvariant().Contains(search) ||
+             a.Description.ToLowerInvariant().Contains(search) ||
              a.Id.ToLowerInvariant().Contains(search))
         ).ToList();
 
@@ -1379,10 +1408,10 @@ public partial class MainWindow : Window
         GlobalStatusText.Text = "Sprawdzanie zainstalowanych programów winget...";
         await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
         ApplyAppsFilter();
-        GlobalStatusText.Text = "Status programów zaktualizowany.";
+        GlobalStatusText.Text = "Zakończono próbę odczytu programów. Szczegóły w dzienniku.";
         int installed = _allApps.Count(a => a.IsInstalled);
         int updates = _allApps.Count(a => a.HasUpdate);
-        await ShowAlertAsync("Centrum Programów", $"Przeskanowano {_allApps.Count} programów w systemie:\n• Zainstalowane: {installed}\n• Dostępne aktualizacje: {updates}", "Rozumiem", "✅", isSuccess: true);
+        await ShowAlertAsync("Centrum Programów", $"Katalog: {_allApps.Count} programów. Dostępne wyniki odczytu:\n• Zainstalowane: {installed}\n• Dostępne aktualizacje: {updates}", "Rozumiem", "✅", isSuccess: true);
     }
 
     private async void InstallSingleApp_Click(object sender, RoutedEventArgs e)
@@ -1424,7 +1453,7 @@ public partial class MainWindow : Window
         }
 
         string targetPath = _settingsService.Current.DefaultInstallFolder;
-        bool confirm = await ShowConfirmAsync("Instalacja pakietu programów", 
+        bool confirm = await ShowConfirmAsync("Instalacja pakietu programów",
             $"Czy chcesz zainstalować {selected.Count} zaznaczonych programów?\nFolder docelowy: {targetPath}\n\nOperacja może potrwać kilka minut.", "Zainstaluj", "Anuluj");
         if (!confirm) return;
 
@@ -1435,7 +1464,7 @@ public partial class MainWindow : Window
         foreach (var app in selected)
         {
             GlobalStatusText.Text = $"Instalowanie: {app.Name}...";
-            bool ok = app.HasUpdate 
+            bool ok = app.HasUpdate
                 ? await _appInstaller.UpgradeAppAsync(app, AppendLog)
                 : await _appInstaller.InstallAppAsync(app, targetPath, AppendLog);
             if (ok) success++; else failed++;
@@ -1443,12 +1472,12 @@ public partial class MainWindow : Window
 
         ApplyAppsFilter();
         GlobalStatusText.Text = $"Instalacja ukończona: {success} sukces, {failed} błędów.";
-        await ShowAlertAsync("Wynik instalacji", $"Zakończono instalację pakietu programów!\n• Zainstalowano pomyślnie: {success}\n• Błędy: {failed}", "Świetnie", "✅", isSuccess: true);
+        await ShowAlertAsync("Wynik instalacji", $"Zakończono instalację pakietu programów!\n• Zainstalowano pomyślnie: {success}\n• Błędy: {failed}", "Zamknij", "ℹ️", isSuccess: failed == 0);
     }
 
     private async void UpgradeAllInstalledApps_Click(object sender, RoutedEventArgs e)
     {
-        bool confirm = await ShowConfirmAsync("Automatyczna aktualizacja oprogramowania (Always Up-To-Date)", 
+        bool confirm = await ShowConfirmAsync("Automatyczna aktualizacja oprogramowania (Always Up-To-Date)",
             "Ta operacja sprawdzi i automatycznie zaktualizuje wszystkie zainstalowane programy na Twoim komputerze do najnowszych stabilnych wersji w tle (silent upgrade).\n\n" +
             "Czy chcesz rozpocząć pobieranie i instalację najnowszych wersji?", "⚡ Zaktualizuj wszystkie programy", "Anuluj");
         if (!confirm) return;
@@ -1470,7 +1499,7 @@ public partial class MainWindow : Window
         }
 
         AppendLog("🔍 Sprawdzanie i automatyczna aktualizacja pozostałych pakietów systemowych...");
-        await DiskHelper.RunProcessAsync("winget", "upgrade --all --silent --accept-package-agreements --accept-source-agreements", AppendLog);
+        var (upgradeOk, upgradeOutput) = await DiskHelper.RunProcessAsync("winget", "upgrade --all --silent --accept-package-agreements --accept-source-agreements", AppendLog);
 
         await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
         ApplyAppsFilter();
@@ -1478,10 +1507,9 @@ public partial class MainWindow : Window
         AppendLog("===============================================================");
         AppendLog("🎉 ZAKOŃCZONO PROCES AKTUALIZACJI OPROGRAMOWANIA!");
         AppendLog("===============================================================");
-        GlobalStatusText.Text = "Wszystkie programy są w najnowszych wersjach (Up-To-Date)!";
+        GlobalStatusText.Text = upgradeOk ? "Zakończono polecenie aktualizacji. Sprawdź pozostałe aktualizacje." : "Aktualizacja zgłosiła błąd. Sprawdź dziennik.";
 
-        await ShowAlertAsync("Wszystko Zaktualizowane!", 
-            "Wszystkie Twoje aplikacje zostały zaktualizowane do najnowszych oficjalnych wersji!\n\nTwój system jest w 100% up-to-date.", "Świetnie", "🚀", isSuccess: true);
+        await ShowAlertAsync("Wynik aktualizacji", $"Zaktualizowano {count} programów z katalogu. Pozostałe widoczne aktualizacje: {_allApps.Count(a => a.HasUpdate)}.\nWynik zbiorczego polecenia winget: {(upgradeOk ? "ukończono" : "błąd; sprawdź dziennik")}", "Zamknij", "ℹ️", isSuccess: upgradeOk);
     }
 
     // ==================== USTAWIENIA SYSTEMU & MODUŁY KLIENTSKIE ====================
@@ -1491,9 +1519,9 @@ public partial class MainWindow : Window
         var dialog = new OpenFolderDialog
         {
             Title = "Wybierz domyślny folder do instalacji programów (np. D:\\Programy)",
-            InitialDirectory = Directory.Exists(_settingsService.Current.DefaultInstallFolder) 
-                ? _settingsService.Current.DefaultInstallFolder 
-                : @"D:\"
+            InitialDirectory = Directory.Exists(_settingsService.Current.DefaultInstallFolder)
+                ? _settingsService.Current.DefaultInstallFolder
+                : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
         };
 
         if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.FolderName))
@@ -1513,6 +1541,8 @@ public partial class MainWindow : Window
 
         try
         {
+            if (!Path.IsPathFullyQualified(path)) throw new IOException("Wybierz pełną ścieżkę folderu.");
+            path = Path.GetFullPath(path);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
@@ -1532,102 +1562,41 @@ public partial class MainWindow : Window
 
     private void SettingOption_Changed(object sender, RoutedEventArgs e)
     {
+        if (!_settingsUiReady) return;
         _settingsService.Current.SilentInstall = OptSilentInstallCheck.IsChecked ?? true;
         _settingsService.Current.AutoCheckUpdates = OptAutoCheckUpdatesCheck.IsChecked ?? true;
         _settingsService.Current.RecycleBinDefault = OptRecycleBinCheck.IsChecked ?? true;
+        RecycleBinCheckBox.IsChecked = _settingsService.Current.RecycleBinDefault;
         _settingsService.SaveSettings(_settingsService.Current);
     }
 
     private async void GenerateAuditReport_Click(object sender, RoutedEventArgs e)
     {
-        AppendLog("📑 Generowanie profesjonalnego komercyjnego raportu audytowego PC...");
-        GlobalStatusText.Text = "Generowanie raportu HTML audytu systemu...";
-
+        var dialog = new SaveFileDialog { FileName = $"Aetherial-raport-{DateTime.Now:yyyy-MM-dd}.html", Filter = "Raport HTML|*.html" };
+        if (dialog.ShowDialog(this) != true) return;
         try
         {
-            string reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Raport_Audytu_Systemu.html");
-            var (totalRam, availRam, ramLoad) = MemoryOptimizerService.GetMemoryMetrics();
-            var detectedDrives = _scanner.GetDrives();
-
-            long totalStorage = detectedDrives.Sum(d => d.TotalBytes);
-            long freeStorage = detectedDrives.Sum(d => d.FreeBytes);
-
-            string drivesHtml = "";
-            foreach (var d in detectedDrives)
-            {
-                drivesHtml += $@"
-                <tr>
-                    <td style='padding:10px;border-bottom:1px solid #282838;'><b>{d.DisplayName}</b></td>
-                    <td style='padding:10px;border-bottom:1px solid #282838;'>NTFS (NVMe SSD)</td>
-                    <td style='padding:10px;border-bottom:1px solid #282838;'>{d.FormattedFree} wolne / {d.FormattedTotal}</td>
-                    <td style='padding:10px;border-bottom:1px solid #282838;color:{d.StatusColor};'><b>{d.UsedPercent}% użyte</b></td>
-                </tr>";
-            }
-
-            string html = $@"<!DOCTYPE html>
-<html lang='pl'>
-<head>
-    <meta charset='UTF-8'>
-    <title>Raport Audytu Systemu &amp; Wydajności • Disk Optimizer Pro</title>
-    <style>
-        body {{ font-family: 'Segoe UI', sans-serif; background: #0c0c12; color: #f0f0f5; margin: 0; padding: 40px; }}
-        .card {{ background: #141420; border: 1px solid #242436; border-radius: 12px; padding: 24px; margin-bottom: 24px; }}
-        h1 {{ color: #38bdf8; margin-top: 0; }}
-        h2 {{ color: #81c784; border-bottom: 1px solid #28283c; padding-bottom: 8px; }}
-        table {{ width: 100%; border-collapse: collapse; margin-top: 12px; }}
-        th {{ background: #1b1b2c; text-align: left; padding: 10px; color: #94a3b8; }}
-        .badge {{ background: #0078d4; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; }}
-        .badge-green {{ background: #2e7d32; }}
-    </style>
-</head>
-<body>
-    <div class='card'>
-        <div style='display:flex; justify-content:space-between; align-items:center;'>
-            <div>
-                <h1>📑 Raport Stanu i Wydajności Komputera</h1>
-                <p style='color:#94a3b8;'>Wygenerowano: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Disk Optimizer Pro Suite v5.2 Enterprise</p>
-            </div>
-            <div><span class='badge badge-green'>CERTYFIKAT AUDYTU</span></div>
-        </div>
-    </div>
-
-    <div class='card'>
-        <h2>💻 Specyfikacja i Pamięć Masowa</h2>
-        <p><b>Pamięć RAM:</b> {DriveModel.FormatBytes((long)(totalRam - availRam))} zajęte z {DriveModel.FormatBytes((long)totalRam)} ({ramLoad}% obciążenia)</p>
-        <p><b>Łączna pamięć masowa:</b> {DriveModel.FormatBytes(totalStorage)} (Wolne: <b style='color:#38bdf8;'>{DriveModel.FormatBytes(freeStorage)}</b>)</p>
-        <table>
-            <thead><tr><th>Partycja</th><th>Format</th><th>Pojemność / Wolne</th><th>Stan</th></tr></thead>
-            <tbody>{drivesHtml}</tbody>
-        </table>
-    </div>
-
-    <div class='card'>
-        <h2>🛡️ Stan Bezpieczeństwa i Optymalizacji</h2>
-        <p>✅ Uprawnienia Administratora: <b>Potwierdzone</b></p>
-        <p>✅ Silnik Kompresji: <b>CompactOS XPRESS8K aktywny</b></p>
-        <p>✅ Menedżer Pakietów: <b>Microsoft Winget Native v1.29 zintegrowany</b></p>
-        <p>✅ Narzędzia czyszczenia GPU i cache: <b>Wykryte i gotowe</b></p>
-    </div>
-</body>
-</html>";
-
-            File.WriteAllText(reportPath, html);
-            AppendLog($"✅ Raport audytowy został pomyślnie wygenerowany: {reportPath}");
-            GlobalStatusText.Text = "Raport audytowy wygenerowany pomyślnie.";
-
-            // Otwórz raport w domyślnej przeglądarce
-            try
-            {
-                Process.Start(new ProcessStartInfo { FileName = reportPath, UseShellExecute = true });
-            }
-            catch { }
-
-            await ShowAlertAsync("Raport wygenerowany", $"Wygenerowano profesjonalny raport klienta HTML:\n{reportPath}\n\nRaport został otwarty w Twojej przeglądarce.", "Świetnie", "📑", isSuccess: true);
+            await RefreshDiagnosticsAsync();
+            var (total, available, load) = MemoryOptimizerService.GetMemoryMetrics();
+            var drives = _scanner.GetDrives();
+            static string Encode(string? text) => System.Net.WebUtility.HtmlEncode(text ?? "Brak danych");
+            var rows = string.Join("", drives.Select(d => $"<tr><td>{Encode(d.DisplayName)}</td><td>{Encode(d.FormattedTotal)}</td><td>{Encode(d.FormattedFree)}</td><td>{d.UsedPercent}%</td></tr>"));
+            var diagnostics = string.Join("", DiagnosticItems.Select(d => $"<li><strong>{Encode(d.Title)}</strong>: {Encode(d.BadgeText)}<p>{Encode(d.Description)}</p></li>"));
+            string html = $$"""
+                <!doctype html><html lang="pl"><meta charset="utf-8"><title>Raport Aetherial</title>
+                <style>body{font:16px system-ui;max-width:1000px;margin:40px auto;padding:24px;color:#172033;background:#f4f6fa}table{border-collapse:collapse;width:100%}td,th{padding:12px;text-align:left;border-bottom:1px solid #ccd3df}p{line-height:1.6}</style>
+                <h1>Raport odczytów systemowych</h1><p>{{DateTime.Now:yyyy-MM-dd HH:mm:ss}} • Aetherial {{typeof(App).Assembly.GetName().Version}}</p>
+                <p>Administrator: {{(DiskHelper.IsAdministrator() ? "tak" : "nie")}}. RAM: {{DriveModel.FormatBytes((long)(total - available))}} / {{DriveModel.FormatBytes((long)total)}} ({{load}}%).</p>
+                <h2>Pamięć masowa</h2><table><tr><th>Wolumin</th><th>Pojemność</th><th>Wolne</th><th>Wykorzystanie</th></tr>{{rows}}</table>
+                <h2>Diagnostyka</h2><ul>{{diagnostics}}</ul>
+                <p>Raport zawiera odczyty dostępne w chwili generowania. Nie stanowi certyfikatu sprawności ani pełnego audytu bezpieczeństwa.</p></html>
+                """;
+            await File.WriteAllTextAsync(dialog.FileName, html);
+            GlobalStatusText.Text = "Zapisano raport odczytów systemowych.";
+            AppendLog($"Zapisano raport: {dialog.FileName}");
+            await ShowAlertAsync("Raport zapisany", dialog.FileName, "Zamknij", "📑", true);
         }
-        catch (Exception ex)
-        {
-            await ShowAlertAsync("Błąd generowania raportu", ex.Message, "OK", "❌");
-        }
+        catch (Exception ex) { await ShowAlertAsync("Nie zapisano raportu", ex.Message); }
     }
 
     private bool IsPrivacyShieldEnabled()
@@ -1671,17 +1640,17 @@ public partial class MainWindow : Window
                 if (privacyOn)
                 {
                     PrivacyShieldStatusBadge.Text = "● WŁĄCZONA (ON)";
-                    PrivacyShieldStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#81C784"));
-                    PrivacyShieldBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#143820"));
+                    PrivacyShieldStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    PrivacyShieldBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     PrivacyShieldBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#166534"));
-                    PrivacyShieldToggleButton.Content = "🛡️ Wyłącz Tarczę (Przywróć domyślne)";
+                    PrivacyShieldToggleButton.Content = "🛡️ Wyłącz Tarczę (Włącz diagnostykę)";
                     PrivacyShieldToggleButton.Style = (Style)FindResource("SecondaryButtonStyle");
                 }
                 else
                 {
                     PrivacyShieldStatusBadge.Text = "○ WYŁĄCZONA (OFF)";
-                    PrivacyShieldStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB74D"));
-                    PrivacyShieldBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#362410"));
+                    PrivacyShieldStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    PrivacyShieldBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     PrivacyShieldBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#78350F"));
                     PrivacyShieldToggleButton.Content = "🛡️ Włącz Tarczę Prywatności";
                     PrivacyShieldToggleButton.Style = (Style)FindResource("PrimaryButtonStyle");
@@ -1689,21 +1658,22 @@ public partial class MainWindow : Window
             }
 
             // 2. Hibernacja
-            bool hiberOn = File.Exists(@"C:\hiberfil.sys");
+            string hiberPath = Path.Combine(SystemDrive, "hiberfil.sys");
+            bool hiberOn = File.Exists(hiberPath);
             if (HibernationStatusBadge != null && HibernationBadgeBorder != null)
             {
                 if (hiberOn)
                 {
-                    HibernationStatusBadge.Text = "● WŁĄCZONA (~12.5 GB)";
-                    HibernationStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB74D"));
-                    HibernationBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#362410"));
+                    HibernationStatusBadge.Text = $"● WŁĄCZONA ({DriveModel.FormatBytes(DiskHelper.GetFileSize(hiberPath))})";
+                    HibernationStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    HibernationBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     HibernationBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#78350F"));
                 }
                 else
                 {
-                    HibernationStatusBadge.Text = "○ WYŁĄCZONA (0 GB - Odzyskano miejsce)";
-                    HibernationStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#81C784"));
-                    HibernationBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#143820"));
+                    HibernationStatusBadge.Text = "Nie wykryto pliku hibernacji";
+                    HibernationStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    HibernationBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     HibernationBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#166534"));
                 }
             }
@@ -1715,16 +1685,16 @@ public partial class MainWindow : Window
                 if (storageSenseOn)
                 {
                     StorageSenseStatusBadge.Text = "● WŁĄCZONY (ON)";
-                    StorageSenseStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#81C784"));
-                    StorageSenseBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#143820"));
+                    StorageSenseStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    StorageSenseBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     StorageSenseBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#166534"));
                     StorageSenseToggleButton.Content = "🧹 Wyłącz Czujnik Pamięci";
                 }
                 else
                 {
                     StorageSenseStatusBadge.Text = "○ WYŁĄCZONY (OFF)";
-                    StorageSenseStatusBadge.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9497AB"));
-                    StorageSenseBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E202E"));
+                    StorageSenseStatusBadge.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                    StorageSenseBadgeBorder.SetResourceReference(Border.BackgroundProperty, "AccentSoftBrush");
                     StorageSenseBadgeBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E3146"));
                     StorageSenseToggleButton.Content = "🧹 Włącz Czujnik Pamięci";
                 }
@@ -1736,11 +1706,11 @@ public partial class MainWindow : Window
     private async void TogglePrivacyShield_Click(object sender, RoutedEventArgs e)
     {
         bool isCurrentlyOn = IsPrivacyShieldEnabled();
-        string actionText = isCurrentlyOn 
-            ? "wyłączyć Tarczę Prywatności i przywrócić domyślne usługi diagnostyczne Windows" 
+        string actionText = isCurrentlyOn
+            ? "wyłączyć Tarczę Prywatności i włączyć usługi diagnostyczne Windows"
             : "włączyć Tarczę Prywatności i zablokować telemetrię DiagTrack, śledzenie reklamowe oraz zbędne usługi diagnostyczne";
 
-        bool confirm = await ShowConfirmAsync("Tarcza Prywatności Windows 11", 
+        bool confirm = await ShowConfirmAsync("Tarcza Prywatności Windows 11",
             $"Czy na pewno chcesz {actionText}?", isCurrentlyOn ? "Wyłącz Tarczę" : "Włącz Tarczę", "Anuluj");
         if (!confirm) return;
 
@@ -1752,33 +1722,37 @@ public partial class MainWindow : Window
             if (isCurrentlyOn)
             {
                 AppendLog("🛡️ Przywracanie domyślnych usług Windows...");
-                GlobalStatusText.Text = "Przywracanie telemetrii Windows...";
-                await DiskHelper.RunProcessAsync("sc", "config DiagTrack start= auto", AppendLog);
+                GlobalStatusText.Text = "Włączanie usług diagnostycznych Windows...";
+                var (configured, _) = await DiskHelper.RunProcessAsync("sc", "config DiagTrack start= auto", AppendLog);
+                if (!configured) throw new IOException("Nie zmieniono konfiguracji DiagTrack. Sprawdź dziennik.");
                 await DiskHelper.RunProcessAsync("sc", "start DiagTrack", AppendLog);
+                await DiskHelper.RunProcessAsync("sc", "config dmwappushservice start= demand", AppendLog);
+                Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo", "Enabled", 1, RegistryValueKind.DWord);
                 Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry", 1, RegistryValueKind.DWord);
                 AppendLog("ℹ️ Przywrócono domyślne ustawienia usług diagnostycznych.");
                 GlobalStatusText.Text = "Tarcza prywatności wyłączona.";
-                await ShowAlertAsync("Tarcza Wyłączona", "Przywrócono domyślne usługi diagnostyczne Windows.", "OK", "ℹ️");
+                await ShowAlertAsync("Tarcza Wyłączona", "Zapisano ustawienia włączające diagnostykę i identyfikator reklamowy. Wyniki uruchomienia usług są w dzienniku.", "OK", "ℹ️");
             }
             else
             {
                 AppendLog("🛡️ Aktywacja Tarczy Prywatności Windows 11...");
                 GlobalStatusText.Text = "Wyłączanie telemetrii Windows 11...";
                 await DiskHelper.RunProcessAsync("sc", "stop DiagTrack", AppendLog);
-                await DiskHelper.RunProcessAsync("sc", "config DiagTrack start= disabled", AppendLog);
+                var (configured, _) = await DiskHelper.RunProcessAsync("sc", "config DiagTrack start= disabled", AppendLog);
+                if (!configured) throw new IOException("Nie zmieniono konfiguracji DiagTrack. Sprawdź dziennik.");
                 await DiskHelper.RunProcessAsync("sc", "stop dmwappushservice", AppendLog);
                 await DiskHelper.RunProcessAsync("sc", "config dmwappushservice start= disabled", AppendLog);
                 Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry", 0, RegistryValueKind.DWord);
                 Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo", "Enabled", 0, RegistryValueKind.DWord);
                 AppendLog("✅ Tarcza Prywatności Windows 11 została pomyślnie zastosowana!");
                 GlobalStatusText.Text = "Tarcza prywatności aktywna. Telemetria wyłączona.";
-                await ShowAlertAsync("Tarcza Prywatności Aktywna", "Pomyślnie wyłączono telemetrię DiagTrack, śledzenie reklamowe oraz zbędne usługi diagnostyczne Windows 11!", "Super", "🛡️", isSuccess: true);
+                await ShowAlertAsync("Tarcza Prywatności Aktywna", "Zapisano politykę AllowTelemetry=0 i wyłączono identyfikator reklamowy. Wyniki poleceń usług są w dzienniku. Zakres ograniczenia diagnostyki zależy od wersji Windows.", "Super", "🛡️", isSuccess: true);
             }
         }
         catch (Exception ex)
         {
             AppendLog($"⚠️ Błąd przełączania tarczy: {ex.Message}");
-            await ShowAlertAsync("Informacja", $"Wykonano procedurę: {ex.Message}", "OK", "ℹ️");
+            await ShowAlertAsync("Nie ukończono zmiany", ex.Message, "OK", "⚠️");
         }
         finally
         {
@@ -1840,7 +1814,7 @@ public partial class MainWindow : Window
         GlobalStatusText.Text = $"Wykryto {startupList.Count} programów w autostarcie.";
 
         string msg = $"Wykryto {startupList.Count} programów uruchamiających się ze startem Windows:\n\n" +
-                     string.Join("\n", startupList.Take(6)) + 
+                     string.Join("\n", startupList.Take(6)) +
                      (startupList.Count > 6 ? $"\n...oraz {startupList.Count - 6} więcej." : "") +
                      "\n\nCzy chcesz otworzyć menedżer Autostartu Windows, aby wyłączyć zbędne wpisy?";
 
@@ -1861,14 +1835,14 @@ public partial class MainWindow : Window
         GlobalStatusText.Text = "Odczyt S.M.A.R.T. dysków NVMe...";
 
         var (ok, output, _) = await DiskHelper.RunPowerShellScriptAsync(
-            "Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus, Size | Format-Table -AutoSize | Out-String", 
+            "Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus, Size | Format-Table -AutoSize | Out-String",
             AppendLog);
 
-        GlobalStatusText.Text = "Odczytano stan zdrowia dysków.";
-        string details = string.IsNullOrWhiteSpace(output) ? "Stan dysków prawidłowy (OK)." : output.Trim();
+        GlobalStatusText.Text = ok ? "Odczytano stan dysków." : "Odczyt stanu dysków nie powiódł się.";
+        string details = string.IsNullOrWhiteSpace(output) ? "Brak danych o kondycji dysków." : output.Trim();
 
-        await ShowAlertAsync("Kondycja Dysków (S.M.A.R.T.)", 
-            $"Parametry dysków fizycznych:\n\n{details}\n\nNVMe Kingston KC3000 i partycje działają w 100% sprawnie.", "W porządku", "🩺", isSuccess: true);
+        await ShowAlertAsync("Kondycja Dysków (S.M.A.R.T.)",
+            $"Parametry raportowane przez Windows:\n\n{details}\n\nTo podsumowanie Get-PhysicalDisk, a nie pełny test S.M.A.R.T.", "Zamknij", "🩺", isSuccess: ok);
     }
 
     private void CloseOptimizedOverlay_Click(object sender, RoutedEventArgs e)
@@ -1890,7 +1864,7 @@ public partial class MainWindow : Window
     private async void RestartBluetoothService_Click(object sender, RoutedEventArgs e)
     {
         AppendLog("▶ Restartowanie usługi Bluetooth (bthserv)...");
-        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("Restart-Service bthserv -Force -ErrorAction SilentlyContinue", AppendLog);
+        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("Restart-Service bthserv -Force -ErrorAction Stop", AppendLog);
         await ShowAlertAsync("Bluetooth", "Wysłano polecenie restartu usługi Bluetooth. Sprawdź działanie urządzeń bezprzewodowych.", "OK", "🔄", isSuccess: ok);
     }
 
@@ -1898,7 +1872,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            Process.Start(new ProcessStartInfo("https://asrock.com/mb/AMD/B650E%20PG%20Riptide%20WiFi/index.pl.asp#BIOS") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("msinfo32.exe") { UseShellExecute = true });
         }
         catch { }
     }
@@ -1906,8 +1880,8 @@ public partial class MainWindow : Window
     private async void RunTrimNow_Click(object sender, RoutedEventArgs e)
     {
         AppendLog("▶ Uruchamianie procedury ReTrim dla partycji SSD...");
-        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }", AppendLog);
-        await ShowAlertAsync("SSD TRIM", "Procedura sprzętowej optymalizacji TRIM została pomyślnie zrealizowana dla wszystkich dysków SSD!", "Świetnie", "⚡", isSuccess: ok);
+        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("$ErrorActionPreference='Stop'; Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }", AppendLog);
+        await ShowAlertAsync("SSD TRIM", ok ? "Windows zakończył polecenie ReTrim. Szczegóły znajdują się w dzienniku." : "Nie ukończono ReTrim. Sprawdź błędy w dzienniku.", "Zamknij", "⚡", isSuccess: ok);
     }
 
     private async void InstallMediaTekDrivers_Click(object sender, RoutedEventArgs e)

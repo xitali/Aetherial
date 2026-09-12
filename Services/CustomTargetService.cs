@@ -23,7 +23,7 @@ public class CustomTargetService
             {
                 string json = await File.ReadAllTextAsync(_configFilePath);
                 var list = JsonSerializer.Deserialize<List<CustomTarget>>(json);
-                if (list != null && list.Count > 0)
+                if (list != null)
                 {
                     return list;
                 }
@@ -62,6 +62,10 @@ public class CustomTargetService
     public async Task ScanTargetAsync(CustomTarget target, CancellationToken ct = default)
     {
         target.Status = "Trwa skanowanie...";
+        if (!File.Exists(target.Path) && !Directory.Exists(target.Path))
+        {
+            target.SizeBytes = 0; target.FileCount = 0; target.Status = "Ścieżka nie istnieje"; return;
+        }
 
         try
         {
@@ -158,9 +162,16 @@ public class CustomTargetService
         {
             logger?.Invoke($"▶ Czyszczenie własnego celu: {target.Path} ({target.FormattedMode})...");
 
+            ct.ThrowIfCancellationRequested();
+            DiskHelper.ValidateCleaningPath(target.IsDirectory ? target.Path : Path.GetDirectoryName(Path.GetFullPath(target.Path))!);
             if (!target.IsDirectory && File.Exists(target.Path))
             {
                 var fi = new FileInfo(target.Path);
+                if ((fi.Attributes & FileAttributes.ReparsePoint) != 0 || (target.DaysOlderThan > 0 && fi.LastWriteTime >= DateTime.Now.AddDays(-target.DaysOlderThan)))
+                {
+                    target.Status = "Plik nie spełnia kryteriów czyszczenia";
+                    return (0, 0);
+                }
                 long len = fi.Length;
                 fi.IsReadOnly = false;
                 fi.Delete();
@@ -180,7 +191,8 @@ public class CustomTargetService
                     {
                         try
                         {
-                            Directory.Delete(target.Path, true);
+                            ct.ThrowIfCancellationRequested();
+                            Directory.Delete(target.Path, false);
                             logger?.Invoke($"  ✓ Usunięto cały folder: {target.Path}");
                         }
                         catch (Exception ex)
