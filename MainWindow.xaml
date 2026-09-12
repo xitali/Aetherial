@@ -110,12 +110,12 @@
         <!-- ==================== GŁÓWNA ZAWARTOŚĆ OKNA ==================== -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="84" /> <!-- NOWY WĄSKI, ULTRA-COOL BOCZNY PASEK NAWIGACJI -->
-                <ColumnDefinition Width="*" />  <!-- GŁÓWNY POWIĘKSZONY OBSZAR ROBOCZY -->
+                <ColumnDefinition Width="200" /> <!-- ~200px SIDEBAR (IObit Style) -->
+                <ColumnDefinition Width="*" />   <!-- GŁÓWNY OBSZAR ROBOCZY -->
             </Grid.ColumnDefinitions>
 
-            <!-- ==================== BOCZNY PASEK NAWIGACJI (COOL SLIM RAIL) ==================== -->
-            <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0" Padding="0,14">
+            <!-- ==================== BOCZNY PASEK NAWIGACJI (IObit Style ~200px) ==================== -->
+            <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0" Padding="12,18">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" /> <!-- Logo Badge -->
@@ -124,63 +124,70 @@
                     </Grid.RowDefinitions>
 
                     <!-- 1. Logo AETHERIAL z neonowym akcentem -->
-                    <Border Grid.Row="0" Width="48" Height="48" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="12" HorizontalAlignment="Center" Margin="0,0,0,16" ToolTip="Aetherial Systems Suite">
-                        <Image Source="Assets/app_icon.png" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border Grid.Row="0" Background="{DynamicResource BgDarkBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,22" ToolTip="Aetherial System Suite 6.0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Source="Assets/app_icon.png" Width="26" Height="26" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="AETHERIAL" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource SuccessBrush}" />
+                                    <TextBlock Text=" 6.0" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource AccentBrush}" Margin="2,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="SYSTEM SUITE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
 
-                    <!-- 2. Menu Modułów (Smukłe przyciski Rail z ikonami i mikronapisami) -->
-                    <StackPanel Grid.Row="1" HorizontalAlignment="Center">
-                        <RadioButton x:Name="NavDashboardRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="0" ToolTip="Pulpit — Centrum sterowania i automatyzacja 1-kliknięciem" IsChecked="True">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE80F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Pulpit" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <!-- 2. Menu Modułów (~200px IObit 5-sekcyjny układ) -->
+                    <StackPanel Grid.Row="1">
+                        <RadioButton x:Name="NavDashboardRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="0" ToolTip="Pulpit — Główny wskaźnik zdrowia systemu i 1-klik skan" IsChecked="True">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE80F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <TextBlock Text="Główna" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton x:Name="NavCleanerRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="1" ToolTip="Czyszczenie — pamięci podręczne, shadery GPU, kosz i pliki tymczasowe">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Czyść" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <RadioButton x:Name="NavScannerRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="7" ToolTip="Skan — Kreator analizy, wykrywania problemów i naprawy">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <TextBlock Text="Skan" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton x:Name="NavExplorerRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="2" ToolTip="Dyski — wykryte woluminy i duże pliki">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xEDA2;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Dyski" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <RadioButton x:Name="NavToolsRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="4" ToolTip="Narzędzia — Czyszczenie, Eksplorator, PnP, Symlinki, RAM, Programy">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE90F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <TextBlock Text="Narzędzia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton x:Name="NavDriversRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="3" ToolTip="Sprzęt — Specyfikacja PC i certyfikowane sterowniki WHQL">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Sprzęt" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <RadioButton x:Name="NavHistoryRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="8" ToolTip="Historia — Dziennik i rejestr operacji optymalizacyjnych">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <TextBlock Text="Historia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton x:Name="NavToolsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="4" ToolTip="Narzędzia — Migracja na D/E, projekty Dev, VHDX i RAM">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE90F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Narzędzia" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <RadioButton x:Name="NavSettingsRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="6" ToolTip="Ustawienia — Preferencje, motyw i konfiguracja">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <TextBlock Text="Ustawienia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton x:Name="NavAppsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="5" ToolTip="Programy — Hub aplikacji (Dev, Homelab, AI, Grafika) i auto-aktualizacje winget">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE71D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Programy" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton x:Name="NavSettingsRadio" Style="{StaticResource NavRailButtonStyle}" Click="NavButton_Click" Tag="6" ToolTip="Ustawienia — Domyślny folder instalacji, audyty i moduły zaawansowane">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,2" />
-                                <TextBlock Text="Ustawienia" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
+                        <!-- Ukryte referencje dla kompatybilności wstecznej -->
+                        <RadioButton x:Name="NavCleanerRadio" Visibility="Collapsed" Tag="1" Click="NavButton_Click" />
+                        <RadioButton x:Name="NavExplorerRadio" Visibility="Collapsed" Tag="2" Click="NavButton_Click" />
+                        <RadioButton x:Name="NavDriversRadio" Visibility="Collapsed" Tag="3" Click="NavButton_Click" />
+                        <RadioButton x:Name="NavAppsRadio" Visibility="Collapsed" Tag="5" Click="NavButton_Click" />
                     </StackPanel>
 
-                    <Border Grid.Row="2" CornerRadius="6" Margin="8,4" Padding="4,8" Background="{DynamicResource AccentSoftBrush}" ToolTip="Aplikacja działa lokalnie na tym komputerze."><TextBlock Text="LOKALNIE" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/></Border>
+                    <!-- 3. Status Windows -->
+                    <Border Grid.Row="2" CornerRadius="8" Padding="10,8" Background="{DynamicResource AccentSoftBrush}" ToolTip="Aetherial Suite działa lokalnie w systemie Windows.">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="🛡️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="SYSTEM SECURE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 
@@ -262,67 +269,150 @@
                 <!-- 2. PRZEŁĄCZANE WIDOKI MODUŁÓW -->
                 <Grid Grid.Row="1">
 
-                    <!-- ==================== WIDOK 0: AETHERIAL CYBER-NEON DASHBOARD (STYL ZE ZDJĘCIA NR 2) ==================== -->
+                    <!-- ==================== WIDOK 0: GŁÓWNA (IObit Dashboard: Circular Gauge + Big CTA + 4 Moduły) ==================== -->
                     <Grid x:Name="ViewDashboard" Visibility="Visible">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="0,0,12,16">
-                                <TextBlock Text="Pulpit systemu" Style="{StaticResource PageTitleStyle}" />
-                                <TextBlock Text="Przestrzeń, urządzenia i działania w jednym miejscu." Style="{StaticResource SubtitleStyle}" Margin="0,6,0,24" />
-                                <Grid Margin="0,0,0,20">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
-                                    <Border x:Name="Dash1ClickCardBorder" Style="{StaticResource SurfaceCardStyle}" Margin="0,0,16,0">
-                                        <StackPanel>
-                                            <DockPanel Margin="0,0,0,12">
-                                                <Border x:Name="Dash1ClickBadge" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="10,5" DockPanel.Dock="Right">
-                                                    <TextBlock x:Name="Dash1ClickBadgeText" Text="OCZEKUJE NA SKAN" Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold" />
-                                                </Border>
-                                                <TextBlock Text="Odzyskaj przestrzeń" Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center" />
-                                            </DockPanel>
-                                            <TextBlock Text="Najpierw sprawdź pliki tymczasowe. Wybierz zakres w widoku Czyść, a następnie usuń zaznaczone pliki." Style="{StaticResource SubtitleStyle}" TextWrapping="Wrap" Margin="0,0,0,20" />
-                                            <UniformGrid Columns="2" Margin="0,0,0,22">
-                                                <StackPanel><TextBlock Text="Pamięci podręczne" Style="{StaticResource SubtitleStyle}"/><TextBlock x:Name="DashCacheText" Text="Nie zeskanowano" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/></StackPanel>
-                                                <StackPanel><TextBlock Text="Shadery GPU" Style="{StaticResource SubtitleStyle}"/><TextBlock x:Name="DashShadersText" Text="Nie zeskanowano" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/></StackPanel>
-                                            </UniformGrid>
-                                            <WrapPanel>
-                                                <Button Content="Skanuj pliki" Style="{StaticResource SecondaryButtonStyle}" Click="ScanAllButton_Click" Margin="0,0,10,8"/>
-                                                <Button x:Name="Dash1ClickButton" Content="Wyczyść zaznaczone pliki" Style="{StaticResource PrimaryButtonStyle}" Click="AutoOptimize1Click_Click" Margin="0,0,0,8"/>
-                                            </WrapPanel>
-                                        </StackPanel>
+                                <!-- HERO: Centralny Circular Health Gauge + Big CTA -->
+                                <Border Style="{StaticResource SurfaceCardStyle}" Margin="0,0,0,18" Padding="28,24">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <!-- Circular Gauge -->
+                                        <Grid Width="210" Height="210" HorizontalAlignment="Center" Margin="0,0,0,16">
+                                            <!-- Tło pierścienia -->
+                                            <Ellipse Width="210" Height="210" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="12" />
+                                            <!-- Aktywny pierścień z poświatą -->
+                                            <Ellipse x:Name="HealthRingEllipse" Width="210" Height="210" Stroke="{DynamicResource SuccessBrush}" StrokeThickness="12">
+                                                <Ellipse.Effect>
+                                                    <DropShadowEffect Color="#10B981" BlurRadius="22" ShadowDepth="0" Opacity="0.4" />
+                                                </Ellipse.Effect>
+                                            </Ellipse>
+                                            <!-- Wartości wewnątrz wskaźnika -->
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock x:Name="HealthScoreText" Text="100%" FontSize="52" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock x:Name="HealthStatusLabel" Text="STAN SYSTEMU: OPTYMALNY" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                                <TextBlock x:Name="HealthIssuesCountText" Text="Gotowy do przeskanowania" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- JEDEN WIELKI PRZYCISK AKCJI (IObit Big CTA) -->
+                                        <Button x:Name="DashboardScanBigButton"
+                                                Content="▶  SKANUJ TERAZ"
+                                                Style="{StaticResource BigCtaButtonStyle}"
+                                                HorizontalAlignment="Center"
+                                                Click="BigScanButton_Click"
+                                                ToolTip="Uruchom kompleksowy skan plików tymczasowych, pamięci RAM, urządzeń i kondycji systemu" />
+
+                                        <!-- Podtytuł statusowy -->
+                                        <TextBlock x:Name="DashboardHealthText" Text="System gotowy. Kliknij powyższy przycisk, aby wykryć i rozwiązać problemy." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,12,0,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 4 KARTY PODSUMOWUJĄCE MODUŁY (W JEDNYM RZĘDZIE) -->
+                                <UniformGrid Columns="4" Margin="0,0,0,18">
+                                    <!-- Karta 1: Pamięć podręczna i śmieci -->
+                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="0,0,8,0" Padding="16,14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="🧹" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="CACHE &amp; PLIKI" Style="{StaticResource EyebrowStyle}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock x:Name="DashCacheText" Text="Nie zeskanowano" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,2" />
+                                                <TextBlock x:Name="DashShadersText" Text="Shadery GPU: gotowe" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <Button Grid.Row="2" Content="Szczegóły czyszczenia ➔" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Margin="0,10,0,0" Click="NavToCleaner_Click" />
+                                        </Grid>
                                     </Border>
-                                    <Border Grid.Column="1" Style="{StaticResource SurfaceCardStyle}">
-                                        <StackPanel>
-                                            <TextBlock Text="Stan i diagnostyka" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,14"/>
-                                            <TextBlock x:Name="DashboardHealthText" Text="Uruchom skan urządzeń, aby ocenić stan." FontSize="16" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                            <TextBlock x:Name="DashboardSecurityText" Text="Stan ochrony: brak odczytu" Style="{StaticResource SubtitleStyle}" TextWrapping="Wrap" Margin="0,0,0,20"/>
-                                            <WrapPanel>
-                                                <Button Content="Sprawdź urządzenia" Style="{StaticResource SecondaryButtonStyle}" Click="NavToDrivers_Click" Margin="0,0,8,8"/>
-                                                <Button Content="Optymalizuj nośniki" Style="{StaticResource SecondaryButtonStyle}" Click="RunTrimNow_Click" Margin="0,0,0,8"/>
-                                            </WrapPanel>
-                                            <TextBlock Text="Stan PnP nie jest testem wydajności ani pełnym badaniem kondycji sprzętu." Style="{StaticResource SubtitleStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                                        </StackPanel>
+
+                                    <!-- Karta 2: Pamięć RAM -->
+                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="4,0,4,0" Padding="16,14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="⚡" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="PAMIĘĆ RAM" Style="{StaticResource EyebrowStyle}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock x:Name="RamStatusText" Text="Oczekiwanie na odczyt" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,0,2" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="EmptyWorkingSet gotowy" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                            <Button Grid.Row="2" Content="Optymalizuj RAM ➔" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Margin="0,10,0,0" Click="OptimizeRamNow_Click" />
+                                        </Grid>
                                     </Border>
-                                </Grid>
-                                <TextBlock Text="Przestrzeń dyskowa" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,6"/>
-                                <TextBlock Text="Zajęte miejsce na wykrytych woluminach. Kolor wskazuje stopień zapełnienia." Style="{StaticResource SubtitleStyle}" Margin="0,0,0,14"/>
-                                <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=DrivesItemsControl}" Margin="-5,0,-5,20">
+
+                                    <!-- Karta 3: Sprzęt & Urządzenia PnP -->
+                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="4,0,4,0" Padding="16,14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="🔌" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="SPRZĘT &amp; MAGISTRALA" Style="{StaticResource EyebrowStyle}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock x:Name="DashboardCpuText" Text="Oczekiwanie na odczyt" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,0,2" />
+                                                <TextBlock x:Name="DashboardGpuText" Text="Oczekiwanie na odczyt" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <Button Grid.Row="2" Content="Zarządzaj sprzętem ➔" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Margin="0,10,0,0" Click="NavToDrivers_Click" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Karta 4: Woluminy & Sieć -->
+                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="8,0,0,0" Padding="16,14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="🌐" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="SIEĆ &amp; PAMIĘĆ MASOWA" Style="{StaticResource EyebrowStyle}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock x:Name="DashboardNetworkText" Text="Oczekiwanie na odczyt" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,0,2" />
+                                                <TextBlock x:Name="DashboardSecurityText" Text="Stan nośników: OK" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <Button Grid.Row="2" Content="Eksploruj dyski ➔" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Margin="0,10,0,0" Click="NavToExplorer_Click" />
+                                        </Grid>
+                                    </Border>
+                                </UniformGrid>
+
+                                <!-- Sekcja Partycji Dyskowych -->
+                                <TextBlock Text="Przestrzeń dyskowa woluminów" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,6"/>
+                                <TextBlock Text="Rzeczywiste zużycie wykrytych woluminów fizycznych w systemie Windows." Style="{StaticResource SubtitleStyle}" Margin="0,0,0,14"/>
+                                <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=DrivesItemsControl}" Margin="-5,0,-5,16">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate><DataTemplate>
-                                        <Border Style="{StaticResource SurfaceCardStyle}" Padding="20" Margin="5">
+                                        <Border Style="{StaticResource SurfaceCardStyle}" Padding="18,14" Margin="5">
                                             <StackPanel>
-                                                <DockPanel><TextBlock Text="{Binding UsedPercent, StringFormat={}{0:0.#}% zajęte}" DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}"/></DockPanel>
-                                                <ProgressBar Value="{Binding UsedPercent, Mode=OneWay}" Maximum="100" Foreground="{DynamicResource TextSecondaryBrush}" Height="8" Margin="0,16,0,12"/>
+                                                <DockPanel><TextBlock Text="{Binding UsedPercent, StringFormat={}{0:0.#}% zajęte}" DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}"/></DockPanel>
+                                                <ProgressBar Value="{Binding UsedPercent, Mode=OneWay}" Maximum="100" Foreground="{DynamicResource TextSecondaryBrush}" Height="6" Margin="0,12,0,10"/>
                                                 <DockPanel><TextBlock Text="{Binding FormattedTotal, StringFormat={}Pojemność: {0}}" DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding FormattedFree, StringFormat={}Wolne: {0}}" FontWeight="SemiBold"/></DockPanel>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate></ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <TextBlock Text="Odczyty systemowe" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,14"/>
-                                <UniformGrid Columns="2" Margin="-5,0,-5,0">
-                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="5"><StackPanel><TextBlock Text="PROCESOR" Style="{StaticResource EyebrowStyle}"/><TextBlock x:Name="DashboardCpuText" Text="Oczekiwanie na odczyt" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0"/></StackPanel></Border>
-                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="5"><StackPanel><TextBlock Text="PAMIĘĆ RAM" Style="{StaticResource EyebrowStyle}"/><TextBlock x:Name="RamStatusText" Text="Oczekiwanie na odczyt" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0"/></StackPanel></Border>
-                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="5"><StackPanel><TextBlock Text="GRAFIKA" Style="{StaticResource EyebrowStyle}"/><TextBlock x:Name="DashboardGpuText" Text="Oczekiwanie na odczyt" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0"/></StackPanel></Border>
-                                    <Border Style="{StaticResource SurfaceCardStyle}" Margin="5"><StackPanel><TextBlock Text="SIEĆ" Style="{StaticResource EyebrowStyle}"/><TextBlock x:Name="DashboardNetworkText" Text="Oczekiwanie na odczyt" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0"/></StackPanel></Border>
-                                </UniformGrid>
+
+                                <!-- Kompatybilność: Złożone kontrolki zachowane dla stabilności -->
+                                <Border x:Name="Dash1ClickCardBorder" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <Border x:Name="Dash1ClickBadge"><TextBlock x:Name="Dash1ClickBadgeText" Text="" /></Border>
+                                        <Button x:Name="Dash1ClickButton" Click="AutoOptimize1Click_Click" />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
@@ -717,6 +807,17 @@
                     <Grid x:Name="ViewTools" Visibility="Collapsed">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Margin="0,0,8,0">
+
+                                <!-- Pasek nawigacyjny podnarzędzi Aetherial -->
+                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8,6" Margin="0,0,0,14">
+                                    <WrapPanel>
+                                        <Button Content="🛠 Narzędzia zaawansowane" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToTools_Click" />
+                                        <Button Content="🧹 Pamięci podręczne i śmieci" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToCleaner_Click" />
+                                        <Button Content="💾 Eksplorator woluminów" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToExplorer_Click" />
+                                        <Button Content="🔌 Sprzęt &amp; PnP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToDrivers_Click" />
+                                        <Button Content="📦 Programy &amp; Winget" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" FontSize="12" Click="NavToApps_Click" />
+                                    </WrapPanel>
+                                </Border>
 
                                 <!-- KARTA 1: ASYSTENT MIGRACJI DANYCH NA DYSK D/E (NTFS JUNCTION) -->
                                 <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,14">
@@ -1197,6 +1298,231 @@
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 7: KREATOR SKANOWANIA I WYNIKÓW (IObit Wizard) ==================== -->
+                    <Grid x:Name="ViewScanner" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- Pasek narzędziowy / filtr -->
+                            <RowDefinition Height="*" />    <!-- Zawartość: Pasek postępu LUB Lista wyników -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Nagłówek skanera -->
+                        <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="16,12" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔍" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Centrum analizy i naprawy problemów" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock x:Name="ScannerResultsSummaryBadge" Text="Zainicjuj skanowanie, aby zbadać stan komputera." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="ScannerRestorePointCheck" Content="Utwórz punkt przywracania przed naprawą" IsChecked="True" VerticalAlignment="Center" Margin="0,0,16,0" FontSize="12" />
+                                    <Button x:Name="ScannerFixSelectedButton" Content="⚡  NAPRAW ZAZNACZONE" Style="{StaticResource SuccessButtonStyle}" Padding="20,8" FontSize="13" Click="FixSelected_Click" IsEnabled="False" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Obszar roboczy: Faza 1 (Skanowanie w toku) LUB Faza 2 (Lista wyników) -->
+                        <Grid Grid.Row="1">
+                            <!-- Faza 1: Panel aktywnego skanowania -->
+                            <Border x:Name="ScannerProgressPanel" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="32" Visibility="Collapsed">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="600">
+                                    <Border Width="80" Height="80" CornerRadius="40" Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Center" Margin="0,0,0,20">
+                                        <TextBlock Text="⚡" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
+                                    </Border>
+                                    <TextBlock x:Name="ScannerCurrentStepText" Text="Trwa skanowanie komponentów systemu..." FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                    <TextBlock x:Name="ScannerDetailText" Text="Analizowanie lokalizacji tymczasowych, pamięci operacyjnej i urządzeń..." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,20" />
+                                    
+                                    <ProgressBar x:Name="ScannerProgressBar" Height="10" Minimum="0" Maximum="100" Value="0" Margin="0,0,0,20" Foreground="{DynamicResource AccentBrush}" />
+                                    
+                                    <Button x:Name="ScannerCancelButton" Content="✕ Anuluj skanowanie" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Center" Padding="18,8" Click="CancelScan_Click" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Faza 2: Lista wyników z checkboxami -->
+                            <Border x:Name="ScannerResultsPanel" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Visibility="Visible">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Pasek wyboru i filtrów -->
+                                    <Border Grid.Row="0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="16,10">
+                                        <DockPanel>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <CheckBox x:Name="ScannerSelectAllCheckBox" Content="Zaznacz wszystkie elementy" IsChecked="True" VerticalAlignment="Center" Click="ScannerSelectAll_Click" Margin="0,0,16,0" />
+                                                <TextBlock x:Name="ScannerSelectedCountText" Text="Zaznaczono: 0 pozycji" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <Button Content="🔄 Uruchom ponowny skan" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Padding="12,6" FontSize="12" Click="BigScanButton_Click" />
+                                        </DockPanel>
+                                    </Border>
+
+                                    <!-- Lista pozycji ScanResultItem -->
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl x:Name="ScannerItemsControl" Margin="12">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:ScanResultItem}">
+                                                    <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,8" Padding="16,12">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Checkbox -->
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,16,0" />
+
+                                                            <!-- Severity Badge -->
+                                                            <Border Grid.Column="1" Background="{Binding SeverityBg}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center" Margin="0,0,14,0">
+                                                                <TextBlock Text="{Binding SeverityBadge}" FontSize="11" FontWeight="Bold" Foreground="{Binding SeverityColor}" />
+                                                            </Border>
+
+                                                            <!-- Tytuł, Kategoria, Opis -->
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                                                    <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    </Border>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                                            </StackPanel>
+
+                                                            <!-- Rozmiar do odzyskania i status -->
+                                                            <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,8,0" MinWidth="110" HorizontalAlignment="Right">
+                                                                <TextBlock Text="{Binding FormattedSize}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
+                                                                <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{Binding StatusColor}" HorizontalAlignment="Right" Margin="0,2,0,0" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+
+                    <!-- ==================== WIDOK 8: HISTORIA I AUDYT OPERACJI ==================== -->
+                    <Grid x:Name="ViewHistory" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- Podsumowanie statystyk -->
+                            <RowDefinition Height="*" />    <!-- Lista operacji -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Podsumowanie statystyk -->
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Karta 1: Liczba wykonanych operacji -->
+                            <Border Grid.Column="0" Style="{StaticResource SurfaceCardStyle}" Margin="0,0,8,0" Padding="18,14">
+                                <StackPanel>
+                                    <TextBlock Text="ŁĄCZNIE OPERACJI" Style="{StaticResource EyebrowStyle}" />
+                                    <TextBlock x:Name="HistoryTotalOpsText" Text="0" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0" />
+                                    <TextBlock Text="Zarejestrowane procedury" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Karta 2: Łącznie zwolniona przestrzeń -->
+                            <Border Grid.Column="1" Style="{StaticResource SurfaceCardStyle}" Margin="4,0,4,0" Padding="18,14">
+                                <StackPanel>
+                                    <TextBlock Text="ZWOLNIONA PRZESTRZEŃ" Style="{StaticResource EyebrowStyle}" />
+                                    <TextBlock x:Name="HistoryTotalFreedText" Text="0 B" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,6,0,0" />
+                                    <TextBlock Text="Odzyskane miejsce na dyskach" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Karta 3: Ostatnia optymalizacja -->
+                            <Border Grid.Column="2" Style="{StaticResource SurfaceCardStyle}" Margin="8,0,0,0" Padding="18,14">
+                                <StackPanel>
+                                    <TextBlock Text="OSTATNIA OPTYMALIZACJA" Style="{StaticResource EyebrowStyle}" />
+                                    <TextBlock x:Name="HistoryLastDateText" Text="Brak wpisów" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,0" />
+                                    <TextBlock Text="Rejestr w %LocalAppData%\Aetherial" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Lista wpisów z historii -->
+                        <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Pasek akcji historii -->
+                                <Border Grid.Row="0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="16,10">
+                                    <DockPanel>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="📜" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Dziennik zdarzeń i rejestr zmian" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="🔄 Odśwież" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="10,5" FontSize="12" Click="RefreshHistory_Click" />
+                                            <Button Content="📂 Otwórz folder" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="10,5" FontSize="12" Click="OpenHistoryFolder_Click" />
+                                            <Button Content="🗑 Wyczyść historię" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="12" Click="ClearHistory_Click" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- Elementy historii -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="HistoryItemsControl" Margin="12">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type models:HistoryEntry}">
+                                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,8" Padding="16,12">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Status Badge -->
+                                                        <Border Grid.Column="0" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                            <TextBlock Text="{Binding StatusBadge}" FontSize="11" FontWeight="Bold" Foreground="{Binding StatusColor}" />
+                                                        </Border>
+
+                                                        <!-- Typ operacji & Czas -->
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,20,0" MinWidth="160">
+                                                            <TextBlock Text="{Binding OperationType}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                            <TextBlock Text="{Binding FormattedDate}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                                                        </StackPanel>
+
+                                                        <!-- Podsumowanie / Szczegóły -->
+                                                        <TextBlock Grid.Column="2" Text="{Binding Summary}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
+
+                                                        <!-- Zwolnione bajty -->
+                                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="110">
+                                                            <TextBlock Text="{Binding FormattedBytes}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
+                                                            <TextBlock Text="{Binding ItemsFixed, StringFormat={}{0} naprawionych}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" Margin="0,2,0,0" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </Grid>
 

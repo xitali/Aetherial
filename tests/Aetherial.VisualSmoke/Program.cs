@@ -42,7 +42,9 @@ internal static class Program
             ((TextBlock)window.FindName("HardwareSummaryText")).Text = hardware.Motherboard + " • " + hardware.Ram;
             foreach (var device in new DriverUpdaterService().GetConnectedPnpDevicesAsync().GetAwaiter().GetResult()) window.PnpDevices.Add(device);
             ((TextBlock)window.FindName("HardwareInventorySummaryText")).Text = $"{window.PnpDevices.Count} urządzeń z Windows CIM";
-            var views = new[] { "ViewDashboard", "ViewCleaner", "ViewExplorer", "ViewDrivers", "ViewTools", "ViewApps", "ViewSettings" };
+            window.ScanResultItems.Add(new ScanResultItem { Name = "Tymczasowe pliki systemowe", Description = "Kosz i cache Windows", SizeBytes = 1024 * 1024 * 350, Severity = Severity.Warning });
+            window.HistoryItems.Add(new HistoryEntry { OperationType = "Czyszczenie dysku", BytesSaved = 1024 * 1024 * 500, ItemsFixed = 3, Success = true, Summary = "Usunięto zbędne pliki cache" });
+            var views = new[] { "ViewDashboard", "ViewCleaner", "ViewExplorer", "ViewDrivers", "ViewTools", "ViewApps", "ViewSettings", "ViewScanner", "ViewHistory" };
             int count = 0;
             foreach (bool light in new[] { false, true })
             {
@@ -68,7 +70,7 @@ internal static class Program
                 if (views.Count(name => ((FrameworkElement)window.FindName(name)).Visibility == Visibility.Visible) != 1)
                     throw new InvalidOperationException("Navigation must select exactly one view");
             }
-            Console.WriteLine("PASS seven navigation routes; Light/Dark resources load.");
+            Console.WriteLine($"PASS all {views.Length} navigation routes; Light/Dark resources load.");
             PresentationTraceSources.DataBindingSource.Flush();
             if (bindingErrors.ToString().Contains("Error:")) throw new InvalidOperationException(bindingErrors.ToString());
             Console.WriteLine("PASS WPF binding error trace.");

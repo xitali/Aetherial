@@ -26,6 +26,12 @@ public partial class MainWindow : Window
     private readonly DriverUpdaterService _driverService = new();
     private readonly SoftwareInstallerService _appInstaller = new();
     private readonly SettingsService _settingsService = new();
+    private readonly IScanService _scanService = new ScanService();
+    private readonly IHistoryService _historyService = new HistoryService();
+    private readonly IFixService _fixService;
+    private readonly ISystemRestoreService _restoreService = new SystemRestoreService();
+    private CancellationTokenSource? _scanCts;
+    private CancellationTokenSource? _fixCts;
 
     public ObservableCollection<DriveModel> Drives { get; } = new();
     public ObservableCollection<CleanItem> CleanItems { get; } = new();
@@ -36,6 +42,8 @@ public partial class MainWindow : Window
     public ObservableCollection<PnpDeviceItem> PnpDevices { get; } = new();
     public ObservableCollection<DiagnosticItem> DiagnosticItems { get; } = new();
     public ObservableCollection<AppPackageItem> AppsList { get; } = new();
+    public ObservableCollection<ScanResultItem> ScanResultItems { get; } = new();
+    public ObservableCollection<HistoryEntry> HistoryItems { get; } = new();
 
     private List<AppPackageItem> _allApps = new();
     private string _selectedCategory = "All";
@@ -53,6 +61,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _fixService = new FixService(_historyService);
         InitializeComponent();
         App.ApplyTheme(_settingsService.Current.Theme == "Light");
 
@@ -65,6 +74,8 @@ public partial class MainWindow : Window
         PnpDevicesControl.ItemsSource = PnpDevices;
         DiagnosticItemsControl.ItemsSource = DiagnosticItems;
         AppsItemsControl.ItemsSource = AppsList;
+        ScannerItemsControl.ItemsSource = ScanResultItems;
+        HistoryItemsControl.ItemsSource = HistoryItems;
 
         // Inicjalizacja ustawień w UI
         SettingsInstallPathTextBox.Text = _settingsService.Current.DefaultInstallFolder;
@@ -98,6 +109,7 @@ public partial class MainWindow : Window
             AppendLog($"Aetherial Suite {typeof(App).Assembly.GetName().Version} • Administrator: {(DiskHelper.IsAdministrator() ? "tak" : "nie")}");
             await LoadSymlinkPresetsAsync();
             await NavigateToFolderAsync(SystemDrive);
+            await RefreshHistoryAsync();
             await Task.WhenAll(ScanAllItemsAsync(), RefreshDiagnosticsAsync(), RefreshHardwareInventoryAsync(), RefreshDashboardHardwareAsync());
             if (_settingsService.Current.AutoCheckUpdates)
             {
@@ -267,42 +279,273 @@ public partial class MainWindow : Window
         ViewTools.Visibility = viewIndex == 4 ? Visibility.Visible : Visibility.Collapsed;
         ViewApps.Visibility = viewIndex == 5 ? Visibility.Visible : Visibility.Collapsed;
         ViewSettings.Visibility = viewIndex == 6 ? Visibility.Visible : Visibility.Collapsed;
+        ViewScanner.Visibility = viewIndex == 7 ? Visibility.Visible : Visibility.Collapsed;
+        ViewHistory.Visibility = viewIndex == 8 ? Visibility.Visible : Visibility.Collapsed;
+
+        if (viewIndex == 0 && NavDashboardRadio != null) NavDashboardRadio.IsChecked = true;
+        else if (viewIndex >= 1 && viewIndex <= 5 && NavToolsRadio != null) NavToolsRadio.IsChecked = true;
+        else if (viewIndex == 6 && NavSettingsRadio != null) NavSettingsRadio.IsChecked = true;
+        else if (viewIndex == 7 && NavScannerRadio != null) NavScannerRadio.IsChecked = true;
+        else if (viewIndex == 8 && NavHistoryRadio != null) NavHistoryRadio.IsChecked = true;
     }
 
     private void NavToCleaner_Click(object sender, RoutedEventArgs e)
     {
-        NavCleanerRadio.IsChecked = true;
+        if (NavCleanerRadio != null) NavCleanerRadio.IsChecked = true;
         SwitchView(1);
     }
 
     private void NavToExplorer_Click(object sender, RoutedEventArgs e)
     {
-        NavExplorerRadio.IsChecked = true;
+        if (NavExplorerRadio != null) NavExplorerRadio.IsChecked = true;
         SwitchView(2);
     }
 
     private void NavToDrivers_Click(object sender, RoutedEventArgs e)
     {
-        NavDriversRadio.IsChecked = true;
+        if (NavDriversRadio != null) NavDriversRadio.IsChecked = true;
         SwitchView(3);
     }
 
     private void NavToTools_Click(object sender, RoutedEventArgs e)
     {
-        NavToolsRadio.IsChecked = true;
+        if (NavToolsRadio != null) NavToolsRadio.IsChecked = true;
         SwitchView(4);
     }
 
     private void NavToApps_Click(object sender, RoutedEventArgs e)
     {
-        NavAppsRadio.IsChecked = true;
+        if (NavAppsRadio != null) NavAppsRadio.IsChecked = true;
         SwitchView(5);
     }
 
     private void NavToSettings_Click(object sender, RoutedEventArgs e)
     {
-        NavSettingsRadio.IsChecked = true;
+        if (NavSettingsRadio != null) NavSettingsRadio.IsChecked = true;
         SwitchView(6);
+    }
+
+    private void NavToScanner_Click(object sender, RoutedEventArgs e)
+    {
+        if (NavScannerRadio != null) NavScannerRadio.IsChecked = true;
+        SwitchView(7);
+    }
+
+    private void NavToHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (NavHistoryRadio != null) NavHistoryRadio.IsChecked = true;
+        SwitchView(8);
+    }
+
+    // ==================== KREATOR SKANOWANIA (SCANNER WIZARD) ====================
+
+    private async void BigScanButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy) return;
+        SwitchView(7);
+        await RunWizardScanAsync();
+    }
+
+    private async Task RunWizardScanAsync()
+    {
+        _isBusy = true;
+        _scanCts = new CancellationTokenSource();
+        ScannerProgressPanel.Visibility = Visibility.Visible;
+        ScannerResultsPanel.Visibility = Visibility.Collapsed;
+        ScannerFixSelectedButton.IsEnabled = false;
+        ScannerProgressBar.Value = 0;
+        ScannerCurrentStepText.Text = "Rozpoczynanie skanowania...";
+        ScannerDetailText.Text = "Przygotowywanie diagnostyki...";
+        AppendLog("Rozpoczęto całościowe skanowanie systemu...");
+
+        IProgress<(int percent, string message)> progress = new Progress<(int percent, string message)>(p =>
+        {
+            ScannerProgressBar.Value = p.percent;
+            ScannerCurrentStepText.Text = p.message;
+            ScannerDetailText.Text = $"Postęp skanowania: {p.percent}%";
+        });
+
+        try
+        {
+            var report = await _scanService.ScanAllAsync(progress, _scanCts.Token);
+            ScanResultItems.Clear();
+            foreach (var item in report.Items)
+            {
+                item.PropertyChanged += (_, _) => UpdateScannerSelectedCount();
+                ScanResultItems.Add(item);
+            }
+
+            // Aktualizacja wskaźnika Circular Gauge na pulpicie
+            HealthScoreText.Text = $"{report.HealthScore}%";
+            HealthStatusLabel.Text = report.HealthScore >= 90 ? "STAN SYSTEMU: OPTYMALNY" : (report.HealthScore >= 60 ? "STAN SYSTEMU: WYMAGA UWAGI" : "STAN SYSTEMU: KRYTYCZNY");
+            HealthIssuesCountText.Text = report.ProblemCount == 0 ? "Brak wykrytych problemów" : $"Wykryto {report.ProblemCount} problemów ({DriveModel.FormatBytes(report.TotalRecoverableBytes)})";
+
+            var statusColor = report.HealthScore >= 90 ? "#10B981" : (report.HealthScore >= 60 ? "#F59E0B" : "#EF4444");
+            HealthScoreText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(statusColor));
+            HealthStatusLabel.Foreground = HealthScoreText.Foreground;
+            HealthRingEllipse.Stroke = HealthScoreText.Foreground;
+
+            ScannerResultsSummaryBadge.Text = report.ProblemCount == 0
+                ? "System w doskonałej kondycji • Nie wykryto problemów"
+                : $"Wykryto {report.ProblemCount} problemów • Możliwe do odzyskania: {DriveModel.FormatBytes(report.TotalRecoverableBytes)}";
+
+            UpdateScannerSelectedCount();
+            AppendLog($"Zakończono skan: stan zdrowia {report.HealthScore}%, wykryto {report.ProblemCount} pozycji ({DriveModel.FormatBytes(report.TotalRecoverableBytes)}).");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("Skanowanie zostało przerwane przez użytkownika.");
+            ScannerResultsSummaryBadge.Text = "Skanowanie zostało przerwane.";
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Błąd podczas skanowania: {ex.Message}");
+            ScannerResultsSummaryBadge.Text = "Wystąpił błąd podczas analizy.";
+        }
+        finally
+        {
+            ScannerProgressPanel.Visibility = Visibility.Collapsed;
+            ScannerResultsPanel.Visibility = Visibility.Visible;
+            _isBusy = false;
+        }
+    }
+
+    private void CancelScan_Click(object sender, RoutedEventArgs e)
+    {
+        _scanCts?.Cancel();
+    }
+
+    private void ScannerSelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        bool isChecked = ScannerSelectAllCheckBox.IsChecked ?? true;
+        foreach (var item in ScanResultItems)
+        {
+            item.IsSelected = isChecked;
+        }
+        UpdateScannerSelectedCount();
+    }
+
+    private void UpdateScannerSelectedCount()
+    {
+        int selected = ScanResultItems.Count(i => i.IsSelected);
+        long bytes = ScanResultItems.Where(i => i.IsSelected).Sum(i => i.SizeBytes);
+        ScannerSelectedCountText.Text = $"Zaznaczono: {selected} z {ScanResultItems.Count} pozycji ({DriveModel.FormatBytes(bytes)})";
+        ScannerFixSelectedButton.IsEnabled = selected > 0;
+    }
+
+    private async void FixSelected_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isBusy) return;
+        var selected = ScanResultItems.Where(i => i.IsSelected).ToList();
+        if (selected.Count == 0) return;
+
+        bool createRestore = ScannerRestorePointCheck.IsChecked ?? true;
+        string confirmMsg = $"Czy chcesz rozpocząć naprawę {selected.Count} zaznaczonych pozycji?\n" +
+                            (createRestore ? "Przed rozpoczęciem zostanie utworzony punkt przywracania systemu Windows." : "Punkt przywracania jest wyłączony.");
+
+        if (!await ShowConfirmAsync("Potwierdzenie optymalizacji", confirmMsg, confirmText: "Rozpocznij naprawę", isDanger: false, icon: "⚡"))
+            return;
+
+        _isBusy = true;
+        _fixCts = new CancellationTokenSource();
+        ScannerProgressPanel.Visibility = Visibility.Visible;
+        ScannerResultsPanel.Visibility = Visibility.Collapsed;
+        ScannerProgressBar.Value = 0;
+        ScannerCurrentStepText.Text = "Rozpoczynanie naprawy...";
+        ScannerDetailText.Text = "Przygotowywanie procedur...";
+
+        IProgress<(int percent, string message)> progress = new Progress<(int percent, string message)>(p =>
+        {
+            ScannerProgressBar.Value = p.percent;
+            ScannerCurrentStepText.Text = p.message;
+            ScannerDetailText.Text = $"Postęp: {p.percent}%";
+        });
+
+        try
+        {
+            if (createRestore)
+            {
+                progress.Report((5, "Tworzenie punktu przywracania systemu..."));
+                var (ok, msg) = await _restoreService.CreateRestorePointAsync("Aetherial System Clean");
+                AppendLog(ok ? "Utworzono punkt przywracania." : $"Punkt przywracania: {msg}");
+            }
+
+            var fixReport = await _fixService.FixSelectedAsync(selected, progress, _fixCts.Token);
+            foreach (var msg in fixReport.Messages) AppendLog(msg);
+
+            // Po naprawie - aktualizacja wskaźnika do 100%
+            HealthScoreText.Text = "100%";
+            HealthStatusLabel.Text = "STAN SYSTEMU: OPTYMALNY";
+            HealthIssuesCountText.Text = $"Pomyślnie naprawiono {fixReport.SuccessCount} problemów";
+            var successColor = (Color)ColorConverter.ConvertFromString("#10B981");
+            HealthScoreText.Foreground = new SolidColorBrush(successColor);
+            HealthStatusLabel.Foreground = HealthScoreText.Foreground;
+            HealthRingEllipse.Stroke = HealthScoreText.Foreground;
+
+            await RefreshHistoryAsync();
+            RefreshDrives();
+            RefreshLiveMetrics();
+
+            ScannerResultsSummaryBadge.Text = $"Naprawiono pomyślnie {fixReport.SuccessCount} elementów • Zwolniono: {DriveModel.FormatBytes(fixReport.BytesFreed)}";
+            AppendLog($"Zakończono optymalizację: naprawiono {fixReport.SuccessCount} pozycji, zwolniono {DriveModel.FormatBytes(fixReport.BytesFreed)}.");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("Naprawa została przerwana przez użytkownika.");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Błąd podczas naprawy: {ex.Message}");
+        }
+        finally
+        {
+            ScannerProgressPanel.Visibility = Visibility.Collapsed;
+            ScannerResultsPanel.Visibility = Visibility.Visible;
+            _isBusy = false;
+        }
+    }
+
+    // ==================== DZIENNIK I HISTORIA (HISTORY HUB) ====================
+
+    private async Task RefreshHistoryAsync()
+    {
+        try
+        {
+            var entries = await _historyService.GetHistoryAsync();
+            HistoryItems.Clear();
+            long totalFreed = 0;
+            foreach (var entry in entries)
+            {
+                HistoryItems.Add(entry);
+                totalFreed += entry.BytesSaved;
+            }
+            HistoryTotalOpsText.Text = entries.Count.ToString();
+            HistoryTotalFreedText.Text = DriveModel.FormatBytes(totalFreed);
+            HistoryLastDateText.Text = entries.Count > 0 ? entries[0].FormattedDate : "Brak operacji";
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Nie udało się załadować historii: {ex.Message}");
+        }
+    }
+
+    private async void RefreshHistory_Click(object sender, RoutedEventArgs e) => await RefreshHistoryAsync();
+
+    private async void ClearHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (await ShowConfirmAsync("Wyczyść historię", "Czy na pewno chcesz usunąć wszystkie wpisy z dziennika historii?", "Wyczyść", isDanger: true, icon: "🗑"))
+        {
+            await _historyService.ClearHistoryAsync();
+            await RefreshHistoryAsync();
+            AppendLog("Dziennik historii operacji został wyczyszczony.");
+        }
+    }
+
+    private void OpenHistoryFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aetherial");
+        Directory.CreateDirectory(appData);
+        Process.Start(new ProcessStartInfo { FileName = "explorer.exe", Arguments = $"\"{appData}\"", UseShellExecute = true });
     }
 
     // ==================== DYSKI & METRYKI ====================
@@ -691,6 +934,8 @@ public partial class MainWindow : Window
         UpdateRamMetricsDisplay();
         GlobalStatusText.Text = $"Pamięć RAM zoptymalizowana! Uwolniono {DriveModel.FormatBytes(freed)}.";
     }
+
+    private void OptimizeRamNow_Click(object sender, RoutedEventArgs e) => OptimizeRam_Click(sender, e);
 
     private async void DisableHibernation_Click(object sender, RoutedEventArgs e)
     {
