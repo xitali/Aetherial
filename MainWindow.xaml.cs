@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     public ObservableCollection<DevArtifactItem> DevArtifactItems { get; } = new();
     public ObservableCollection<DriverUpdateItem> DriverUpdates { get; } = new();
     public ObservableCollection<PnpDeviceItem> PnpDevices { get; } = new();
+    public ObservableCollection<DiagnosticItem> DiagnosticItems { get; } = new();
     public ObservableCollection<AppPackageItem> AppsList { get; } = new();
 
     private List<AppPackageItem> _allApps = new();
@@ -55,6 +56,7 @@ public partial class MainWindow : Window
         DevArtifactsControl.ItemsSource = DevArtifactItems;
         DriverUpdatesControl.ItemsSource = DriverUpdates;
         PnpDevicesControl.ItemsSource = PnpDevices;
+        DiagnosticItemsControl.ItemsSource = DiagnosticItems;
         AppsItemsControl.ItemsSource = AppsList;
 
         // Inicjalizacja ustawień w UI
@@ -96,6 +98,9 @@ public partial class MainWindow : Window
 
         // Wstępne skanowanie w tle
         await ScanAllItemsAsync();
+
+        // Dynamiczna diagnostyka sprzętowa w tle
+        _ = RefreshDiagnosticsAsync();
 
         // Wstępne wykrywanie urządzeń PnP w tle
         _ = Task.Run(async () =>
@@ -1138,21 +1143,114 @@ public partial class MainWindow : Window
     private async void SearchAllDrivers_Click(object sender, RoutedEventArgs e)
     {
         LogDrawerBorder.Visibility = Visibility.Visible;
-        GlobalStatusText.Text = "⏳ Głęboki skan urządzeń PnP & sterowników WHQL...";
-        AppendLog("=== Rozpoczęto pełne skanowanie sprzętu PnP i aktualizacji WHQL ===");
+        GlobalStatusText.Text = "⏳ Głęboki skan urządzeń PnP, Centrum Diagnostycznego & sterowników WHQL...";
+        AppendLog("=== Rozpoczęto pełne skanowanie sprzętu PnP, diagnostyki i aktualizacji WHQL ===");
 
-        // 1. Odśwież urządzenia PnP
+        // 1. Odśwież Centrum Diagnostyczne (Dynamiczny stan sprzętu)
+        await RefreshDiagnosticsAsync();
+
+        // 2. Odśwież urządzenia PnP
         PnpDevices.Clear();
         var pnpList = await _driverService.GetConnectedPnpDevicesAsync(AppendLog);
         foreach (var d in pnpList) PnpDevices.Add(d);
 
-        // 2. Odśwież certyfikowane WHQL
+        // 3. Odśwież certyfikowane WHQL
         DriverUpdates.Clear();
         var updates = await _driverService.SearchDriverUpdatesAsync(AppendLog);
         foreach (var u in updates) DriverUpdates.Add(u);
 
-        GlobalStatusText.Text = $"Zidentyfikowano {PnpDevices.Count} urządzeń PnP | Dostępne WHQL: {DriverUpdates.Count}";
-        AppendLog($"✓ Gotowe. Wykryto {PnpDevices.Count} urządzeń PnP, {DriverUpdates.Count} aktualizacji WHQL.");
+        GlobalStatusText.Text = $"Diagnostyka: {DiagnosticItems.Count} zbadanych | Urządzenia PnP: {PnpDevices.Count} | WHQL: {DriverUpdates.Count}";
+        AppendLog($"✓ Gotowe. Centrum Diagnostyczne: {DiagnosticItems.Count} pozycji, {PnpDevices.Count} urządzeń PnP, {DriverUpdates.Count} aktualizacji WHQL.");
+    }
+
+    public async Task RefreshDiagnosticsAsync()
+    {
+        try
+        {
+            var items = await _driverService.GetDynamicDiagnosticItemsAsync(AppendLog);
+            Dispatcher.Invoke(() =>
+            {
+                DiagnosticItems.Clear();
+                foreach (var item in items)
+                {
+                    DiagnosticItems.Add(item);
+                }
+
+                int problemCount = items.Count(i => i.IsProblem);
+                int healthyCount = items.Count - problemCount;
+
+                if (problemCount == 0)
+                {
+                    DiagnosticsMainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                    DiagnosticsIconText.Text = "🟢";
+                    DiagnosticsHeaderTitle.Text = "CENTRUM DIAGNOSTYCZNE: STAN HARDWARE W 100% SPRAWNY";
+                    DiagnosticsHeaderTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
+                    DiagnosticsBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B98120"));
+                    DiagnosticsBadgeText.Text = "0 BŁĘDÓW • SYSTEM W PEŁNI ZOPTYMALIZOWANY";
+                    DiagnosticsBadgeText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
+                    DiagnosticsSubtitleText.Text = "Aplikacja zweryfikowała fizyczny stan magistrali PnP, łączność Wi-Fi 6E / Bluetooth, profil EXPO oraz sterowniki AM5. Wszystkie podzespoły działają bez zakłóceń!";
+                }
+                else
+                {
+                    DiagnosticsMainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F59E0B"));
+                    DiagnosticsIconText.Text = "⚠️";
+                    DiagnosticsHeaderTitle.Text = "CENTRUM DIAGNOSTYCZNE: STAN HARDWARE & ZALECENIA NAPRAWCZE";
+                    DiagnosticsHeaderTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FBBF24"));
+                    DiagnosticsBadgeBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF444425"));
+                    DiagnosticsBadgeText.Text = $"{problemCount} WYMAGA NAPRAWY | {healthyCount} W NORMIE";
+                    DiagnosticsBadgeText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F87171"));
+                    DiagnosticsSubtitleText.Text = "Aplikacja zweryfikowała fizyczny stan magistrali PnP, rejestr błędów urządzeń oraz konfigurację AM5. Poniżej znajduje się rzetelne podsumowanie stanu Twojego komputera:";
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Błąd odświeżania Centrum Diagnostycznego: {ex.Message}");
+        }
+    }
+
+    private void DiagnosticAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string target && !string.IsNullOrEmpty(target))
+        {
+            switch (target.ToLowerInvariant())
+            {
+                case "install_mediatek":
+                    InstallMediaTekDrivers_Click(sender, e);
+                    break;
+                case "asrock_bios":
+                    OpenAsrockBios_Click(sender, e);
+                    break;
+                case "retrim":
+                    RunTrimNow_Click(sender, e);
+                    break;
+                case "amd":
+                    DriverUpdaterService.OpenAmdChipsetDrivers();
+                    break;
+                case "killer":
+                    DriverUpdaterService.OpenKillerIntelSuite();
+                    break;
+                case "nvidia":
+                    DriverUpdaterService.OpenNvidiaApp();
+                    break;
+                case "mchose":
+                    DriverUpdaterService.OpenMchoseHub();
+                    break;
+                case "devmgmt":
+                    DriverUpdaterService.OpenDeviceManager();
+                    break;
+                default:
+                    if (target.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try { Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true }); } catch { }
+                    }
+                    else
+                    {
+                        DriverUpdaterService.OpenDeviceManager();
+                    }
+                    break;
+            }
+        }
     }
 
     private void PnpDeviceAction_Click(object sender, RoutedEventArgs e)

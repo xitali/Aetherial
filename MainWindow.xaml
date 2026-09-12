@@ -979,159 +979,61 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="14">
 
-                                    <!-- ==================== SEKCJA 1: ⚠️ CO NALEŻY POPRAWIĆ W TWOIM KOMPUTERZE ==================== -->
-                                    <Border Background="#191B28" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="10" Padding="16,14" Margin="0,0,0,18">
+                                    <!-- ==================== SEKCJA 1: CENTRUM DIAGNOSTYCZNE (100% DYNAMICZNE) ==================== -->
+                                    <Border x:Name="DiagnosticsMainBorder" Background="#191B28" BorderBrush="#10B981" BorderThickness="1" CornerRadius="10" Padding="16,14" Margin="0,0,0,18">
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                                <TextBlock Text="⚠️" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="CENTRUM DIAGNOSTYCZNE: STAN HARDWARE &amp; ZALECENIA NAPRAWCZE" FontSize="15" FontWeight="Bold" Foreground="#FBBF24" VerticalAlignment="Center" />
-                                                <Border Background="#EF444425" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="2 WYMAGAJĄ NAPRAWY | 4 W NORMIE" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
+                                                <TextBlock x:Name="DiagnosticsIconText" Text="🟢" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                <TextBlock x:Name="DiagnosticsHeaderTitle" Text="CENTRUM DIAGNOSTYCZNE: STAN HARDWARE W 100% SPRAWNY" FontSize="15" FontWeight="Bold" Foreground="#34D399" VerticalAlignment="Center" />
+                                                <Border x:Name="DiagnosticsBadgeBorder" Background="#10B98120" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock x:Name="DiagnosticsBadgeText" Text="0 BŁĘDÓW • SYSTEM W PEŁNI ZOPTYMALIZOWANY" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="Aplikacja zweryfikowała fizyczny stan magistrali PnP, rejestr błędów urządzeń oraz konfigurację AM5. Poniżej znajduje się rzetelne podsumowanie stanu Twojego komputera:" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,12" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="DiagnosticsSubtitleText" Text="Aplikacja zweryfikowała fizyczny stan magistrali PnP, łączność Wi-Fi 6E / Bluetooth, profil EXPO oraz sterowniki AM5. Poniżej znajduje się rzetelne podsumowanie stanu Twojego komputera:" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,12" TextWrapping="Wrap" />
 
-                                            <UniformGrid Columns="3" Margin="-4,0">
-                                                <!-- KARTA 1: STAN CHIPSETU AMD (100% SPRAWNY) -->
-                                                <Border Background="#131520" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#10B98120" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟢 STAN SPRAWNY" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="Chipset AMD AM5 &amp; Sensory" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Wszystkie komponenty chipsetu AMD (GPIO, SMBus, Crash Defender, 3D V-Cache Optimizer) są w 100% zainstalowane i aktywne. Brak błędów Code 28 w architekturze AMD." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="✓ Chipset AMD Sprawny" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenDeviceManager_Click" />
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- KARTA 2: BŁĄD CODE 43 BLUETOOTH -->
-                                                <Border Background="#131520" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#F59E0B20" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟡 BŁĄD CODE 43" FontSize="10" FontWeight="Bold" Foreground="#FBBF24" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="MediaTek Bluetooth Adapter" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Urządzenie USB\VID_0E8D&amp;PID_0608 zgłasza zatrzymanie przez system (Kod 43). Przygotowany pakiet sterowników WHQL czeka na instalację." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="⚡ Zainstaluj / Napraw Bluetooth" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="InstallMediaTekDrivers_Click" />
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- KARTA 3: PRAWDZIWY BŁĄD CODE 28 WI-FI 6E -->
-                                                <Border Background="#131520" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#EF444420" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🔴 BŁĄD CODE 28" FontSize="10" FontWeight="Bold" Foreground="#F87171" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="Kontroler sieci Wi-Fi 6E (RZ608)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Brak sterownika dla magistrali PCI\VEN_14C3&amp;DEV_0608 (MediaTek MT7921 / RZ608). Pobrany certyfikowany pakiet WHQL jest gotowy do wdrożenia 1-kliknięciem." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="⚡ Zainstaluj sterownik Wi-Fi" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="11" Click="InstallMediaTekDrivers_Click" />
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- KARTA 4: RAM EXPO PROFIL -->
-                                                <Border Background="#131520" BorderBrush="#4F46E5" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#4F46E520" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟢 WYDAJNOŚĆ" FontSize="10" FontWeight="Bold" Foreground="#818CF8" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="Pamięć RAM DDR5 EXPO Profil" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Moduły pamięci 32 GB pracują na bazowym zegarze 4800 MT/s JEDEC. Aktywacja profilu EXPO (6000 MT/s) w BIOS ASRock da +10-15% FPS dla Ryzen 7 7800X3D." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Border Grid.Row="2" Background="#1E2235" CornerRadius="4" Padding="8,4">
-                                                            <TextBlock Text="Włącz EXPO w BIOS (Klawisz Del / F2)" FontSize="10.5" Foreground="#A5B4FC" HorizontalAlignment="Center" />
+                                            <ItemsControl x:Name="DiagnosticItemsControl">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <UniformGrid Columns="3" Margin="-4,0" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type models:DiagnosticItem}">
+                                                        <Border Background="#131520" BorderBrush="{Binding BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="Auto" />
+                                                                </Grid.RowDefinitions>
+                                                                <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Border Grid.Column="0" Background="{Binding BadgeBackground}" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
+                                                                        <TextBlock Text="{Binding BadgeText}" FontSize="10" FontWeight="Bold" Foreground="{Binding BadgeForeground}" />
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
+                                                                </Grid>
+                                                                <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
+                                                                <Grid Grid.Row="2">
+                                                                    <Button Content="{Binding ActionButtonText}" 
+                                                                            Tag="{Binding ActionTarget}"
+                                                                            Style="{StaticResource SecondaryButtonStyle}" 
+                                                                            Padding="10,5" FontSize="11" 
+                                                                            Click="DiagnosticAction_Click"
+                                                                            Visibility="{Binding HasButton, Converter={StaticResource BoolToVis}}" />
+                                                                    <Border Background="#1E2235" CornerRadius="4" Padding="8,4"
+                                                                            Visibility="{Binding HasNote, Converter={StaticResource BoolToVis}}">
+                                                                        <TextBlock Text="{Binding NoteText}" FontSize="10.5" Foreground="#A5B4FC" HorizontalAlignment="Center" />
+                                                                    </Border>
+                                                                </Grid>
+                                                            </Grid>
                                                         </Border>
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- KARTA 5: BIOS AGESA -->
-                                                <Border Background="#131520" BorderBrush="#4F46E5" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#4F46E520" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟢 OPTYMALIZACJA" FontSize="10" FontWeight="Bold" Foreground="#818CF8" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="Płyta ASRock B650E (BIOS v2.02)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Płyta posiada BIOS 2.02. Nowsza wersja wprowadza mikrokod AGESA 1.2.0.2a. Pobrany plik ROM v3.10 znajduje się już w Twoim folderze Pobrane!" FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="🔍 Sprawdź BIOS ASRock" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="OpenAsrockBios_Click" />
-                                                    </Grid>
-                                                </Border>
-
-                                                <!-- KARTA 6: TRIM NVME -->
-                                                <Border Background="#131520" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4">
-                                                    <Grid>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="#10B98120" CornerRadius="4" Padding="5,2" Margin="0,0,6,0" VerticalAlignment="Top">
-                                                                <TextBlock Text="🟢 STAN ZDROWY" FontSize="10" FontWeight="Bold" Foreground="#34D399" />
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1" Text="Kingston KC3000 NVMe 2TB" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="16" />
-                                                        </Grid>
-                                                        <TextBlock Grid.Row="1" Text="Nośnik SSD PCIe 4.0 jest w 100% sprawny (SMART: OK). Aby utrzymać fabryczną prędkość zapisu 7000 MB/s, zalecana jest regularna optymalizacja ReTrim." FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,10" LineHeight="16" />
-                                                        <Button Grid.Row="2" Content="⚡ Wykonaj ReTrim SSD Teraz" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Click="RunTrimNow_Click" />
-                                                    </Grid>
-                                                </Border>
-                                            </UniformGrid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
                                     </Border>
 

@@ -18,6 +18,9 @@ publish/
 *.exe
 *.dll
 *.pdb
+*.deps.json
+*.runtimeconfig.json
+brief.md
 
 # Crash dumps & runtime logs
 *.log
