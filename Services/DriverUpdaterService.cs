@@ -298,31 +298,21 @@ public class DriverUpdaterService
         {
             string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string downloads = Path.Combine(userProfile, "Downloads");
-            string batPath = Path.Combine(downloads, "Zainstaluj_Sterowniki_MediaTek.bat");
+            string psScript = Path.Combine(downloads, "Zainstaluj_Sterowniki_MediaTek.ps1");
             string wifiInf = Path.Combine(downloads, "mediatek_wifi", "mtkwl6ex.inf");
             string btInf = Path.Combine(downloads, "mediatek_bt", "mtkbtfilter.inf");
 
-            if (File.Exists(batPath))
-            {
-                logger?.Invoke("▶ Uruchamianie skryptu instalacyjnego sterowników MediaTek z uprawnieniami administratora...");
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = batPath,
-                    UseShellExecute = true,
-                    Verb = "runas"
-                });
-                return true;
-            }
+            EnsureMediaTekInstallerFiles(downloads, wifiInf, btInf);
 
-            string cmd = $"pnputil /add-driver \"{wifiInf}\" /install; pnputil /add-driver \"{btInf}\" /install; Start-Sleep 2";
-            logger?.Invoke("▶ Wykonywanie pnputil /add-driver dla Wi-Fi i Bluetooth (Administrator)...");
-            Process.Start(new ProcessStartInfo
+            logger?.Invoke("▶ Uruchamianie procedury instalacji sterowników Wi-Fi 6E & Bluetooth (PowerShell RunAs)...");
+
+            var psi = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-NoProfile -Command \"{cmd}\"",
-                UseShellExecute = true,
-                Verb = "runas"
-            });
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \\\"{psScript}\\\"' -Verb RunAs\"",
+                UseShellExecute = true
+            };
+            Process.Start(psi);
             return true;
         }
         catch (Exception ex)
@@ -330,6 +320,86 @@ public class DriverUpdaterService
             logger?.Invoke($"Błąd uruchamiania instalatora sterowników: {ex.Message}");
             return false;
         }
+    }
+
+    private static void EnsureMediaTekInstallerFiles(string downloads, string wifiInf, string btInf)
+    {
+        try
+        {
+            string psScript = Path.Combine(downloads, "Zainstaluj_Sterowniki_MediaTek.ps1");
+            string batPath = Path.Combine(downloads, "Zainstaluj_Sterowniki_MediaTek.bat");
+
+            string psCode = @"# Auto-elevate if not admin
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Start-Process powershell.exe -ArgumentList ""-NoProfile -ExecutionPolicy Bypass -File `""$PSCommandPath`"""" -Verb RunAs
+    exit
+}
+
+$Host.UI.RawUI.WindowTitle = ""Instalacja Sterownikow MediaTek Wi-Fi 6E & Bluetooth""
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+Write-Host ""====================================================================="" -ForegroundColor Cyan
+Write-Host ""   INSTALACJA STEROWNIKOW MEDIATEK WI-FI 6E & BLUETOOTH (WHQL)       "" -ForegroundColor Cyan
+Write-Host ""====================================================================="" -ForegroundColor Cyan
+Write-Host """"
+
+$downloads = ""$env:USERPROFILE\Downloads""
+$wifiInf = Join-Path $downloads ""mediatek_wifi\mtkwl6ex.inf""
+$btInf   = Join-Path $downloads ""mediatek_bt\mtkbtfilter.inf""
+
+if (Test-Path $wifiInf) {
+    Write-Host ""[1/2] Instalowanie AMD RZ608 / MediaTek MT7921 Wi-Fi 6E..."" -ForegroundColor Yellow
+    Write-Host ""Plik INF: $wifiInf"" -ForegroundColor Gray
+    $resWifi = & pnputil.exe /add-driver ""$wifiInf"" /install
+    $resWifi | ForEach-Object { Write-Host ""  $_"" -ForegroundColor Green }
+} else {
+    Write-Host ""BLAD: Nie znaleziono pliku $wifiInf"" -ForegroundColor Red
+}
+
+Write-Host """"
+if (Test-Path $btInf) {
+    Write-Host ""[2/2] Instalowanie MediaTek Bluetooth 5.2..."" -ForegroundColor Yellow
+    Write-Host ""Plik INF: $btInf"" -ForegroundColor Gray
+    $resBt = & pnputil.exe /add-driver ""$btInf"" /install
+    $resBt | ForEach-Object { Write-Host ""  $_"" -ForegroundColor Green }
+} else {
+    Write-Host ""BLAD: Nie znaleziono pliku $btInf"" -ForegroundColor Red
+}
+
+Write-Host """"
+Write-Host ""Restartowanie uslugi Bluetooth..."" -ForegroundColor Yellow
+Restart-Service bthserv -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+
+Write-Host """"
+Write-Host ""====================================================================="" -ForegroundColor Cyan
+Write-Host ""   STATUS MAGISTRALI PNP PO INSTALACJI:                              "" -ForegroundColor Cyan
+Write-Host ""====================================================================="" -ForegroundColor Cyan
+Start-Sleep -Seconds 2
+
+Get-PnpDevice | Where-Object { 
+    $_.InstanceId -like '*14C3&DEV_0608*' -or 
+    $_.InstanceId -like '*0E8D&PID_0608*' -or 
+    $_.FriendlyName -like '*RZ608*' -or 
+    $_.FriendlyName -like '*MediaTek*' -or 
+    $_.FriendlyName -like '*Generic Bluetooth*' 
+} | Format-Table InstanceId, FriendlyName, Status, ConfigManagerErrorCode -AutoSize
+
+Write-Host """"
+Write-Host ""Gotowe! Wcisnij dowolny klawisz, aby zamknac okno..."" -ForegroundColor Green
+try {
+    $null = $Host.UI.RawUI.ReadKey(""NoEcho,IncludeKeyDown"")
+} catch {
+    pause
+}
+";
+            File.WriteAllText(psScript, psCode, System.Text.Encoding.UTF8);
+
+            string batCode = "@echo off\r\nsetlocal\r\ncd /d \"%~dp0\"\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0Zainstaluj_Sterowniki_MediaTek.ps1\"\r\n";
+            File.WriteAllText(batPath, batCode, System.Text.Encoding.ASCII);
+        }
+        catch { }
     }
 
     public async Task<List<PnpDeviceItem>> GetConnectedPnpDevicesAsync(Action<string>? logger = null)
@@ -345,13 +415,17 @@ public class DriverUpdaterService
 
             try
             {
+                string pnpQuery = "Get-PnpDevice | Where-Object { ($_.InstanceId -like '*14C3&DEV_0608*' -or $_.InstanceId -like '*0E8D&PID_0608*' -or $_.InstanceId -like '*ACPI\\AMD*') -and $_.Status -ne 'OK' } | Select-Object -ExpandProperty InstanceId";
+                string encoded = Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(pnpQuery));
+
                 using var proc = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
-                        Arguments = "-NoProfile -Command \"Get-PnpDevice | Where-Object { ($_.InstanceId -like '*14C3&DEV_0608*' -or $_.InstanceId -like '*0E8D&PID_0608*' -or $_.InstanceId -like '*ACPI\\AMD*') -and $_.Status -ne 'OK' } | Select-Object -ExpandProperty InstanceId\"",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}",
                         RedirectStandardOutput = true,
+                        StandardOutputEncoding = System.Text.Encoding.UTF8,
                         UseShellExecute = false,
                         CreateNoWindow = true
                     }

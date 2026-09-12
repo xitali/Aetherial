@@ -294,6 +294,8 @@ public static class DiskHelper
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8,
                 CreateNoWindow = true
             };
 
@@ -328,5 +330,17 @@ public static class DiskHelper
             logger?.Invoke($"Nie można uruchomić {fileName}: {ex.Message}");
             return (false, ex.Message, -1);
         }
+    }
+
+    public static async Task<(bool success, string output, int exitCode)> RunPowerShellScriptAsync(
+        string script, 
+        Action<string>? logger = null, 
+        CancellationToken ct = default)
+    {
+        // PowerShell -EncodedCommand przyjmuje Base64 z ciągu Unicode (UTF-16LE)
+        // Całkowicie eliminuje problemy ze znakami specjalnymi, polskimi literami i cudzysłowami
+        byte[] bytes = System.Text.Encoding.Unicode.GetBytes(script);
+        string encoded = Convert.ToBase64String(bytes);
+        return await RunProcessDetailedAsync("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -EncodedCommand {encoded}", logger, ct);
     }
 }

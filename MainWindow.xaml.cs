@@ -805,7 +805,7 @@ public partial class MainWindow : Window
             // 3. Sprzętowa optymalizacja TRIM dla dysków SSD
             GlobalStatusText.Text = "⚡ Optymalizacja komórek SSD NVMe (TRIM)...";
             AppendLog("▶ Uruchamianie procedury ReTrim dla partycji SSD...");
-            await DiskHelper.RunProcessAsync("powershell", "-NoProfile -Command \"Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }\"", AppendLog);
+            await DiskHelper.RunPowerShellScriptAsync("Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }", AppendLog);
 
             // 4. Optymalizacja RAM
             GlobalStatusText.Text = "⚡ Optymalizacja pamięci operacyjnej RAM...";
@@ -1762,8 +1762,8 @@ public partial class MainWindow : Window
         AppendLog("🩺 Sprawdzanie kondycji i parametrów S.M.A.R.T. dysków SSD/NVMe...");
         GlobalStatusText.Text = "Odczyt S.M.A.R.T. dysków NVMe...";
 
-        var (ok, output) = await DiskHelper.RunProcessAsync("powershell", 
-            "-NoProfile -Command \"Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus, Size | Format-Table -AutoSize | Out-String\"", 
+        var (ok, output, _) = await DiskHelper.RunPowerShellScriptAsync(
+            "Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus, Size | Format-Table -AutoSize | Out-String", 
             AppendLog);
 
         GlobalStatusText.Text = "Odczytano stan zdrowia dysków.";
@@ -1792,7 +1792,7 @@ public partial class MainWindow : Window
     private async void RestartBluetoothService_Click(object sender, RoutedEventArgs e)
     {
         AppendLog("▶ Restartowanie usługi Bluetooth (bthserv)...");
-        var (ok, _) = await DiskHelper.RunProcessAsync("powershell", "-NoProfile -Command \"Restart-Service bthserv -Force -ErrorAction SilentlyContinue\"", AppendLog);
+        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("Restart-Service bthserv -Force -ErrorAction SilentlyContinue", AppendLog);
         await ShowAlertAsync("Bluetooth", "Wysłano polecenie restartu usługi Bluetooth. Sprawdź działanie urządzeń bezprzewodowych.", "OK", "🔄", isSuccess: ok);
     }
 
@@ -1808,7 +1808,7 @@ public partial class MainWindow : Window
     private async void RunTrimNow_Click(object sender, RoutedEventArgs e)
     {
         AppendLog("▶ Uruchamianie procedury ReTrim dla partycji SSD...");
-        var (ok, _) = await DiskHelper.RunProcessAsync("powershell", "-NoProfile -Command \"Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }\"", AppendLog);
+        var (ok, _, _) = await DiskHelper.RunPowerShellScriptAsync("Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim -Verbose }", AppendLog);
         await ShowAlertAsync("SSD TRIM", "Procedura sprzętowej optymalizacji TRIM została pomyślnie zrealizowana dla wszystkich dysków SSD!", "Świetnie", "⚡", isSuccess: ok);
     }
 

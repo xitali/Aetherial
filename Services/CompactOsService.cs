@@ -49,8 +49,8 @@ public class CompactOsService
         string scriptPath = Path.Combine(Path.GetTempPath(), $"compact_vhdx_{Guid.NewGuid():N}.txt");
         try
         {
-            string scriptContent = $"select vdisk file=\"{vhdxPath}\"\nattach vdisk readonly\ncompact vdisk\ndetach vdisk\n";
-            await File.WriteAllTextAsync(scriptPath, scriptContent, ct);
+            string scriptContent = $"select vdisk file=\"{vhdxPath}\"\r\nattach vdisk readonly\r\ncompact vdisk\r\ndetach vdisk\r\n";
+            await File.WriteAllTextAsync(scriptPath, scriptContent, System.Text.Encoding.ASCII, ct);
 
             logger?.Invoke("2. Uruchamianie procedury diskpart compact vdisk...");
             var (ok, _) = await DiskHelper.RunProcessAsync("diskpart", $"/s \"{scriptPath}\"", logger, ct);
