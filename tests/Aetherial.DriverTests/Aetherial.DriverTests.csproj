@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Models/PnpDeviceItem.cs" Link="PnpDeviceItem.cs" />
+    <Compile Include="../../Models/DriverAssessment.cs" Link="DriverAssessment.cs" />
+    <Compile Include="../../Services/DriverCatalogService.cs" Link="DriverCatalogService.cs" />
+  </ItemGroup>
+</Project>

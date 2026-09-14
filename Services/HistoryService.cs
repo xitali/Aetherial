@@ -1,98 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Threading.Tasks;
 using DiskOptimizer.Models;
-
 namespace DiskOptimizer.Services;
-
-public interface IHistoryService
-{
-    Task<List<HistoryEntry>> GetHistoryAsync();
-    Task AddEntryAsync(HistoryEntry entry);
-    Task ClearHistoryAsync();
-}
-
 public class HistoryService : IHistoryService
 {
-    private readonly string _historyFilePath;
-    private readonly object _lock = new();
-
-    public HistoryService()
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> Gates = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string _path;
+    private readonly SemaphoreSlim _gate;
+    public HistoryService(string? historyFilePath = null)
     {
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appFolder = Path.Combine(localAppData, "Aetherial");
-        Directory.CreateDirectory(appFolder);
-        _historyFilePath = Path.Combine(appFolder, "history.json");
+        _path = Path.GetFullPath(historyFilePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aetherial", "history.json"));
+        _gate = Gates.GetOrAdd(_path, _ => new SemaphoreSlim(1, 1));
     }
-
-    public async Task<List<HistoryEntry>> GetHistoryAsync()
+    private async Task<List<HistoryEntry>> ReadAsync(CancellationToken ct)
     {
-        return await Task.Run(() =>
-        {
-            lock (_lock)
-            {
-                if (!File.Exists(_historyFilePath)) return new List<HistoryEntry>();
-                try
-                {
-                    string json = File.ReadAllText(_historyFilePath);
-                    var list = JsonSerializer.Deserialize<List<HistoryEntry>>(json);
-                    return list?.OrderByDescending(x => x.Timestamp).ToList() ?? new List<HistoryEntry>();
-                }
-                catch
-                {
-                    return new List<HistoryEntry>();
-                }
-            }
-        });
+        if (!File.Exists(_path)) return new();
+        var json = await File.ReadAllTextAsync(_path, ct).ConfigureAwait(false);
+        // Corruption is reported; never silently erase an unreadable journal on append.
+        return (JsonSerializer.Deserialize<List<HistoryEntry>>(json) ?? throw new JsonException("Nieprawidłowy dziennik historii."))
+            .OrderByDescending(x => x.Timestamp).Take(100).ToList();
     }
-
-    public async Task AddEntryAsync(HistoryEntry entry)
+    public async Task<List<HistoryEntry>> GetHistoryAsync(CancellationToken ct = default)
     {
-        await Task.Run(() =>
-        {
-            lock (_lock)
-            {
-                var list = new List<HistoryEntry>();
-                if (File.Exists(_historyFilePath))
-                {
-                    try
-                    {
-                        string existing = File.ReadAllText(_historyFilePath);
-                        list = JsonSerializer.Deserialize<List<HistoryEntry>>(existing) ?? new List<HistoryEntry>();
-                    }
-                    catch { }
-                }
-
-                list.Insert(0, entry);
-                if (list.Count > 100) list = list.Take(100).ToList();
-
-                try
-                {
-                    string json = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-                    string tempPath = _historyFilePath + ".tmp";
-                    File.WriteAllText(tempPath, json);
-                    File.Move(tempPath, _historyFilePath, true);
-                }
-                catch { }
-            }
-        });
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try { return await ReadAsync(ct).ConfigureAwait(false); }
+        finally { _gate.Release(); }
     }
-
-    public async Task ClearHistoryAsync()
+    public async Task AddEntryAsync(HistoryEntry entry, CancellationToken ct = default)
     {
-        await Task.Run(() =>
+        ArgumentNullException.ThrowIfNull(entry);
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        string temp = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
         {
-            lock (_lock)
-            {
-                try
-                {
-                    if (File.Exists(_historyFilePath)) File.Delete(_historyFilePath);
-                }
-                catch { }
-            }
-        });
+            var entries = await ReadAsync(ct).ConfigureAwait(false);
+            entries.Insert(0, entry);
+            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+            await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(entries.Take(100)), ct).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            if (File.Exists(_path)) File.Replace(temp, _path, null);
+            else File.Move(temp, _path);
+        }
+        finally
+        {
+            try { if (File.Exists(temp)) File.Delete(temp); }
+            finally { _gate.Release(); }
+        }
+    }
+    public async Task ClearHistoryAsync(CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try { ct.ThrowIfCancellationRequested(); File.Delete(_path); }
+        finally { _gate.Release(); }
     }
 }

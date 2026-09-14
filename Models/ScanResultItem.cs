@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace DiskOptimizer.Models;
@@ -22,7 +22,7 @@ public enum FixAction
 
 public class ScanResultItem : INotifyPropertyChanged
 {
-    private bool _isSelected = true;
+    private bool _isSelected;
     private string _status = "Wykryto";
     private string _statusColor = "#FBBF24";
 
@@ -34,6 +34,7 @@ public class ScanResultItem : INotifyPropertyChanged
     public long SizeBytes { get; set; }
     public FixAction Fix { get; set; } = FixAction.Generic;
     public string DetailPath { get; set; } = string.Empty;
+    public bool CanFix { get; set; }
 
     public bool IsSelected
     {

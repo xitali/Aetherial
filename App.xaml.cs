@@ -1,11 +1,23 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiskOptimizer;
 
 public partial class App : Application
 {
+    private Mutex? instanceMutex;
+    private bool ownsInstanceMutex;
+    private static readonly Lazy<ServiceProvider> Provider = new(CompositionRoot.BuildServices);
+    public static ServiceProvider Services => Provider.Value;
+    protected override void OnExit(ExitEventArgs e)
+    {
+        if (Provider.IsValueCreated) Provider.Value.Dispose();
+        if (ownsInstanceMutex) instanceMutex?.ReleaseMutex();
+        instanceMutex?.Dispose();
+        base.OnExit(e);
+    }
     public static void ApplyTheme(bool light)
     {
         var palette = new Dictionary<string, string>
@@ -31,6 +43,13 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        instanceMutex = new Mutex(true, @"Local\Aetherial.Desktop", out ownsInstanceMutex);
+        if (!ownsInstanceMutex)
+        {
+            MessageBox.Show("Aetherial jest już uruchomiony. Przejdź do otwartego okna aplikacji.", "Aetherial", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
         AppDomain.CurrentDomain.UnhandledException += (_, args) => WriteCrash(args.ExceptionObject.ToString());
         TaskScheduler.UnobservedTaskException += (_, args) => { WriteCrash(args.Exception.ToString()); args.SetObserved(); };
         DispatcherUnhandledException += (_, args) =>
@@ -47,6 +66,7 @@ public partial class App : Application
     {
         try
         {
+            Services.GetRequiredService<Serilog.ILogger>().Error("Unhandled application error: {Error}", message);
             Directory.CreateDirectory(Path.GetDirectoryName(CrashPath)!);
             if (File.Exists(CrashPath) && new FileInfo(CrashPath).Length > 2_000_000) File.WriteAllText(CrashPath, "");
             File.AppendAllText(CrashPath, $"[{DateTime.Now:O}] {message}{Environment.NewLine}");

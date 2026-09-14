@@ -13,7 +13,18 @@ public class DriveModel : INotifyPropertyChanged
     public string DriveLetter
     {
         get => _driveLetter;
-        set { _driveLetter = value; OnPropertyChanged(); OnPropertyChanged(nameof(DisplayName)); }
+        set { _driveLetter = value; OnPropertyChanged(); OnPropertyChanged(nameof(DisplayName)); OnPropertyChanged(nameof(RootPath)); }
+    }
+
+    public string RootPath => NormalizePath(DriveLetter);
+
+    public static string NormalizePath(string input)
+    {
+        string path = input.Trim();
+        if (System.Text.RegularExpressions.Regex.IsMatch(path, "^[A-Za-z]:?[\\\\/]?$"))
+            return char.ToUpperInvariant(path[0]) + ":\\";
+        if (!System.IO.Path.IsPathFullyQualified(path)) throw new ArgumentException("Podaj pełną ścieżkę folderu lub literę woluminu.");
+        return System.IO.Path.GetFullPath(path);
     }
 
     public string VolumeLabel

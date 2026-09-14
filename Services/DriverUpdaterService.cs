@@ -257,7 +257,7 @@ public class DriverUpdaterService
     {
         Process.Start(new ProcessStartInfo
         {
-            FileName = "https://pg.asrock.com/mb/AMD/B650E%20PG%20Riptide%20WiFi/index.asp#Download",
+            FileName = "https://www.asrock.com/support/index.asp",
             UseShellExecute = true
         });
     }
@@ -448,20 +448,22 @@ $ram = @(Get-CimInstance Win32_PhysicalMemory)
         }
     }
 
-    public async Task<List<PnpDeviceItem>> GetConnectedPnpDevicesAsync(Action<string>? logger = null)
+    public async Task<List<PnpDeviceItem>> GetConnectedPnpDevicesAsync(Action<string>? logger = null, CancellationToken ct = default)
     {
         const string script = """
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$os = Get-CimInstance Win32_OperatingSystem
 $drivers = @{}
 Get-CimInstance Win32_PnPSignedDriver | ForEach-Object { if ($_.DeviceID) { $drivers[$_.DeviceID] = $_ } }
 $devices = @(Get-CimInstance Win32_PnPEntity | Where-Object { $_.Present -eq $true } | ForEach-Object {
  $driver = $drivers[$_.PNPDeviceID]
- [pscustomobject]@{ Name = $_.Name; Id = $_.PNPDeviceID; Category = $_.PNPClass; Manufacturer = $_.Manufacturer; Code = $_.ConfigManagerErrorCode; Version = $driver.DriverVersion; Date = if ($driver.DriverDate) { $driver.DriverDate.ToString('yyyy-MM-dd') } else { '' } }
+ [pscustomobject]@{ Name = $_.Name; Id = $_.PNPDeviceID; HardwareIds = @($_.HardwareID); OsVersion = $os.Version; OsProductType = [int]$os.ProductType; OsArchitecture = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }; Category = $_.PNPClass; Manufacturer = $_.Manufacturer; Code = $_.ConfigManagerErrorCode; Version = $driver.DriverVersion; Date = if ($driver.DriverDate) { $driver.DriverDate.ToString('yyyy-MM-dd') } else { '' } }
 })
 ConvertTo-Json -InputObject $devices -Compress -Depth 3
 """;
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(60));
         var (ok, output, _) = await DiskHelper.RunPowerShellScriptAsync(script, null, timeout.Token);
         if (!ok) throw new IOException($"Nie odczytano urządzeń PnP: {output}");
         using var doc = JsonDocument.Parse(output);
@@ -475,6 +477,8 @@ ConvertTo-Json -InputObject $devices -Compress -Depth 3
             devices.Add(new PnpDeviceItem
             {
                 DeviceName = string.IsNullOrWhiteSpace(Read("Name")) ? Read("Id") : Read("Name"),
+                DeviceId = Read("Id"), DeviceErrorCode = code, OsProductType = el.TryGetProperty("OsProductType", out var osType) && osType.TryGetInt32(out var productType) ? productType : 0, OsVersion = Read("OsVersion"), OsArchitecture = Read("OsArchitecture"),
+                HardwareIds = el.TryGetProperty("HardwareIds", out var ids) && ids.ValueKind == JsonValueKind.Array ? ids.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString() ?? "").ToArray() : Array.Empty<string>(),
                 Category = Read("Category"), Manufacturer = Read("Manufacturer"), DriverVersion = string.IsNullOrEmpty(Read("Version")) ? "Brak danych" : Read("Version"),
                 DriverDate = Read("Date"), NeedsUpdate = problem,
                 Status = code == 0 ? "System nie zgłasza błędu" : code.HasValue ? $"Kod urządzenia: {code}" : "Stan nieznany",

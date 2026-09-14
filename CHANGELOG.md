@@ -1,7 +1,28 @@
-﻿# CHANGELOG: Aetherial Suite
+# CHANGELOG: Aetherial Suite
 
 Wszystkie istotne zmiany w projekcie są dokumentowane w tym pliku.
 Format jest oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/), a wersjonowanie na [Semantic Versioning](https://semver.org/).
+
+## [6.1.0] - 2026-09-13
+
+### Dodano
+- Niezależne porównywanie sterowników NVIDIA z oficjalnym katalogiem na podstawie PCI ID, modelu i systemu; widok wersji, źródła, daty oraz filtrów wyników.
+- Nowy przepływ Czyść: skan, wybór kategorii, potwierdzenie, postęp, anulowanie i rzeczywisty raport.
+- Projekty Core i Services, kontener DI, view modele CommunityToolkit.Mvvm oraz rotowane logi Serilog w profilu użytkownika.
+- Testy offline sterowników i skanera w procesie wydania.
+- Test interakcji WPF przed publikacją oraz blokadę drugiej instancji aplikacji.
+
+### Poprawiono
+- Nawigację woluminów: normalizacja ścieżek, anulowanie poprzedniego odczytu i ochrona przed spóźnionymi wynikami.
+- Zbiorcze wykonywanie: sprawdzanie celów względem katalogu, wymagany punkt przywracania i rozróżnienie wykonania, pominięcia, błędu oraz anulowania.
+- Raport skanu: zakres dostępnych celów czyszczenia zamiast fikcyjnej kondycji PC; brak deklaracji pełnej naprawy po wykonaniu instrukcji.
+- Trwałą historię: atomowy zapis, ograniczenie liczby wpisów, synchronizacja i obsługa uszkodzonego pliku.
+- Retencję wyników kompilacji nowych bibliotek i projektów testowych.
+
+### Ograniczenia
+- AMD, Intel i OEM pozostają niezweryfikowane automatycznie. Nie dodano automatycznej instalacji sterowników producenta.
+- Migracja wszystkich starszych narzędzi do MVVM, instalator i aktualizator pozostają w backlogu.
+- Opis 6.0 poniżej dokumentuje wcześniejszy zakres; deklaracje procentowego zdrowia i pełnego skanu zostały zastąpione w 6.1 rzeczywistym zakresem pomiaru.
 
 ## [6.0.0] - 2026-09-13
 

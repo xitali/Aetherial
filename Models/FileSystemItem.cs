@@ -65,7 +65,7 @@ public class FileSystemItem : INotifyPropertyChanged
         set { _status = value; OnPropertyChanged(); }
     }
 
-    public string FormattedSize => DriveModel.FormatBytes(SizeBytes);
+    public string FormattedSize => IsDirectory && SizeBytes == 0 ? "Nie obliczono" : DriveModel.FormatBytes(SizeBytes);
     public string FormattedDate => LastModified > DateTime.MinValue 
         ? LastModified.ToString("yyyy-MM-dd HH:mm") 
         : "Nieznana";

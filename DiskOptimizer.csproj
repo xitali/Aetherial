@@ -1,15 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>6.0.0</Version>
+    <Version>6.1.0</Version>
     <AssemblyName>Aetherial</AssemblyName>
     <RootNamespace>DiskOptimizer</RootNamespace>
-    <DefaultItemExcludes>$(DefaultItemExcludes);.artifacts/**;release/**;tests/**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);.artifacts/**;release/**;tests/**;Aetherial.Core/**;Aetherial.Services/**</DefaultItemExcludes>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
@@ -18,15 +17,22 @@
     <Company>Aetherial Systems</Company>
     <Description>Advanced PC Optimization, Diagnostics &amp; Maintenance Architecture</Description>
   </PropertyGroup>
-
   <ItemGroup>
     <Resource Include="Assets\app_icon.png" />
     <Resource Include="Assets\app_icon.ico" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="DiskOptimizer_Manual.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
-
-
+  <ItemGroup>
+    <Compile Remove="Models/**/*.cs;Services/**/*.cs" />
+    <ProjectReference Include="Aetherial.Core/Aetherial.Core.csproj" />
+    <ProjectReference Include="Aetherial.Services/Aetherial.Services.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
 </Project>

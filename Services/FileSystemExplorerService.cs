@@ -119,8 +119,9 @@ public class FileSystemExplorerService
 
     public async Task<List<FileSystemItem>> GetFolderContentsAsync(string folderPath, CancellationToken ct = default)
     {
+        folderPath = DriveModel.NormalizePath(folderPath);
         var results = new List<FileSystemItem>();
-        if (!Directory.Exists(folderPath)) return results;
+        if (!Directory.Exists(folderPath)) throw new DirectoryNotFoundException("Folder nie istnieje lub jest niedostępny.");
 
         await Task.Run(() =>
         {
@@ -185,19 +186,18 @@ public class FileSystemExplorerService
                     catch { }
                 }
             }
-            catch (Exception)
-            {
-                // Błędy dostępu do katalogu
-            }
+            catch (UnauthorizedAccessException) { throw; }
+            catch (IOException) { throw; }
         }, ct);
-
+        ct.ThrowIfCancellationRequested();
         return results;
     }
 
     public async Task<List<FileSystemItem>> FindLargeFilesAsync(string rootPath, long minSizeBytes = 500 * 1024 * 1024, int limit = 60, CancellationToken ct = default)
     {
         var results = new List<FileSystemItem>();
-        if (!Directory.Exists(rootPath)) return results;
+        rootPath = DriveModel.NormalizePath(rootPath);
+        if (!Directory.Exists(rootPath)) throw new DirectoryNotFoundException("Folder nie istnieje lub jest niedostępny.");
 
         await Task.Run(() =>
         {
@@ -271,6 +271,7 @@ public class FileSystemExplorerService
             catch { }
         }, ct);
 
+        ct.ThrowIfCancellationRequested();
         return results.OrderByDescending(r => r.SizeBytes).ToList();
     }
 

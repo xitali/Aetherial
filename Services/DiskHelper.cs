@@ -110,64 +110,54 @@ public static class DiskHelper
         }
     }
 
-    public static (long sizeBytes, int fileCount) GetDirectorySize(string directoryPath, CancellationToken ct = default)
+    public static (long sizeBytes, int fileCount) GetDirectorySize(
+        string directoryPath, CancellationToken ct = default, Action<string, Exception>? onSkipped = null)
     {
-        if (!Directory.Exists(directoryPath)) return (0, 0);
-
+        ct.ThrowIfCancellationRequested();
         long totalSize = 0;
         int fileCount = 0;
+        var stack = new Stack<string>();
+        stack.Push(directoryPath);
 
-        try
+        while (stack.Count > 0)
         {
-            var stack = new Stack<string>();
-            stack.Push(directoryPath);
-
-            while (stack.Count > 0)
+            ct.ThrowIfCancellationRequested();
+            string currentDir = stack.Pop();
+            try
             {
-                if (ct.IsCancellationRequested) break;
+                var dirInfo = new DirectoryInfo(currentDir);
+                // Junctions are intentionally outside this scan's scope.
+                if ((dirInfo.Attributes & FileAttributes.ReparsePoint) != 0 && currentDir != directoryPath)
+                    continue;
 
-                string currentDir = stack.Pop();
-                try
+                foreach (var file in dirInfo.EnumerateFiles())
                 {
-                    var dirInfo = new DirectoryInfo(currentDir);
-                    
-                    // Pomiń punkty reparse (symlinki/junctions), aby uniknąć pętli
-                    if ((dirInfo.Attributes & FileAttributes.ReparsePoint) != 0 && currentDir != directoryPath)
-                        continue;
-
-                    foreach (var file in dirInfo.EnumerateFiles())
+                    ct.ThrowIfCancellationRequested();
+                    try
                     {
-                        if (ct.IsCancellationRequested) break;
-                        try
-                        {
-                            totalSize += file.Length;
-                            fileCount++;
-                        }
-                        catch
-                        {
-                            // Pomiń zablokowane pliki
-                        }
+                        totalSize += file.Length;
+                        fileCount++;
                     }
-
-                    foreach (var subDir in dirInfo.EnumerateDirectories())
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
                     {
-                        if ((subDir.Attributes & FileAttributes.ReparsePoint) == 0)
-                        {
-                            stack.Push(subDir.FullName);
-                        }
+                        onSkipped?.Invoke(file.FullName, ex);
                     }
                 }
-                catch (UnauthorizedAccessException) { }
-                catch (DirectoryNotFoundException) { }
-                catch (PathTooLongException) { }
-                catch (Exception) { }
+
+                foreach (var subDir in dirInfo.EnumerateDirectories())
+                {
+                    ct.ThrowIfCancellationRequested();
+                    if ((subDir.Attributes & FileAttributes.ReparsePoint) == 0)
+                        stack.Push(subDir.FullName);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
+            {
+                onSkipped?.Invoke(currentDir, ex);
             }
         }
-        catch
-        {
-            // Ignoruj ogólne błędy dostępu
-        }
 
+        ct.ThrowIfCancellationRequested();
         return (totalSize, fileCount);
     }
 

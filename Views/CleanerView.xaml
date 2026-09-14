@@ -1,0 +1,79 @@
+<UserControl x:Class="DiskOptimizer.Views.CleanerView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:models="clr-namespace:DiskOptimizer.Models;assembly=Aetherial.Core">
+ <Grid>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Style="{StaticResource SurfaceCardStyle}" Padding="24" Margin="0,0,0,16">
+   <Grid>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Margin="0,0,24,0">
+     <TextBlock Text="CZYŚĆ  /  PAMIĘCI PODRĘCZNE" Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Bold"/>
+     <TextBlock Text="{Binding Heading}" FontSize="25" FontWeight="SemiBold" Margin="0,10,0,8" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+     <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+     <WrapPanel Margin="0,18,0,0">
+      <Button Content="{Binding ScanLabel}" Style="{StaticResource PrimaryButtonStyle}" Padding="24,13" FontSize="15" IsEnabled="{Binding CanScan}" Click="Scan_Click"/>
+      <Button Content="Anuluj" Style="{StaticResource SecondaryButtonStyle}" Click="Cancel_Click" Margin="8,0,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+      <TextBlock Text="1. Skan  →  2. Wybór  →  3. Potwierdzenie" Foreground="{DynamicResource TextSecondaryBrush}" Margin="18,0,0,0" VerticalAlignment="Center"/>
+     </WrapPanel>
+     <ProgressBar Height="4" Margin="0,16,0,0" IsIndeterminate="{Binding IsBusy}" Value="{Binding Progress, Mode=OneWay}" Maximum="100" Foreground="{DynamicResource AccentBrush}"/>
+    </StackPanel>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="235">
+     <TextBlock Text="{Binding FoundSize}" FontSize="36" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
+     <TextBlock Text="odczytanych danych do przejrzenia" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Right" Margin="0,4,0,10"/>
+     <TextBlock Text="{Binding ScanSummary}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Right"/>
+    </StackPanel>
+   </Grid>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+   <DockPanel Margin="0,0,0,8">
+    <Button DockPanel.Dock="Right" Content="Odznacz wszystko" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" IsEnabled="{Binding CanSelect}" Click="Deselect_Click"/>
+    <CheckBox Content="Tylko znalezione dane" IsChecked="{Binding FoundOnly}" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"/>
+   </DockPanel>
+   <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <ItemsControl x:Name="ResultsList" ItemsSource="{Binding ItemsView}" IsEnabled="{Binding CanSelect}">
+     <ItemsControl.GroupStyle><GroupStyle><GroupStyle.HeaderTemplate><DataTemplate>
+      <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="4,14,0,8"/>
+     </DataTemplate></GroupStyle.HeaderTemplate></GroupStyle></ItemsControl.GroupStyle>
+     <ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type models:CleanItem}">
+      <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,8">
+       <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanClean}" VerticalAlignment="Top" Margin="0,4,16,0" AutomationProperties.Name="{Binding Title}"/>
+        <StackPanel Grid.Column="1" Margin="0,0,16,0">
+         <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+         <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,6"/>
+         <Expander Header="Ścieżka i szczegóły" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11">
+          <StackPanel Margin="0,8,0,0">
+           <TextBlock Text="{Binding Path}" TextWrapping="Wrap"/>
+           <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+          </StackPanel>
+         </Expander>
+        </StackPanel>
+        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+         <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right">
+          <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="{Binding FormattedSize}"/><Style.Triggers><DataTrigger Binding="{Binding IsScanned}" Value="False"><Setter Property="Text" Value="—"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+         </TextBlock>
+         <TextBlock Text="{Binding BadgeText}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Right" FontSize="11" Margin="0,6,0,0"/>
+         <TextBlock Text="{Binding Status}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Right" FontSize="11" Margin="0,6,0,0"/>
+        </StackPanel>
+       </Grid>
+      </Border>
+     </DataTemplate></ItemsControl.ItemTemplate>
+    </ItemsControl>
+   </ScrollViewer>
+  </Grid>
+  <Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="0,14,0,0">
+   <Grid>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+     <TextBlock x:Name="SelectedSummary" Text="{Binding SelectionText}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+     <TextBlock Text="Pliki zostaną usunięte dopiero po potwierdzeniu. Kategorie wymagające ostrożności wybierasz samodzielnie." Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+     <TextBlock Text="{Binding ResultText}" Foreground="{DynamicResource InfoBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+    </StackPanel>
+    <Button Grid.Column="1" Content="{Binding CleanLabel}" Style="{StaticResource SuccessButtonStyle}" Padding="22,12" IsEnabled="{Binding CanClean}" VerticalAlignment="Center" Click="Clean_Click"/>
+   </Grid>
+  </Border>
+ </Grid>
+</UserControl>

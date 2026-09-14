@@ -1,45 +1,30 @@
-﻿# AUDIT: Inwentaryzacja Funkcji i Stan Aplikacji Aetherial 6.0
+# Audyt Aetherial 6.1
 
-Data sporzadzenia: 2026-09-13
-Wersja docelowa: 6.0.0
+Data: 2026-09-13. Dokument opisuje stan implementacji i znane granice;
+nie jest deklaracją, że wszystkie funkcje sprawdzono na każdym komputerze.
 
-Niniejszy dokument stanowi inwentaryzacje wszystkich podsystemow, serwisow i komponentow aplikacji zgodnie z wymogami Etapu 0 planu restrukturyzacji (AETHERIAL_PLAN.md).
+| Moduł | Stan implementacji | Granice |
+| --- | --- | --- |
+| Dyski i eksplorator | DriveInfo, normalizacja korzeni woluminów, anulowanie odczytu i odrzucanie spóźnionych wyników; jawny stan folderu. | Dyski odłączane, uprawnienia i pełna obsługa fizycznego pulpitu wymagają dalszych scenariuszy. |
+| Sprzęt | Inwentaryzacja PnP/CIM i niezależny katalog NVIDIA; porównanie wersji z informacją o zgodności, źródle i dacie. | Game Ready WHQL DCH Windows x64; AMD/Intel/OEM nie są automatycznie porównywane. Brak instalatora sterowników producenta. |
+| Czyść | Osobny widok i view model, skan, wybór, potwierdzenie, anulowanie, raport i historia. Cele są sprawdzane ponownie przed działaniem. | Konwencjonalne lokalizacje cache nie obejmują wszystkich konfiguracji. Zablokowane pliki mogą pozostać. |
+| Skan i wykonawca | Raport dostępnych celów czyszczenia, tylko obsługiwane działania; brak arbitralnego wskaźnika zdrowia oraz automatycznej naprawy PnP. | Nie jest to pełna diagnostyka sprzętu. Starsze przepływy wymagają dalszego ujednolicenia. |
+| Punkt przywracania | Sprawdzenie utworzenia przed zbiorczym czyszczeniem; niepowodzenie zatrzymuje wykonanie. | Wymaga obsługi przez system i uprawnień. Nie odtwarza usuwanych plików użytkownika. |
+| Historia | Ograniczony do 100 wpisów, synchronizowany zapis atomowy JSON; zachowanie uszkodzonego pliku i zgłoszenie błędu. | Awaria zapisu jest zgłaszana, nie gwarantuje utrwalenia operacji. |
+| Architektura | Core bez WPF, Services, aplikacja UI, DI i Serilog; nowe view modele oparte na CommunityToolkit.Mvvm. | Część starszych usług oraz MainWindow nadal koordynuje logikę; migracja MVVM nie jest zakończona. |
+| Narzędzia zaawansowane | Zachowano migracje folderów, projekty dev, RAM, winget i Windows Update. | Istnienie funkcji nie potwierdza poprawności każdego scenariusza produkcyjnego; nie uruchamiano masowych zmian na danych użytkownika. |
+| Wydania | Staging przed zamianą latest, SHA-256, testy offline, ignorowanie binariów/logów i retencja jednego release po udanej publikacji. | Stan konkretnego wydania i testów jest dokumentowany osobno. Instalator i aktualizator pozostają w backlogu. |
 
----
+## Dane referencyjne i pomiary
 
-## 1. Stan Funkcjonalnosci i Modulow
+Modele sprzętu, wersje lokalne, dostępne woluminy i rozmiary są odczytywane.
+Dopuszczalne stałe to reguły katalogu cache, identyfikatory API systemów, identyfikatory
+winget i oficjalne adresy wsparcia. Nie stanowią one wyniku diagnozy komputera.
+Błąd katalogu sterowników nie daje statusu „aktualny”; wynik PnP nie potwierdza
+najnowszej wersji. Nie należy prezentować procentu zdrowia bez uzasadnionego pomiaru.
 
-| Modul / Podsystem | Pliki Zrodlowe | Stan | Uwagi i Podjete Dzialania |
-| :--- | :--- | :--- | :--- |
-| **Odczyt Woluminow** | `DriveModel.cs`, `DiskScannerService.cs` | **Dziala (100%)** | Prawdziwe odczyty `DriveInfo.GetDrives()`. Usunieto sztywne listy dyskow C/D/E/F. Bezpieczne formatowanie bajtow. |
-| **Czyszczenie Dyskow** | `DiskCleanerService.cs`, `DiskHelper.cs` | **Dziala (100%)** | Scisla walidacja sciezek (`ValidateCleaningPath`). Ochrona katalogu Windows, profilu uzytkownika i korzeni dyskow. Filtry wieku plikow (`daysOlderThan`). Bezpieczne pomijanie plikow zablokowanych. |
-| **Eksplorator Plikow** | `FileSystemExplorerService.cs` | **Dziala (100%)** | Dynamiczne przegladanie folderow, identyfikacja duzych plikow. Usuwanie do Kosza lub trwale z weryfikacja rozmiaru na zywo. |
-| **PnP & Diagnostyka Sprzetu** | `DriverUpdaterService.cs`, `DiagnosticItem.cs` | **Dziala (100%)** | Usunieto falszywe bledy Code 28 i statyczne mocki. Odczyt na zywo przez PowerShell/CIM obecnych urzadzen (`Present -eq $true`), taktowania RAM (EXPO 6000 MT/s) i wersji BIOS. |
-| **Optymalizacja RAM** | `MemoryOptimizerService.cs` | **Dziala (100%)** | Prawdziwe API `GlobalMemoryStatusEx` i `EmptyWorkingSet`. Bezpieczne uwalnianie pamieci podrecznej stron. |
-| **Dowiazania Symboliczne (Symlinki)** | `SymlinkService.cs` | **Dziala (100%)** | Relokacja folderow z tworzeniem zlacza NTFS (Junction). Zabezpieczenie przed samoreferencja i sciezkami zagniezdzonymi. |
-| **Artefakty Deweloperskie** | `DevProjectsService.cs` | **Dziala (100%)** | Bezpieczne wykrywanie folderow `bin/obj` (.NET), `node_modules` (Node.js) i `target` (Rust) na podstawie obecnosci plikow manifestow (`.csproj`, `package.json`, `Cargo.toml`). Domyslnie niezaznaczone. |
-| **Katalog Programow** | `SoftwareInstallerService.cs` | **Dziala (100%)** | Odczyt stanu pakietow winget. |
-| **System Ustawien i Motywow** | `SettingsService.cs`, `AppSettings.cs`, `App.xaml` | **Dziala (100%)** | Obsluga motywu ciemnego (`Dark`) i jasnego (`Light`). Zapis preferencji do pliku JSON w profilu uzytkownika. |
-| **Nowy Silnik Skanera & Wynikow** | `IScanService.cs`, `IFixService.cs`, `ScanResultItem.cs` | **Nowy (Wdrazany w 6.0)** | Ujednolicony silnik integrujacy wszystkie moduly w jeden proces skanowania ze wskaznikiem zdrowia PC i lista wynikow. |
-| **Trwala Historia Operacji** | `IHistoryService.cs` | **Nowy (Wdrazany w 6.0)** | Rejestr przeszlych operacji czyszczenia i optymalizacji z zapisem w `%LocalAppData%\Aetherial\history.json`. |
-| **Punkt Przywracania** | `ISystemRestoreService.cs` | **Nowy (Wdrazany w 6.0)** | Ochrona systemu przed operacjami zbiorczymi. |
+## Weryfikacja i kolejne etapy
 
----
-
-## 2. Wyeliminowane Antywzorce i Martwy Kod
-
-1. **Usunieto statyczne kafelki**: Wyeliminowano sztywne karty w XAML symulujace usterki sprzetowe.
-2. **Usunieto sztuczne wykresy**: Aplikacja nie generuje losowych wykresow liniowych ani fikcyjnych wskaznikow procentowych bez zrodla danych systemowych.
-3. **Zabezpieczono testy przed utrata danych**: Testy regresji (`Aetherial.Regression`) wykonuja operacje wylacznie na izolowanych folderach w `%TEMP%` z unikalnym GUID-em.
-4. **Czyste repozytorium**: Z repozytorium usunieto stare pliki wykonywalne, zrzuty pamieci, logi sesji i raporty HTML specyficzne dla pojedynczego komputera.
-
----
-
-## 3. Zakres MVP Wersji 6.0
-
-Wersja 6.0 skupia sie na 5 kluczowych filarach w oparciu o ergonomiczny wzorzec **IObit Driver Booster**:
-1. **Pulpit Glowny**: Centralny wskaznik zdrowia PC (Circular Gauge) + 1 wielki przycisk akcji `[ ▶ SKANUJ TERAZ ]` + 4 kafelki statusowe.
-2. **Skaner & Wyniki**: Przejrzysty kreator problemow z selekcja i masowa naprawa `[ Napraw zaznaczone ]`.
-3. **Centrum Narzedzi**: Zintegrowany dostep do bezpiecznego czyszczenia, woluminow, dowiazan symbolicznych, projektow dev, inwentaryzacji sprzetu i programow.
-4. **Historia**: Przeglad wykonanych optymalizacji i odzyskanego miejsca.
-5. **Ustawienia**: Konfiguracja zachowania, domyslnego folderu i przelacznik motywu Jasny/Ciemny.
+[WERYFIKACJA.md](docs/WERYFIKACJA.md) oddziela wykonane testy od niewykonanych.
+[BACKLOG.md](BACKLOG.md) zawiera kryteria pozostałych prac wynikających z
+[AETHERIAL_PLAN.md](AETHERIAL_PLAN.md). Plan użytkownika zachowano bez zmiany.

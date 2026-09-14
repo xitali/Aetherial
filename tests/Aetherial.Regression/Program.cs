@@ -39,6 +39,21 @@ internal static class Program
             Reject(() => DiskHelper.ValidateCleaningPath(Environment.GetFolderPath(Environment.SpecialFolder.Windows)), "Windows root protected");
             Reject(() => DiskHelper.ValidateCleaningPath(Environment.SystemDirectory), "Windows system subdirectory protected");
 
+            string scanFile = Fixture("scan/readable.bin", 53);
+            int skippedReads = 0;
+            var scanSize = DiskHelper.GetDirectorySize(Path.GetDirectoryName(scanFile)!, onSkipped: (_, _) => skippedReads++);
+            Check(scanSize == (53L, 1) && skippedReads == 0, "Directory scan reports measured bytes without false errors");
+            string missingScanPath = Path.Combine(Root, "missing-scan-directory");
+            scanSize = DiskHelper.GetDirectorySize(missingScanPath, onSkipped: (_, _) => skippedReads++);
+            Check(scanSize == (0L, 0) && skippedReads == 1, "Missing directory is reported as an incomplete read");
+            var missingScanItem = new CleanItem { Path = missingScanPath, ActionType = CleanActionType.DeleteFiles, IsScanned = true, SizeBytes = 999 };
+            await new DiskScannerService().ScanItemAsync(missingScanItem);
+            Check(!missingScanItem.IsScanned && !missingScanItem.IsScanning && missingScanItem.SizeBytes == 0 && missingScanItem.Status.StartsWith("Błąd: niepełny odczyt"), "Incomplete scan clears stale data and never reports clean");
+            bool scanCancelled = false;
+            try { DiskHelper.GetDirectorySize(missingScanPath, new CancellationToken(true), (_, _) => skippedReads++); }
+            catch (OperationCanceledException) { scanCancelled = true; }
+            Check(scanCancelled && skippedReads == 1, "Directory cancellation propagates without becoming an access error");
+
             string old = Fixture("age/old.bin", 113);
             File.SetLastWriteTime(old, DateTime.Now.AddDays(-60));
             string recent = Fixture("age/recent.bin", 227);

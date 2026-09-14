@@ -15,6 +15,12 @@ public class PnpDeviceItem : INotifyPropertyChanged
     public string Category { get; set; } = "Inne";
     public string CategoryIcon { get; set; } = "🔌";
     public string DeviceName { get; set; } = string.Empty;
+    public string DeviceId { get; set; } = string.Empty;
+    public string[] HardwareIds { get; set; } = Array.Empty<string>();
+    public string OsVersion { get; set; } = string.Empty;
+    public string OsArchitecture { get; set; } = string.Empty;
+    public int OsProductType { get; set; }
+    public int? DeviceErrorCode { get; set; }
     public string Manufacturer { get; set; } = string.Empty;
     public string DriverVersion { get; set; } = "Domyślny systemowy";
     public string DriverDate { get; set; } = "";

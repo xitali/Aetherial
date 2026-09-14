@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskOptimizer", "DiskOptimizer.csproj", "{16637229-8CD5-45E3-AB42-DF1E99DE038E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.Core", "Aetherial.Core\Aetherial.Core.csproj", "{ABBBBBEA-E50A-430E-954D-580CDFA323CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.Services", "Aetherial.Services\Aetherial.Services.csproj", "{B75F9721-B285-4888-975D-15DB39794413}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5414D58D-4265-4D9B-BB40-FD7663465427}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.Regression", "tests\Aetherial.Regression\Aetherial.Regression.csproj", "{223862C9-A61E-4D1F-B1FA-0686896DF219}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.VisualSmoke", "tests\Aetherial.VisualSmoke\Aetherial.VisualSmoke.csproj", "{65E16045-063C-4B2E-AD66-24B2A6C182A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.DriverTests", "tests\Aetherial.DriverTests\Aetherial.DriverTests.csproj", "{534D03DF-7CC4-4C79-85AF-406BA76C4103}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aetherial.ScanTests", "tests\Aetherial.ScanTests\Aetherial.ScanTests.csproj", "{4691798E-CDE1-47DA-BE22-D82522C14551}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16637229-8CD5-45E3-AB42-DF1E99DE038E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16637229-8CD5-45E3-AB42-DF1E99DE038E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16637229-8CD5-45E3-AB42-DF1E99DE038E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16637229-8CD5-45E3-AB42-DF1E99DE038E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABBBBBEA-E50A-430E-954D-580CDFA323CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABBBBBEA-E50A-430E-954D-580CDFA323CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABBBBBEA-E50A-430E-954D-580CDFA323CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABBBBBEA-E50A-430E-954D-580CDFA323CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B75F9721-B285-4888-975D-15DB39794413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B75F9721-B285-4888-975D-15DB39794413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B75F9721-B285-4888-975D-15DB39794413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B75F9721-B285-4888-975D-15DB39794413}.Release|Any CPU.Build.0 = Release|Any CPU
+		{223862C9-A61E-4D1F-B1FA-0686896DF219}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{223862C9-A61E-4D1F-B1FA-0686896DF219}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{223862C9-A61E-4D1F-B1FA-0686896DF219}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{223862C9-A61E-4D1F-B1FA-0686896DF219}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65E16045-063C-4B2E-AD66-24B2A6C182A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65E16045-063C-4B2E-AD66-24B2A6C182A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65E16045-063C-4B2E-AD66-24B2A6C182A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65E16045-063C-4B2E-AD66-24B2A6C182A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{534D03DF-7CC4-4C79-85AF-406BA76C4103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{534D03DF-7CC4-4C79-85AF-406BA76C4103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{534D03DF-7CC4-4C79-85AF-406BA76C4103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{534D03DF-7CC4-4C79-85AF-406BA76C4103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4691798E-CDE1-47DA-BE22-D82522C14551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4691798E-CDE1-47DA-BE22-D82522C14551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4691798E-CDE1-47DA-BE22-D82522C14551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4691798E-CDE1-47DA-BE22-D82522C14551}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{223862C9-A61E-4D1F-B1FA-0686896DF219} = {5414D58D-4265-4D9B-BB40-FD7663465427}
+		{65E16045-063C-4B2E-AD66-24B2A6C182A3} = {5414D58D-4265-4D9B-BB40-FD7663465427}
+		{534D03DF-7CC4-4C79-85AF-406BA76C4103} = {5414D58D-4265-4D9B-BB40-FD7663465427}
+		{4691798E-CDE1-47DA-BE22-D82522C14551} = {5414D58D-4265-4D9B-BB40-FD7663465427}
+	EndGlobalSection
+EndGlobal

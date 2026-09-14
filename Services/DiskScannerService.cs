@@ -355,10 +355,15 @@ public class DiskScannerService
     public async Task ScanItemAsync(CleanItem item, CancellationToken ct = default)
     {
         item.IsScanning = true;
+        item.IsScanned = false;
+        item.SizeBytes = 0;
+        item.ItemCount = 0;
         item.Status = "Trwa skanowanie...";
 
         try
         {
+            int skipped = 0;
+            void ReportSkipped(string path, Exception error) => skipped++;
             await Task.Run(() =>
             {
                 if (item.ActionType == CleanActionType.RecycleBin)
@@ -373,7 +378,7 @@ public class DiskScannerService
                     int totalFiles = 0;
                     foreach (var p in GetShaderCachePaths())
                     {
-                        var (sz, cnt) = DiskHelper.GetDirectorySize(p, ct);
+                        var (sz, cnt) = DiskHelper.GetDirectorySize(p, ct, ReportSkipped);
                         totalSize += sz;
                         totalFiles += cnt;
                     }
@@ -382,12 +387,12 @@ public class DiskScannerService
                 }
                 else if (File.Exists(item.Path))
                 {
-                    item.SizeBytes = DiskHelper.GetFileSize(item.Path);
+                    item.SizeBytes = new FileInfo(item.Path).Length;
                     item.ItemCount = 1;
                 }
-                else if (Directory.Exists(item.Path))
+                else if (!string.IsNullOrWhiteSpace(item.Path))
                 {
-                    var (size, count) = DiskHelper.GetDirectorySize(item.Path, ct);
+                    var (size, count) = DiskHelper.GetDirectorySize(item.Path, ct, ReportSkipped);
                     item.SizeBytes = size;
                     item.ItemCount = count;
                 }
@@ -398,10 +403,18 @@ public class DiskScannerService
                 }
             }, ct);
 
-            item.Status = item.SizeBytes > 0 
+            ct.ThrowIfCancellationRequested();
+            if (skipped > 0)
+            {
+                item.Status = $"Błąd: niepełny odczyt ({skipped} pominiętych miejsc)";
+                return;
+            }
+            item.IsScanned = true;
+            item.Status = item.SizeBytes > 0
                 ? $"Znaleziono {item.FormattedSize} ({item.ItemCount} el.)" 
                 : "Czysto (0 B)";
         }
+        catch (OperationCanceledException) { item.Status = "Skan anulowany — dane niepełne"; throw; }
         catch (Exception ex)
         {
             item.Status = $"Błąd: {ex.Message}";
@@ -409,7 +422,6 @@ public class DiskScannerService
         finally
         {
             item.IsScanning = false;
-            item.IsScanned = true;
         }
     }
 }

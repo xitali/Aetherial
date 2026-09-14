@@ -1,44 +1,48 @@
-# Weryfikacja Aetherial 6.0.0
+# Weryfikacja Aetherial 6.1.0
 
-## Zrealizowane
+Stan lokalnych sprawdzeń z 2026-09-13, przed publikacją wydania.
 
-- Zaktualizowany brief i plan obejmujący dziesięć obszarów odpowiedzialności.
-- Pełna przebudowa dashboardu i widoku sprzętu; wspólne style pozostałych widoków.
-- Rzeczywiste odczyty woluminów, RAM, uptime, CPU, GPU, sieci oraz 220 obecnych
-  urządzeń PnP na komputerze testowym. Dane maszyny nie są częścią paczki ani Git.
-- Poprawki błędów odczytu PowerShell: UTF-8, osobne stdout/stderr, błędy poleceń.
-- Brak fikcyjnych procentów zdrowia, modelu sprzętu, odzyskanych GB i statusu aktualności.
-- Ochrona plików: walidacja katalogów i dowiązań, filtry wieku, kontrola kodów procesów,
-  brak trwałego usuwania jako awaryjnego zamiennika nieudanego przeniesienia do kosza.
-- Migracja zachowuje kopię źródła; zwolnienie jej miejsca wymaga ręcznej weryfikacji.
-- Ustawienia i logi poza projektem; raport na żądanie, kodowany HTML.
+## Potwierdzone
 
-## Testy
+- Kompilacja Release: 0 błędów, 0 ostrzeżeń.
+- `Aetherial.Regression`: 26 sprawdzeń zakończonych powodzeniem. Obejmują m.in.
+  ochronę ścieżek, filtry wieku, anulowanie, zablokowane pliki oraz pomiar rozmiaru.
+- `Aetherial.DriverTests`: 25 sprawdzeń offline zakończonych powodzeniem. Testują
+  dopasowanie PCI/modelu/systemu, porównanie wersji, zaufane adresy, błędy sieci,
+  brak pokrycia producenta i anulowanie. Dane testowe są jawnie izolowane od aplikacji.
+- `Aetherial.ScanTests`: 17 sprawdzeń zakończonych powodzeniem. Obejmują skaner,
+  walidację wykonania, odmowę bez punktu przywracania, anulowanie i historię.
 
-- 22 sprawdzenia regresji na izolowanych plikach: chronione katalogi, filtry wieku,
-  pliki zablokowane, anulowanie, własne cele, identyfikacja projektów, odznaczone
-  artefakty, odrzucone migracje, aktualny pomiar rozmiaru, modele i proces PowerShell.
-- 18 renderów prawdziwego drzewa WPF: siedem widoków w obu motywach przy 1366×900,
-  dodatkowo dashboard przy 2560×1440 i 3840×2160 (200% DPI).
-- Ręcznie obejrzane rendery dashboardu, sprzętu i narzędzi; poprawione tło,
-  kontrast przycisków i neutralne statusy w jasnym motywie.
-- Siedem tras nawigacji wybiera dokładnie jeden widok. Śledzenie błędów bindingów WPF
-  nie zgłasza błędów dla katalogu aplikacji, urządzeń, celów czyszczenia i presetów.
-- Release: build/test/publish do stagingu, kontrola pliku EXE i SHA-256, zamiana latest.
+Testy nie są zezwoleniem na usuwanie danych użytkownika. Operacje testowe korzystają
+z izolowanych danych lub zastępczych implementacji zależności.
 
-## Granice weryfikacji
+## Kontrola UI i publikacji
 
-Test renderowania uruchamia rzeczywisty XAML i usługi odczytu, lecz nie wywołuje Loaded,
-instalacji ani usuwania danych użytkownika. Narzędzie automatyzacji pulpitu dwukrotnie
-zwróciło błąd inicjalizacji „failed to write kernel assets”. Nie potwierdzono więc
-pełnego testu klikania w otwartym oknie, UAC, instalacji sterowników, instalatorów winget,
-ani migracji czynnych folderów. Nie wykonywano zmian ustawień bezpieczeństwa Windows.
+- Test zdarzeń w rzeczywistym drzewie WPF: kliknięcia czterech wykrytych woluminów
+  oraz anulowanie skanu czyszczenia zakończone powodzeniem.
+- 22 rendery bieżącego XAML, dziewięć tras nawigacji, zero wykrytych błędów bindingów.
+  Po zmianie kontrastu trwa ponowne renderowanie; kontrola wcześniejszych renderów
+  nie zastępuje oceny końcowego wyglądu.
+- Proces wydania uruchamia także `Aetherial.VisualSmoke --interactions-only` przed
+  publikacją. Jest to test obsługi zdarzeń wewnątrz procesu WPF.
+- Dodano blokadę drugiej instancji aplikacji przez mutex. Potwierdzono obecność
+  obsługi w kodzie; scenariusza dwóch uruchomień na pulpicie jeszcze nie wykonano.
 
-Windows Update zależy od usługi i sieci, a część funkcji od administratora.
-Nie ma pomiaru temperatur ani wykresu historycznego obciążenia CPU/GPU: aplikacja
-pokazuje dostępne dane, bez generowania brakujących pomiarów. Domyślne lokalizacje
-cache odpowiadają konwencjom programów; niestandardowe foldery mogą wymagać własnego celu.
-Katalog aplikacji i linki producentów są danymi referencyjnymi, nie odczytem stanu PC.
+Lokalny release 6.1.0 przygotowano przez scripts/release.ps1; pozostał tylko release/latest.
+Stare buildy bin/obj usunięto. Rendery testowe pozostają w ignorowanym .artifacts/visual.
+Status publikacji można sprawdzić w GitHub Actions i na stronie najnowszego wydania.
 
-Główny code-behind nadal koordynuje widoki. Dalszy podział na osobne view modele
-jest możliwym następnym etapem, a nie deklarowaną częścią ukończonej migracji MVVM.
+## Granice
+
+Test drzewa WPF nie jest pełnym testem kliknięć na fizycznym pulpicie. W poprzednim
+podejściu automatyzacja pulpitu nie zainicjalizowała się („failed to write kernel
+assets”). Nie potwierdzono tą drogą UAC, instalacji sterowników, winget ani migracji
+czynnych folderów. Nie wykonywano zbiorczych operacji na danych użytkownika.
+
+Weryfikacja wersji producenta ma obecnie pokrycie NVIDIA Game Ready WHQL DCH;
+pozostałe urządzenia są jawnie niezweryfikowane. Dostępność internetu i katalogu
+może zmienić wynik. Punkt przywracania nie jest kopią kasowanych danych.
+Brak pełnej diagnostyki zużycia SSD i temperatur. Niedostępne podkatalogi oraz
+niestandardowe lokalizacje programów mogą ograniczyć pomiar cache.
+
+Lista pozostałych prac: [BACKLOG.md](../BACKLOG.md).

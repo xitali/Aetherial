@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace DiskOptimizer.Models;
 
@@ -14,6 +14,6 @@ public class HistoryEntry
 
     public string FormattedDate => Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
     public string FormattedBytes => BytesSaved > 0 ? DriveModel.FormatBytes(BytesSaved) : "0 B";
-    public string StatusBadge => Success ? "✓ Sukces" : "⚠️ Częściowo";
+    public string StatusBadge => Success ? "✓ Sukces" : (ItemsFixed > 0 ? "⚠ Częściowo" : "⚠ Nieukończona");
     public string StatusColor => Success ? "#10B981" : "#F59E0B";
 }

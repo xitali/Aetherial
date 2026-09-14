@@ -1,140 +1,108 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using DiskOptimizer.Models;
-
 namespace DiskOptimizer.Services;
-
-public class FixReport
-{
-    public int SuccessCount { get; set; }
-    public int FailureCount { get; set; }
-    public long BytesFreed { get; set; }
-    public List<string> Messages { get; set; } = new();
-}
-
-public interface IFixService
-{
-    Task<FixReport> FixSelectedAsync(IEnumerable<ScanResultItem> items, IProgress<(int percent, string message)>? progress = null, CancellationToken ct = default);
-}
-
 public class FixService : IFixService
 {
-    private readonly DiskCleanerService _cleaner = new();
-    private readonly MemoryOptimizerService _ramOptimizer = new();
-    private readonly IHistoryService _historyService;
-
-    public FixService(IHistoryService? historyService = null)
+    private readonly IHistoryService _history;
+    private readonly ISystemRestoreService _restore;
+    public FixService(IHistoryService? historyService = null, ISystemRestoreService? restoreService = null)
     {
-        _historyService = historyService ?? new HistoryService();
+        _history = historyService ?? new HistoryService();
+        _restore = restoreService ?? new SystemRestoreService();
     }
-
     public async Task<FixReport> FixSelectedAsync(IEnumerable<ScanResultItem> items, IProgress<(int percent, string message)>? progress = null, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(items);
+        ct.ThrowIfCancellationRequested();
+        var selected = items.Where(i => i.IsSelected).DistinctBy(i => i.Id).ToList();
         var report = new FixReport();
-        var selectedList = items.Where(i => i.IsSelected).ToList();
-        int total = selectedList.Count;
-        if (total == 0)
-        {
-            progress?.Report((100, "Brak zaznaczonych pozycji do naprawy."));
-            return report;
-        }
-
-        int current = 0;
-
-        foreach (var item in selectedList)
-        {
-            if (ct.IsCancellationRequested) break;
-            current++;
-            int pct = (int)((double)current / total * 100);
-            progress?.Report((pct, $"Naprawianie ({current}/{total}): {item.Name}..."));
-
-            try
-            {
-                switch (item.Fix)
-                {
-                    case FixAction.CleanFiles:
-                        var cleanItem = new CleanItem
-                        {
-                            Id = item.Id,
-                            Title = item.Name,
-                            Path = item.DetailPath
-                        };
-                        var (freedBytes, removedFiles) = await _cleaner.CleanItemAsync(cleanItem, ct: ct);
-                        report.BytesFreed += freedBytes;
-                        report.SuccessCount++;
-                        item.Status = $"Oczyszczono ({DriveModel.FormatBytes(freedBytes)})";
-                        item.StatusColor = "#10B981";
-                        report.Messages.Add($"Oczyszczono: {item.Name} — zwolniono {DriveModel.FormatBytes(freedBytes)} ({removedFiles} plików).");
-                        break;
-
-                    case FixAction.OptimizeRam:
-                        var (ramFreed, procs) = await _ramOptimizer.OptimizeRamAsync(ct: ct);
-                        report.BytesFreed += ramFreed;
-                        report.SuccessCount++;
-                        item.Status = "Zoptymalizowano RAM";
-                        item.StatusColor = "#10B981";
-                        report.Messages.Add($"Pamięć RAM: zwolniono {DriveModel.FormatBytes(ramFreed)} w {procs} procesach.");
-                        break;
-
-                    case FixAction.TrimSsd:
-                        var (trimOk, _, _) = await DiskHelper.RunPowerShellScriptAsync("Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | ForEach-Object { Optimize-Volume -DriveLetter $_.DriveLetter -ReTrim }");
-                        if (trimOk)
-                        {
-                            report.SuccessCount++;
-                            item.Status = "Wykonano ReTrim";
-                            item.StatusColor = "#10B981";
-                            report.Messages.Add("Wykonano procedurę ReTrim dla wszystkich woluminów SSD.");
-                        }
-                        else
-                        {
-                            report.FailureCount++;
-                            item.Status = "Pominięto (brak uprawnień)";
-                            item.StatusColor = "#F59E0B";
-                        }
-                        break;
-
-                    case FixAction.UpdateDriver:
-                        item.Status = "Otwórz Menedżer Urządzeń";
-                        item.StatusColor = "#38BDF8";
-                        report.SuccessCount++;
-                        report.Messages.Add($"Wymaga aktualizacji sterownika: {item.Name}.");
-                        break;
-
-                    default:
-                        report.SuccessCount++;
-                        item.Status = "Przetworzono";
-                        item.StatusColor = "#10B981";
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                report.FailureCount++;
-                item.Status = "Błąd";
-                item.StatusColor = "#EF4444";
-                report.Messages.Add($"Błąd przy {item.Name}: {ex.Message}");
-            }
-        }
-
-        // Zapis do historii operacji
+        if (selected.Count == 0) return report;
         try
         {
-            var historyEntry = new HistoryEntry
+            // Never derive deletion targets or commands from mutable result rows.
+            var catalog = await Task.Run(() => new DiskScannerService().GetDefaultItems(), ct).ConfigureAwait(false);
+            var eligible = selected.Where(i => i.CanFix && i.Fix == FixAction.CleanFiles && catalog.Any(c => c.Id == i.Id && c.CanClean && c.ActionType == CleanActionType.DeleteFiles && string.Equals(c.Path, i.DetailPath, StringComparison.OrdinalIgnoreCase))).ToList();
+            foreach (var skipped in selected.Except(eligible))
             {
-                OperationType = "Optymalizacja 1-Kliknięciem",
-                ItemsFixed = report.SuccessCount,
-                BytesSaved = report.BytesFreed,
-                Success = report.FailureCount == 0,
-                Summary = $"Naprawiono {report.SuccessCount} pozycji, zwolniono {DriveModel.FormatBytes(report.BytesFreed)}."
-            };
-            await _historyService.AddEntryAsync(historyEntry);
+                skipped.Status = "Pominięto: wymaga osobnego narzędzia lub ponownego skanu";
+                report.SkippedCount++;
+                report.Messages.Add($"{skipped.Name}: {skipped.Status}");
+            }
+            if (eligible.Count > 0)
+            {
+                progress?.Report((0, "Tworzenie punktu przywracania (nie jest kopią usuwanych plików)…"));
+                var restore = await _restore.CreateRestorePointAsync(ct: ct).ConfigureAwait(false);
+                report.Messages.Add(restore.message);
+                if (!restore.success)
+                {
+                    report.FailureCount += eligible.Count;
+                    foreach (var item in eligible) item.Status = "Nie wykonano: punkt przywracania nie został utworzony";
+                }
+                else
+                {
+                    for (int index = 0; index < eligible.Count; index++)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        var item = eligible[index];
+                        var target = catalog.Single(c => c.Id == item.Id);
+                        target.SizeBytes = item.SizeBytes;
+                        progress?.Report((index * 100 / eligible.Count, $"Czyszczenie: {item.Name}"));
+                        try
+                        {
+                            var result = await Task.Run(() => new DiskCleanerService().CleanItemAsync(target, ct: ct), ct).ConfigureAwait(false);
+                            report.BytesFreed += result.totalFreed;
+                            ct.ThrowIfCancellationRequested();
+                            if (target.Status.StartsWith("Błąd", StringComparison.OrdinalIgnoreCase)) throw new IOException(target.Status);
+                            // A zero measurement is not evidence of a successful repair.
+                            if (result.totalFreed == 0 && result.totalFiles == 0)
+                            {
+                                report.SkippedCount++;
+                                item.Status = "Nie usunięto plików (zajęte, chronione lub już usunięte)";
+                                item.StatusColor = "#F59E0B";
+                            }
+                            else
+                            {
+                                report.SuccessCount++;
+                                item.Status = $"Usunięto {result.totalFiles} plików: {DriveModel.FormatBytes(result.totalFreed)}. Pozostałe wymagają ponownego skanu.";
+                                item.StatusColor = "#10B981";
+                                item.IsSelected = false;
+                            }
+                            report.Messages.Add($"{item.Name}: {item.Status}");
+                        }
+                        catch (OperationCanceledException) { item.Status = "Anulowano; część plików mogła zostać usunięta"; throw; }
+                        catch (Exception ex)
+                        {
+                            report.FailureCount++;
+                            item.Status = $"Błąd: {ex.Message}";
+                            item.StatusColor = "#EF4444";
+                            report.Messages.Add($"{item.Name}: {item.Status}");
+                        }
+                    }
+                }
+            }
         }
-        catch { }
-
-        progress?.Report((100, $"Zakończono naprawę! Zwolniono: {DriveModel.FormatBytes(report.BytesFreed)}."));
+        catch (OperationCanceledException)
+        {
+            report.WasCancelled = true;
+            report.Messages.Add("Anulowano. Wykonane usunięcia nie zostały cofnięte; uruchom ponowny skan.");
+        }
+        catch (Exception ex)
+        {
+            report.FailureCount += Math.Max(1, selected.Count - report.SuccessCount - report.FailureCount - report.SkippedCount);
+            report.Messages.Add($"Operacja nie została ukończona: {ex.Message}");
+        }
+        var summary = $"Wykonano: {report.SuccessCount}; błędy: {report.FailureCount}; pominięto: {report.SkippedCount}; zmierzone zwolnione miejsce: {DriveModel.FormatBytes(report.BytesFreed)}.";
+        try
+        {
+            // Persist completed work even if caller cancelled.
+            await _history.AddEntryAsync(new HistoryEntry
+            {
+                OperationType = "Czyszczenie zaznaczonych pozycji", ItemsFixed = report.SuccessCount,
+                BytesSaved = report.BytesFreed, Success = !report.WasCancelled && report.FailureCount == 0 && report.SkippedCount == 0,
+                Summary = (report.WasCancelled ? "Anulowano. " : "") + summary + " " + string.Join(" | ", report.Messages)
+            }).ConfigureAwait(false);
+        }
+        catch (Exception ex) { report.Messages.Add($"Nie zapisano historii: {ex.Message}"); }
+        progress?.Report((report.WasCancelled ? 0 : 100, summary));
         return report;
     }
 }

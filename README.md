@@ -1,51 +1,76 @@
-# Aetherial — Storage & Diagnostics
+# Aetherial 6.1 — Storage & Diagnostics
 
-Natywna aplikacja Windows 10/11 x64 w C# / .NET 8 / WPF. Interfejs po polsku,
-ciemny i jasny motyw, przegląd dysków, czyszczenie, eksplorator plików,
-inwentaryzacja PnP, diagnostyka, katalog aplikacji oraz narzędzia systemowe.
+Polska aplikacja Windows 10/11 x64 w C# / .NET 8 / WPF do przeglądania dysków,
+czyszczenia wybranych danych i sprawdzania sprzętu. Pracuje na odczytach Windows;
+brak pomiaru lub odpowiedzi producenta pozostaje wyraźnie oznaczony.
 
-## Dane i ograniczenia
+## Główne przepływy
 
-Woluminy pochodzą z Windows, urządzenia i sterowniki z CIM/PnP oraz Windows Update.
-Stan instalacji aplikacji jest sprawdzany lokalnie; katalog pakietów jest kuratorowaną
-listą identyfikatorów winget. Brak odczytu nie jest wynikiem poprawnym.
-Aplikacja nie deklaruje procentowego zdrowia SSD ani temperatur bez źródła pomiaru.
-Część funkcji wymaga administratora, internetu, winget lub obsługi polecenia przez Windows.
-Nie uruchamiaj równocześnie aplikacji korzystających z folderu przenoszonego dowiązaniem.
+- **Sprzęt:** odczyt identyfikatorów PnP i zainstalowanych wersji, następnie porównanie
+  obsługiwanych kart NVIDIA z oficjalnym katalogiem Game Ready WHQL DCH. Lista pokazuje
+  wersję lokalną, wersję katalogową, źródło, zgodność i czas sprawdzenia. Filtry pomagają
+  oddzielić dostępne aktualizacje od urządzeń niezweryfikowanych.
+- **Czyść:** skan → przegląd kategorii i rozmiarów → własny wybór → potwierdzenie →
+  wynik. Pozycje zaczynają odznaczone. Operacja wymaga utworzenia punktu przywracania;
+  nie zastępuje on kopii usuwanych plików. Raport rozróżnia zmierzone odzyskane miejsce,
+  błędy/pominięcia i anulowanie.
+- **Dyski:** wybór wykrytego woluminu zmienia ścieżkę i odczytywaną listę. Nowsza
+  nawigacja anuluje poprzedni odczyt; spóźniony wynik nie zastępuje bieżącego folderu.
+- **Skan i historia:** wyniki dostępnych celów czyszczenia oraz trwały zapis wykonanych
+  operacji. Licznik wyników nie jest procentową oceną zdrowia komputera.
 
-## Uruchomienie i wydanie
+## Zakres i źródła danych
+
+Automatyczne porównanie sterowników obejmuje obecnie obsługiwane karty NVIDIA na
+Windows 10/11 x64. AMD, Intel i pozostałe urządzenia mają status niezweryfikowany
+oraz dostępne odnośniki do producentów. Aplikacja nie instaluje automatycznie
+sterowników z tego katalogu. Windows Update pozostaje osobnym narzędziem zaawansowanym.
+Szczegóły: [katalog sterowników](docs/DRIVER_CATALOG.md).
+
+Woluminy, urządzenia i wersje pochodzą z systemu. Identyfikatory winget, adresy
+producentów i reguły lokalizacji cache to dane referencyjne, a nie pomiary komputera.
+Nie wszystkie niestandardowe lokalizacje programów są wykrywane. Nie ma pomiarów
+temperatur ani pełnej diagnostyki zużycia SSD. Wybrane operacje wymagają administratora,
+internetu, winget lub aktywnej ochrony systemu Windows.
+
+## Budowanie i wydanie
 
 Wymagany .NET 8 SDK na Windows:
 
 ```powershell
-dotnet build DiskOptimizer.csproj -c Release
-dotnet run --project tests/Aetherial.Regression/Aetherial.Regression.csproj -c Release
+dotnet build Aetherial.sln -c Release
+dotnet run --project tests/Aetherial.Regression -c Release
+dotnet run --project tests/Aetherial.DriverTests -c Release
+dotnet run --project tests/Aetherial.ScanTests -c Release
 ./scripts/release.ps1
 ```
 
-Gotowy samodzielny plik EXE i instrukcja znajdują się w `release/latest`.
-Nie jest to Native AOT: jest to samodzielny pakiet .NET WPF single-file.
-Skrypt testuje i publikuje do stagingu przed zastąpieniem poprzedniego wydania.
-Wersja pochodzi z `DiskOptimizer.csproj`.
+Skrypt wykonuje testy offline i zdarzeń WPF, publikuje do stagingu, sprawdza EXE i zapisuje SHA-256,
+a następnie zastępuje `release/latest`. Dotychczasowy pakiet pozostaje do czasu
+powodzenia publikacji. Wyniki kompilacji znanych projektów są sprzątane po wydaniu.
+Pakiet jest samodzielnym .NET WPF single-file, nie Native AOT.
+Test katalogu z `-- --live` jest opcjonalny i zależy od dostępności usługi NVIDIA.
 
-## GitHub
+## Architektura
 
-Repozytorium zawiera kod, zasoby, testy, instrukcję i dokumentację zmian.
-Nie dodawaj EXE/DLL/PDB, bin/obj/publish/release, ustawień użytkownika, logów ani raportów.
-Workflow `.github/workflows/release.yml` buduje i testuje zmiany. Tag `v<wersja>`
-publikuje ZIP jako GitHub Release, a po powodzeniu usuwa wcześniejsze opublikowane
-release (historia Git i tagi pozostają). Publikacja wymaga uprawnień GitHub.
+- `Aetherial.Core`: modele i kontrakty; bez zależności od WPF.
+- `Aetherial.Services`: odczyty Windows, katalog sterowników, czyszczenie i historia.
+- `DiskOptimizer.csproj`: aplikacja WPF; `CompositionRoot.cs` konfiguruje DI.
+- `Views/` i `ViewModels/`: nowe widoki sprzętu i czyszczenia oraz stan eksploratora,
+  z użyciem CommunityToolkit.Mvvm. Starsze narzędzia nadal częściowo korzystają z code-behind.
+- `Models/`, `Services/`: pliki źródłowe dołączane do odpowiednich projektów bibliotek.
+- `tests/`: izolowane regresje, sprawdzanie katalogu, skanera i renderowania WPF.
 
-## Struktura
+Historia, ustawienia i rotowane logi Serilog trafiają do profilu użytkownika w
+`%LocalAppData%\Aetherial`, nie do repozytorium.
 
-- `App.xaml`: wspólne zasoby i style.
-- `MainWindow.xaml`: układ oraz widoki.
-- `MainWindow.xaml.cs`: nawigacja i koordynacja operacji.
-- `Models/`, `Services/`: modele, odczyty Windows i operacje.
-- `tests/`: izolowane regresje i kontrola renderowania.
-- `scripts/`: powtarzalne wydanie.
-- `docs/`: plan, zmiany i wynik weryfikacji.
+## GitHub i dalsze prace
 
-Instrukcja: [DiskOptimizer_Manual.html](DiskOptimizer_Manual.html).
-Plan: [docs/PLAN_WDROZENIA.md](docs/PLAN_WDROZENIA.md).
-Licencja: [MIT](LICENSE).
+Git zawiera kod, zasoby, testy i dokumentację. EXE/DLL/PDB, bin/obj, paczki, logi
+i lokalne rendery są ignorowane. Tag `v<wersja>` uruchamia workflow publikujący ZIP;
+starsze opublikowane releases są usuwane dopiero po udanym przesłaniu nowego.
+Historia Git i tagi pozostają. Wersja produktu pochodzi z `DiskOptimizer.csproj`.
+
+Plan użytkownika: [AETHERIAL_PLAN.md](AETHERIAL_PLAN.md).
+Stan modułów: [AUDIT.md](AUDIT.md). Pozostałe prace: [BACKLOG.md](BACKLOG.md).
+Weryfikacja: [docs/WERYFIKACJA.md](docs/WERYFIKACJA.md). Licencja: [MIT](LICENSE).

@@ -2,9 +2,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../DiskOptimizer.csproj" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Aetherial.Core/Aetherial.Core.csproj" />
+    <ProjectReference Include="../../Aetherial.Services/Aetherial.Services.csproj" />
+  </ItemGroup>
 </Project>

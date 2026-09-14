@@ -11,7 +11,12 @@ $previousPath = Join-Path $artifactRoot 'previous-release'
 function Assert-WorkspacePath([string]$Path) {
     $resolved = [IO.Path]::GetFullPath($Path)
     if (-not $resolved.StartsWith($projectRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw "Path outside workspace: $resolved" }
-    if ((Test-Path -LiteralPath $resolved) -and ((Get-Item -LiteralPath $resolved).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Refusing a junction: $resolved" }
+    # Reject junctions in the complete path, including parent directories.
+    $currentPath = $resolved
+    while ($currentPath -ne $projectRoot) {
+        if ((Test-Path -LiteralPath $currentPath) -and ((Get-Item -LiteralPath $currentPath -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Refusing a junction: $currentPath" }
+        $currentPath = [IO.Path]::GetDirectoryName($currentPath)
+    }
 }
 function Remove-WorkspaceDirectory([string]$Path) {
     Assert-WorkspacePath $Path
@@ -20,11 +25,17 @@ function Remove-WorkspaceDirectory([string]$Path) {
 
 Push-Location $projectRoot
 try {
+    Assert-WorkspacePath $stagePath
     New-Item -ItemType Directory -Path $stagePath -Force | Out-Null
     dotnet build DiskOptimizer.csproj -c Release --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
-    dotnet run --project tests/Aetherial.Regression/Aetherial.Regression.csproj -c Release
-    if ($LASTEXITCODE -ne 0) { throw 'Regression checks failed.' }
+    # DriverTests does not contact the catalogue unless explicitly passed --live.
+    foreach ($suite in @('Aetherial.Regression', 'Aetherial.DriverTests', 'Aetherial.ScanTests')) {
+        dotnet run --project "tests/$suite/$suite.csproj" -c Release
+        if ($LASTEXITCODE -ne 0) { throw "$suite offline checks failed; previous release preserved." }
+    }
+    dotnet run --project tests/Aetherial.VisualSmoke/Aetherial.VisualSmoke.csproj -c Release -- --interactions-only
+    if ($LASTEXITCODE -ne 0) { throw 'WPF interaction checks failed; previous release preserved.' }
     dotnet publish DiskOptimizer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o $stagePath --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed; previous release preserved.' }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $stagePath
@@ -53,7 +64,11 @@ try {
         Assert-WorkspacePath $oldPackage.FullName
         Remove-Item -LiteralPath $oldPackage.FullName -Recurse -Force
     }
-    foreach ($buildDirectory in @('bin', 'obj', 'publish', 'tests/Aetherial.Regression/bin', 'tests/Aetherial.Regression/obj', 'tests/Aetherial.VisualSmoke/bin', 'tests/Aetherial.VisualSmoke/obj')) {
+    $buildDirectories = @('bin', 'obj', 'publish')
+    foreach ($buildProject in @('Aetherial.Core', 'Aetherial.Services', 'tests/Aetherial.Regression', 'tests/Aetherial.DriverTests', 'tests/Aetherial.ScanTests', 'tests/Aetherial.VisualSmoke')) {
+        $buildDirectories += "$buildProject/bin", "$buildProject/obj"
+    }
+    foreach ($buildDirectory in $buildDirectories) {
         Remove-WorkspaceDirectory (Join-Path $projectRoot $buildDirectory)
     }
     $legacyFiles = @('Aetherial_old.exe','Aetherial.exe','DiskOptimizer_old.exe','DiskOptimizer.exe','DiskOptimizer.dll','DiskOptimizer.pdb','DiskOptimizer.deps.json','DiskOptimizer.runtimeconfig.json','D3DCompiler_47_cor3.dll','PenImc_cor3.dll','PresentationNative_cor3.dll','vcruntime140_cor3.dll','wpfgfx_cor3.dll','crash.log')

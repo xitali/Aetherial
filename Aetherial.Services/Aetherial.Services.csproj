@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DiskOptimizer.Services</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Services/**/*.cs" Link="Services/%(RecursiveDir)%(Filename)%(Extension)" />
+    <ProjectReference Include="../Aetherial.Core/Aetherial.Core.csproj" />
+  </ItemGroup>
+</Project>
