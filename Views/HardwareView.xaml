@@ -3,24 +3,24 @@
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
  <Grid>
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-  <Border Style="{StaticResource SurfaceCardStyle}" Padding="24" Margin="0,0,0,14">
+  <Border Style="{StaticResource SurfaceCardStyle}" Padding="18" Margin="0,0,0,14">
    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel Margin="0,0,22,0"><TextBlock Text="CENTRUM STEROWNIKÓW" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" FontSize="11"/>
-     <TextBlock Text="Wersja właściwa dla Twojego sprzętu" FontSize="27" FontWeight="SemiBold" Margin="0,7,0,7" TextWrapping="Wrap"/>
+     <TextBlock Text="Wersja właściwa dla Twojego sprzętu" FontSize="22" FontWeight="SemiBold" Margin="0,7,0,7" TextWrapping="Wrap"/>
      <TextBlock Text="Identyfikator urządzenia → katalog producenta → porównanie wersji" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-     <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,14,0,0"/>
+     <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8,0,0"/>
     </StackPanel>
-    <StackPanel Grid.Column="1" VerticalAlignment="Center"><Button Content="Sprawdź sterowniki" Command="{Binding ScanCommand}" Style="{StaticResource BigCtaButtonStyle}" FontSize="17" Padding="24,18"/>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center"><Button Content="Sprawdź sterowniki" Command="{Binding ScanCommand}" Style="{StaticResource BigCtaButtonStyle}" FontSize="15" Padding="20,12"/>
      <Button Content="Anuluj sprawdzanie" Command="{Binding CancelCommand}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0"/>
     </StackPanel>
    </Grid>
   </Border>
   <StackPanel Grid.Row="1">
    <UniformGrid Columns="4" Margin="0,0,0,12">
-    <Border Style="{StaticResource SurfaceCardStyle}" Padding="16" Margin="0,0,8,0"><StackPanel><TextBlock Text="DO AKTUALIZACJI" FontSize="11" Foreground="{DynamicResource WarningBrush}"/><TextBlock Text="{Binding UpdateCount}" FontSize="30" FontWeight="SemiBold"/></StackPanel></Border>
-    <Border Style="{StaticResource SurfaceCardStyle}" Padding="16" Margin="0,0,8,0"><StackPanel><TextBlock Text="ZWERYFIKOWANE" FontSize="11" Foreground="{DynamicResource SuccessBrush}"/><TextBlock Text="{Binding VerifiedCount}" FontSize="30" FontWeight="SemiBold"/></StackPanel></Border>
-    <Border Style="{StaticResource SurfaceCardStyle}" Padding="16" Margin="0,0,8,0"><StackPanel><TextBlock Text="BEZ POTWIERDZENIA" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding UnknownCount}" FontSize="30" FontWeight="SemiBold"/></StackPanel></Border>
-    <Border Style="{StaticResource SurfaceCardStyle}" Padding="16"><StackPanel><TextBlock Text="WYKRYTE URZĄDZENIA" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding DeviceCount}" FontSize="30" FontWeight="SemiBold"/></StackPanel></Border>
+    <Border Style="{StaticResource SurfaceCardStyle}" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="DO AKTUALIZACJI" FontSize="11" Foreground="{DynamicResource WarningBrush}"/><TextBlock Text="{Binding UpdateCount}" FontSize="24" FontWeight="SemiBold"/></StackPanel></Border>
+    <Border Style="{StaticResource SurfaceCardStyle}" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="ZWERYFIKOWANE" FontSize="11" Foreground="{DynamicResource SuccessBrush}"/><TextBlock Text="{Binding VerifiedCount}" FontSize="24" FontWeight="SemiBold"/></StackPanel></Border>
+    <Border Style="{StaticResource SurfaceCardStyle}" Padding="12" Margin="0,0,8,0"><StackPanel><TextBlock Text="BEZ POTWIERDZENIA" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding UnknownCount}" FontSize="24" FontWeight="SemiBold"/></StackPanel></Border>
+    <Border Style="{StaticResource SurfaceCardStyle}" Padding="12"><StackPanel><TextBlock Text="WYKRYTE URZĄDZENIA" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding DeviceCount}" FontSize="24" FontWeight="SemiBold"/></StackPanel></Border>
    </UniformGrid>
    <DockPanel Margin="0,0,0,12"><ComboBox ItemsSource="{Binding Filters}" SelectedItem="{Binding Filter}" Width="200" DockPanel.Dock="Right" Margin="12,0,0,0"/><TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="Szukaj nazwy, producenta lub identyfikatora urządzenia" Padding="10,8"/></DockPanel>
    <ProgressBar IsIndeterminate="{Binding IsBusy}" Height="3"/>
@@ -29,10 +29,10 @@
    <ListBox ItemsSource="{Binding Results}" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
     <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/></Style></ListBox.ItemContainerStyle>
     <ListBox.ItemTemplate><DataTemplate>
-     <Border Padding="18" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
+     <Border Padding="14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
       <StackPanel>
        <DockPanel><Border DockPanel.Dock="Right" Background="{DynamicResource AccentSoftBrush}" CornerRadius="5" Padding="8,4" Margin="16,0,0,0"><TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/></Border><TextBlock Text="{Binding DeviceName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/></DockPanel>
-       <Grid Margin="0,12,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+       <Grid Margin="0,8,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel><TextBlock Text="ZAINSTALOWANA" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding InstalledVersion}" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
         <StackPanel Grid.Column="1"><TextBlock Text="W KATALOGU PRODUCENTA" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Text="{Binding LatestVersion, TargetNullValue=Niepotwierdzona}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,4,0,0"/><TextBlock Text="{Binding ReleaseDate}" FontSize="11"/></StackPanel>
         <Button Grid.Column="2" Content="Otwórz źródło" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="{Binding CanOpenSource}" Click="OpenSource_Click" Tag="{Binding}"/>

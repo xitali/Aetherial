@@ -72,7 +72,6 @@ public partial class MainWindow : Window
         HardwarePanel.DataContext = _hardwareViewModel;
         HardwarePanel.AdvancedRequested += (_, _) => { ViewDrivers.Visibility = Visibility.Collapsed; LegacyHardwarePanel.Visibility = Visibility.Visible; };
         Closed += (_, _) => _hardwareViewModel.Dispose();
-        App.ApplyTheme(_settingsService.Current.Theme == "Light");
 
         DrivesItemsControl.ItemsSource = Drives;
         CleanerPanel.SetItems(CleanItems);
@@ -109,6 +108,8 @@ public partial class MainWindow : Window
         OptRecycleBinCheck.IsChecked = _settingsService.Current.RecycleBinDefault;
         RecycleBinCheckBox.IsChecked = _settingsService.Current.RecycleBinDefault;
         _settingsUiReady = true;
+        PreferencesPanel.SettingsApplied += (_, _) => ApplyLivePreferences();
+        ApplyLivePreferences();
 
         Loaded += MainWindow_Loaded;
         StateChanged += (s, e) =>
@@ -128,7 +129,7 @@ public partial class MainWindow : Window
             UpdateSystemToggleStates();
             RefreshLiveMetrics();
             _metricsTimer.Tick += (_, _) => RefreshLiveMetrics();
-            _metricsTimer.Start();
+            ApplyLivePreferences();
             Closed += (_, _) => { _metricsTimer.Stop();  _modalTcs?.TrySetResult(false); };
             AppendLog($"Aetherial Suite {typeof(App).Assembly.GetName().Version} • Administrator: {(DiskHelper.IsAdministrator() ? "tak" : "nie")}");
             await LoadSymlinkPresetsAsync();
@@ -296,6 +297,10 @@ public partial class MainWindow : Window
 
     private void SwitchView(int viewIndex)
     {
+        if (viewIndex == 6) PreferencesPanel.ReloadSettings();
+        ToolTopicsBar.Visibility = viewIndex is >= 1 and <= 5 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var pair in new[] { (TopicCleaner, 1), (TopicExplorer, 2), (TopicHardware, 3), (TopicAdvanced, 4), (TopicApps, 5) })
+            pair.Item1.Style = (Style)FindResource(pair.Item2 == viewIndex ? "PrimaryButtonStyle" : "SecondaryButtonStyle");
         CurrentSectionText.Text = viewIndex switch { 0 => "PULPIT", 1 => "CZYŚĆ", 2 => "DYSKI", 3 => "SPRZĘT", 4 => "NARZĘDZIA", 5 => "APLIKACJE", 6 => "USTAWIENIA", 7 => "SKANOWANIE", 8 => "HISTORIA", _ => "AETHERIAL" };
         LegacyHardwarePanel.Visibility = Visibility.Collapsed;
         ViewDashboard.Visibility = viewIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -313,6 +318,55 @@ public partial class MainWindow : Window
         else if (viewIndex == 6 && NavSettingsRadio != null) NavSettingsRadio.IsChecked = true;
         else if (viewIndex == 7 && NavScannerRadio != null) NavScannerRadio.IsChecked = true;
         else if (viewIndex == 8 && NavHistoryRadio != null) NavHistoryRadio.IsChecked = true;
+        if (IsLoaded) RefreshSectionOnOpen(viewIndex);
+    }
+
+    private readonly Dictionary<int, DateTime> _sectionRefresh = new();
+    private readonly HashSet<int> _refreshingSections = new();
+    private async void RefreshSectionOnOpen(int section)
+    {
+        if (_isBusy || !_refreshingSections.Add(section)) return;
+        try
+        {
+            if (_sectionRefresh.TryGetValue(section, out var last) && DateTime.UtcNow - last < TimeSpan.FromMinutes(2)) return;
+            var settings = _settingsService.Current;
+            switch (section)
+            {
+                case 1 when settings.AutoScanCleanerOnOpen && !_hasCompletedScan: await ScanAllItemsAsync(); break;
+                case 2 when !_explorerViewModel.IsBusy: await NavigateToFolderAsync(string.IsNullOrWhiteSpace(_currentExplorerPath) ? SystemDrive : _currentExplorerPath); break;
+                case 3 when settings.AutoScanHardwareOnOpen && !_hardwareViewModel.IsBusy: await _hardwareViewModel.ScanAsync(); break;
+                case 4: await LoadSymlinkPresetsAsync(); break;
+                case 5 when settings.AutoCheckUpdates:
+                    await _appInstaller.RefreshInstalledStatusesAsync(_allApps, settings.DefaultInstallFolder, AppendLog); ApplyAppsFilter(); break;
+                case 6: PreferencesPanel.ReloadSettings(); break;
+                case 8: await RefreshHistoryAsync(); break;
+            }
+            _sectionRefresh[section] = DateTime.UtcNow;
+        }
+        catch (Exception ex) { AppendLog($"Nie ukończono odświeżenia sekcji: {ex.Message}"); }
+        finally { _refreshingSections.Remove(section); }
+    }
+
+    private void ApplyLivePreferences()
+    {
+        var settings = _settingsService.Current;
+        App.ApplyTheme(settings.Theme == "Light");
+        _metricsTimer.Interval = TimeSpan.FromSeconds(Math.Clamp(settings.MetricsRefreshSeconds, 5, 120));
+        if (settings.AutoRefreshMetrics && IsLoaded) _metricsTimer.Start(); else _metricsTimer.Stop();
+        _explorerViewModel.LargeFileThresholdMb = settings.LargeFileThresholdMb;
+        LargeFilesButton.Content = $"Duże pliki (> {settings.LargeFileThresholdMb} MB)";
+        _sectionRefresh.Clear();
+    }
+
+    private void SettingsTopic_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || !int.TryParse(button.Tag?.ToString(), out var index)) return;
+        SettingsAppearancePage.Visibility = index == 0 ? Visibility.Visible : Visibility.Collapsed;
+        SettingsAppsPage.Visibility = index == 1 ? Visibility.Visible : Visibility.Collapsed;
+        SettingsWindowsPage.Visibility = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        var tabs = new[] { SettingsAppearanceTab, SettingsAppsTab, SettingsWindowsTab };
+        for (var i = 0; i < tabs.Length; i++) tabs[i].Style = (Style)FindResource(i == index ? "PrimaryButtonStyle" : "SecondaryButtonStyle");
+        if (index == 2) UpdateSystemToggleStates();
     }
 
     private void NavToCleaner_Click(object sender, RoutedEventArgs e)
@@ -1081,6 +1135,7 @@ public partial class MainWindow : Window
 
     private async void MasterScanAll_Click(object sender, RoutedEventArgs e)
     {
+        SwitchView(1);
         await ScanAllItemsAsync();
     }
 

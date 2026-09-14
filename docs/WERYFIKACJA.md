@@ -1,48 +1,41 @@
-# Weryfikacja Aetherial 6.1.0
+# Weryfikacja Aetherial 6.2.0
 
-Stan lokalnych sprawdzeń z 2026-09-13, przed publikacją wydania.
+Stan lokalnych sprawdzeń z 2026-09-14. Końcowy pakiet i publikacja 6.2 wymagają
+oddzielnego potwierdzenia; poniższe wyniki nie deklarują powodzenia GitHub CI.
 
-## Potwierdzone
+## Testy lokalne
 
-- Kompilacja Release: 0 błędów, 0 ostrzeżeń.
-- `Aetherial.Regression`: 26 sprawdzeń zakończonych powodzeniem. Obejmują m.in.
-  ochronę ścieżek, filtry wieku, anulowanie, zablokowane pliki oraz pomiar rozmiaru.
-- `Aetherial.DriverTests`: 25 sprawdzeń offline zakończonych powodzeniem. Testują
-  dopasowanie PCI/modelu/systemu, porównanie wersji, zaufane adresy, błędy sieci,
-  brak pokrycia producenta i anulowanie. Dane testowe są jawnie izolowane od aplikacji.
-- `Aetherial.ScanTests`: 17 sprawdzeń zakończonych powodzeniem. Obejmują skaner,
-  walidację wykonania, odmowę bez punktu przywracania, anulowanie i historię.
+- `Aetherial.Regression`: 26 sprawdzeń zakończonych powodzeniem; m.in. ochrona
+  ścieżek, filtry wieku, anulowanie, pliki zablokowane i rzetelność pomiarów.
+- `Aetherial.DriverTests`: 25 sprawdzeń offline zakończonych powodzeniem; dopasowanie
+  PCI/modelu/systemu, wersje, adresy źródłowe, brak pokrycia, błędy sieci i anulowanie.
+- `Aetherial.ScanTests`: 30 sprawdzeń zakończonych powodzeniem. Do skanera,
+  wykonawcy i historii dodano 13 sprawdzeń ustawień: zapis wszystkich preferencji,
+  odczyt po ponownym utworzeniu usługi, walidację zakresów, zachowanie poprawnej
+  konfiguracji przy błędzie, uszkodzony JSON i sprzątanie plików transakcji.
+- Testy wewnątrz procesu WPF potwierdziły nawigację po tematach, działanie timera
+  odświeżania, wpływ progu na wyszukiwanie dużych plików oraz działanie paska
+  przewijania. Są to zdarzenia w rzeczywistym drzewie WPF, nie fizyczne kliknięcia
+  w otwartym oknie na pulpicie.
 
-Testy nie są zezwoleniem na usuwanie danych użytkownika. Operacje testowe korzystają
-z izolowanych danych lub zastępczych implementacji zależności.
+Końcowe rendery interfejsu po zmianach 6.2 będą odświeżone osobno. Wyników i liczby
+renderów poprzedniej wersji nie należy przypisywać bieżącemu wyglądowi.
+Proces wydania uruchamia testy offline i `Aetherial.VisualSmoke --interactions-only`
+przed przygotowaniem pakietu. Końcowy lokalny przebieg wydania zakończył się powodzeniem.
 
-## Kontrola UI i publikacji
+## Zakres niewykonany i ograniczenia
 
-- Test zdarzeń w rzeczywistym drzewie WPF: kliknięcia czterech wykrytych woluminów
-  oraz anulowanie skanu czyszczenia zakończone powodzeniem.
-- 22 rendery bieżącego XAML, dziewięć tras nawigacji, zero wykrytych błędów bindingów.
-  Po zmianie kontrastu trwa ponowne renderowanie; kontrola wcześniejszych renderów
-  nie zastępuje oceny końcowego wyglądu.
-- Proces wydania uruchamia także `Aetherial.VisualSmoke --interactions-only` przed
-  publikacją. Jest to test obsługi zdarzeń wewnątrz procesu WPF.
-- Dodano blokadę drugiej instancji aplikacji przez mutex. Potwierdzono obecność
-  obsługi w kodzie; scenariusza dwóch uruchomień na pulpicie jeszcze nie wykonano.
-
-Lokalny release 6.1.0 przygotowano przez scripts/release.ps1; pozostał tylko release/latest.
-Stare buildy bin/obj usunięto. Rendery testowe pozostają w ignorowanym .artifacts/visual.
-Status publikacji można sprawdzić w GitHub Actions i na stronie najnowszego wydania.
-
-## Granice
-
-Test drzewa WPF nie jest pełnym testem kliknięć na fizycznym pulpicie. W poprzednim
-podejściu automatyzacja pulpitu nie zainicjalizowała się („failed to write kernel
-assets”). Nie potwierdzono tą drogą UAC, instalacji sterowników, winget ani migracji
-czynnych folderów. Nie wykonywano zbiorczych operacji na danych użytkownika.
-
-Weryfikacja wersji producenta ma obecnie pokrycie NVIDIA Game Ready WHQL DCH;
-pozostałe urządzenia są jawnie niezweryfikowane. Dostępność internetu i katalogu
-może zmienić wynik. Punkt przywracania nie jest kopią kasowanych danych.
-Brak pełnej diagnostyki zużycia SSD i temperatur. Niedostępne podkatalogi oraz
-niestandardowe lokalizacje programów mogą ograniczyć pomiar cache.
+- Nie potwierdzono pełnego testu na fizycznym pulpicie: instalacji sterowników,
+  winget, dwóch równoległych uruchomień ani migracji czynnych folderów.
+- `scripts/install-local.ps1` jest dostępny, lecz obecność skryptu nie stanowi dowodu
+  instalacji końcowego pakietu 6.2. Nie dodano automatycznego aktualizatora.
+- Nie wykonywano zbiorczych operacji na danych użytkownika. Testy korzystają
+  z izolowanych plików lub zastępczych zależności. Punkt przywracania nie jest
+  kopią kasowanych plików, a anulowanie nie cofa wykonanych usunięć.
+- Automatyczne porównywanie sterowników obejmuje katalog NVIDIA Game Ready WHQL
+  DCH. Pozostali producenci są niezweryfikowani; brak dostępu do katalogu nie daje
+  statusu „aktualny”. Nie ma pełnej diagnostyki zużycia SSD ani temperatur.
+- Niedostępne podkatalogi i niestandardowe lokalizacje mogą ograniczać pomiar cache.
+  Starsze narzędzia pozostają częściowo w code-behind.
 
 Lista pozostałych prac: [BACKLOG.md](../BACKLOG.md).

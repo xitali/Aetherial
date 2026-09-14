@@ -36,6 +36,27 @@ Check(tampered.SuccessCount == 0 && tampered.SkippedCount == 1, "Modified result
 var interrupted = await new FixService(history, new CancelledRestore()).FixSelectedAsync(new[] { new ScanResultItem { Id = candidate.Id, Name = candidate.Title, DetailPath = candidate.Path, Fix = FixAction.CleanFiles, CanFix = true, IsSelected = true } });
 Check(interrupted.WasCancelled && interrupted.SuccessCount == 0, "Cancellation yields partial report without success");
 Check(!(await history.GetHistoryAsync())[0].Success, "Cancellation saved to history as incomplete");
+var settingsPath = Path.Combine(root, "preferences", "settings.json");
+var preferences = new SettingsService(settingsPath);
+Check(preferences.Current.MetricsRefreshSeconds == 15 && preferences.Current.AutoScanHardwareOnOpen && !preferences.Current.AutoScanCleanerOnOpen, "Safe automation defaults for a new profile");
+var customPreferences = new AppSettings { Theme = "Light", AutoRefreshMetrics = false, MetricsRefreshSeconds = 37, AutoScanHardwareOnOpen = false, AutoScanCleanerOnOpen = true, LargeFileThresholdMb = 2048 };
+preferences.SaveSettings(customPreferences);
+var reloadedPreferences = new SettingsService(settingsPath).Current;
+Check(reloadedPreferences.Theme == "Light" && !reloadedPreferences.AutoRefreshMetrics && reloadedPreferences.MetricsRefreshSeconds == 37 && !reloadedPreferences.AutoScanHardwareOnOpen && reloadedPreferences.AutoScanCleanerOnOpen && reloadedPreferences.LargeFileThresholdMb == 2048, "All new preferences survive a service restart");
+string validSettingsJson = File.ReadAllText(settingsPath);
+foreach (var invalidPreferences in new[] { new AppSettings { MetricsRefreshSeconds = 4 }, new AppSettings { MetricsRefreshSeconds = 121 }, new AppSettings { LargeFileThresholdMb = 99 }, new AppSettings { LargeFileThresholdMb = 10241 }, new AppSettings { Theme = "unknown" }, new AppSettings { DefaultInstallFolder = "relative" } })
+{
+    try { preferences.SaveSettings(invalidPreferences); throw new Exception("Invalid preferences accepted"); }
+    catch (IOException) { checks++; }
+}
+Check(File.ReadAllText(settingsPath) == validSettingsJson && preferences.Current.MetricsRefreshSeconds == 37, "Rejected settings preserve persisted and active configuration");
+File.WriteAllText(settingsPath, "{ broken");
+var corruptPreferences = new SettingsService(settingsPath);
+Check(corruptPreferences.LastError != null && File.ReadAllText(settingsPath) == "{ broken", "Corrupt settings report an error without silently overwriting data");
+var blockedSettings = new SettingsService(Path.Combine(settingsPath, "blocked.json"));
+try { blockedSettings.SaveSettings(new AppSettings()); throw new Exception("Write to file as directory succeeded"); } catch (IOException) { checks++; }
+Check(blockedSettings.LastError != null, "Settings write failures are visible");
+Check(!Directory.EnumerateFiles(Path.GetDirectoryName(settingsPath)!, "*.tmp").Any(), "Preference transactions leave no temporary files");
 Console.WriteLine($"{checks} checks passed; isolated journal at {historyPath}");
 sealed class ForbiddenRestore : ISystemRestoreService
 {

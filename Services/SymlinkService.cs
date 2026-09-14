@@ -13,9 +13,9 @@ public class SymlinkPreset
     public string SuggestedDestPath { get; set; } = string.Empty;
     public string Icon { get; set; } = "🔗";
     public long SizeBytes { get; set; }
-    public string FormattedSize => DriveModel.FormatBytes(SizeBytes);
+    public string FormattedSize => IsJunction ? "Dowiązanie" : Status == "Gotowy" ? "Nie zmierzono" : DriveModel.FormatBytes(SizeBytes);
     public bool IsJunction { get; set; }
-    public bool CanRelocate => !IsJunction && Directory.Exists(SourcePath);
+    public bool CanRelocate => Status != "Gotowy" && !IsJunction && Directory.Exists(SourcePath);
     public string Status { get; set; } = "Gotowy";
 }
 
@@ -87,7 +87,9 @@ public class SymlinkService
 
             if (preset.IsJunction)
             {
-                preset.Status = "Już przeniesiony (dowiązanie aktywne)";
+                var destination = di.ResolveLinkTarget(true);
+                if (destination != null) preset.SuggestedDestPath = destination.FullName;
+                preset.Status = "Dowiązanie aktywne";
                 preset.SizeBytes = 0;
             }
             else

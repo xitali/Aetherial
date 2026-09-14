@@ -3,6 +3,25 @@
 Wszystkie istotne zmiany w projekcie są dokumentowane w tym pliku.
 Format jest oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/), a wersjonowanie na [Semantic Versioning](https://semver.org/).
 
+## [6.2.0] - 2026-09-14
+
+### Dodano
+- Stały pasek tematów w modułach Narzędzi i trzy działy Ustawień.
+- Widok preferencji z sześcioma działającymi ustawieniami: motyw, cykliczne odczyty, interwał, automatyczny skan sprzętu/cache po wejściu oraz próg dużych plików.
+- Walidację i atomowy zapis preferencji z jawnym raportowaniem błędów.
+- 13 sprawdzeń ustawień w ScanTests oraz scenariusze WPF dla nawigacji, timera, progu i przewijania.
+- Instrukcję używania dostępnego skryptu instalacji lokalnej z kontrolą sum, skrótami i deinstalacją zachowującą dane użytkownika.
+
+### Zmieniono
+- Zwarty pulpit i hierarchię danych oraz działań.
+- Wspólne style pasków przewijania, pól wyboru, list rozwijanych i postępu.
+- Stosowanie zapisanych ustawień w bieżącej sesji; próg dużych plików obowiązuje przy następnym wyszukiwaniu.
+
+### Ograniczenia
+- Automatyzacja odczytu nie wykonuje czyszczenia ani instalacji sterowników.
+- Zakres katalogu NVIDIA, częściowa migracja MVVM i brak samoczynnego aktualizatora pozostają bez zmian.
+- Wyniki lokalnych testów i status publikacji są oddzielnie opisane w docs/WERYFIKACJA.md.
+
 ## [6.1.0] - 2026-09-13
 
 ### Dodano

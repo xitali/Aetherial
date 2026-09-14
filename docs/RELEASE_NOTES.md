@@ -1,21 +1,24 @@
-# Aetherial 6.1.0
+# Aetherial 6.2.0
 
-- Sprzęt ma własny przepływ sprawdzania: zainstalowana wersja, wersja producenta,
-  źródło, czas weryfikacji i filtry. Katalog NVIDIA jest sprawdzany według PCI ID,
-  modelu karty i Windows x64. Pozostali producenci pozostają niezweryfikowani.
-- Nowy widok Czyść prowadzi od skanu przez wybór kategorii do wyniku. Domyślnie
-  niczego nie zaznacza; pokazuje postęp i umożliwia anulowanie.
-- Zbiorcze czyszczenie sprawdza cele względem aktualnego katalogu, wymaga punktu
-  przywracania i zapisuje rzeczywisty wynik do historii. Punkt przywracania
-  nie jest kopią usuwanych plików. Anulowanie nie cofa wykonanych usunięć.
-- Zmiana woluminu w Dyskach normalizuje ścieżkę, anuluje starszy odczyt i chroni
-  listę przed zastąpieniem wynikami poprzedniej nawigacji.
-- Skan nie deklaruje fikcyjnej kondycji PC ani skutecznej naprawy sterowników.
-- Oddzielono projekty Core, Services i WPF, dodano DI, view modele i rotowane logi.
-- Proces wydania uruchamia izolowane testy regresji, sterowników i skanera;
-  utrzymuje jeden lokalny pakiet i jeden najnowszy opublikowany GitHub Release.
+- Stały pasek tematów w modułach Narzędzi pozwala przechodzić pomiędzy nimi bez
+  wracania do strony wyboru. Pulpit jest bardziej zwarty, z czytelniejszą hierarchią
+  bieżących danych i akcji.
+- Ustawienia podzielono na „Wygląd i odczyty”, „Programy i pliki” oraz „Windows
+  i raporty”. Preferencje sterują działaniem aplikacji: motywem, cyklicznym odczytem
+  parametrów, interwałem odświeżania, skanem sprzętu i cache po otwarciu modułu
+  oraz progiem rozmiaru podczas wyszukiwania dużych plików.
+- Zapisane preferencje są walidowane i stosowane w bieżącej sesji. Błędy odczytu
+  oraz zapisu są zgłaszane; nieprawidłowa konfiguracja nie zastępuje poprawnego pliku.
+- Ujednolicono paski przewijania, pola wyboru, listy rozwijane i wskaźniki postępu.
+- Rozszerzono izolowane testy ustawień oraz testy zdarzeń WPF o nawigację,
+  rzeczywisty timer odświeżania, próg wyszukiwania i przewijanie.
 
-Katalog NVIDIA dotyczy Game Ready WHQL DCH; Studio i pakiety OEM mogą się różnić.
-Nie ma automatycznej instalacji sterowników producenta, instalatora aplikacji ani
-samoczynnych aktualizacji Aetherial. Starsze narzędzia nie przeszły jeszcze pełnej
-migracji MVVM. Szczegóły testów i ograniczeń: docs/WERYFIKACJA.md w repozytorium.
+Automatyczny skan odczytuje dane. Nie wybiera plików do usunięcia ani nie instaluje
+sterowników. Weryfikacja katalogu producenta nadal obejmuje NVIDIA Game Ready WHQL
+DCH na Windows 10/11 x64; pozostałe urządzenia pozostają niezweryfikowane.
+
+W repozytorium dostępny jest `scripts/install-local.ps1`: instaluje przygotowany
+pakiet `release/latest` w profilu użytkownika, sprawdza sumę EXE, tworzy skróty
+oraz wpis deinstalacji. To lokalny skrypt instalacyjny; automatyczny aktualizator
+Aetherial nie został dodany. Instrukcja i ograniczenia testów znajdują się w README
+oraz docs/WERYFIKACJA.md.

@@ -1,4 +1,4 @@
-# Aetherial 6.1 — Storage & Diagnostics
+# Aetherial 6.2 — Storage & Diagnostics
 
 Polska aplikacja Windows 10/11 x64 w C# / .NET 8 / WPF do przeglądania dysków,
 czyszczenia wybranych danych i sprawdzania sprzętu. Pracuje na odczytach Windows;
@@ -18,6 +18,17 @@ brak pomiaru lub odpowiedzi producenta pozostaje wyraźnie oznaczony.
   nawigacja anuluje poprzedni odczyt; spóźniony wynik nie zastępuje bieżącego folderu.
 - **Skan i historia:** wyniki dostępnych celów czyszczenia oraz trwały zapis wykonanych
   operacji. Licznik wyników nie jest procentową oceną zdrowia komputera.
+
+## Nawigacja i preferencje
+
+Pasek tematów pozostaje dostępny w modułach Narzędzi. Ustawienia mają trzy działy:
+„Wygląd i odczyty”, „Programy i pliki” oraz „Windows i raporty”.
+
+W preferencjach można zapisać sześć ustawień: motyw, włączenie cyklicznego odczytu
+parametrów, jego interwał (5–120 sekund), skan sprzętu po otwarciu, skan cache
+po otwarciu oraz próg dużych plików (100–10 240 MB). Motyw i timer są stosowane
+w bieżącej sesji, a nowy próg przy następnym wyszukiwaniu. Automatyczny skan
+wyłącznie odczytuje dane; czyszczenie i instalacja nadal wymagają własnego wyboru.
 
 ## Zakres i źródła danych
 
@@ -50,6 +61,26 @@ a następnie zastępuje `release/latest`. Dotychczasowy pakiet pozostaje do czas
 powodzenia publikacji. Wyniki kompilacji znanych projektów są sprzątane po wydaniu.
 Pakiet jest samodzielnym .NET WPF single-file, nie Native AOT.
 Test katalogu z `-- --live` jest opcjonalny i zależy od dostępności usługi NVIDIA.
+
+## Lokalna instalacja
+
+Po poprawnym przygotowaniu `release/latest` zamknij zainstalowaną aplikację i uruchom:
+
+```powershell
+./scripts/install-local.ps1
+```
+
+Skrypt sprawdza SHA-256 EXE przed kopiowaniem i po nim, instaluje pakiet w
+`%LocalAppData%\Programs\Aetherial`, tworzy skróty na pulpicie i w menu Start oraz
+wpis deinstalacji bieżącego użytkownika. Nie pobiera wydania z internetu.
+Usuwanie zainstalowanej aplikacji jest dostępne przez wpis Windows albo:
+
+```powershell
+./scripts/install-local.ps1 -Uninstall
+```
+
+Deinstalacja zachowuje ustawienia i historię użytkownika. Skrypt lokalny nie jest
+podpisanym instalatorem MSIX/EXE i nie zapewnia automatycznych aktualizacji.
 
 ## Architektura
 

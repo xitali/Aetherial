@@ -8,17 +8,27 @@ public class SettingsService
 {
     public static string SettingsFilePath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aetherial", "settings.json");
     private AppSettings _currentSettings = new();
+    private readonly string _filePath;
     public AppSettings Current => _currentSettings;
     public string? LastError { get; private set; }
 
-    public SettingsService() => LoadSettings();
+    public SettingsService() : this(SettingsFilePath) { }
+    public SettingsService(string filePath)
+    {
+        _filePath = Path.GetFullPath(filePath);
+        LoadSettings();
+    }
 
     public void LoadSettings()
     {
         try
         {
-            if (File.Exists(SettingsFilePath))
-                _currentSettings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsFilePath)) ?? throw new JsonException("Pusty plik ustawień.");
+            if (File.Exists(_filePath))
+            {
+                var loaded = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_filePath)) ?? throw new JsonException("Pusty plik ustawień.");
+                loaded.Validate();
+                _currentSettings = loaded;
+            }
             LastError = null;
         }
         catch (Exception ex)
@@ -30,12 +40,13 @@ public class SettingsService
 
     public void SaveSettings(AppSettings settings)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(SettingsFilePath)!);
-        string temporaryPath = SettingsFilePath + ".tmp";
+        string temporaryPath = _filePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
+            settings.Validate();
+            Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
             File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
-            File.Move(temporaryPath, SettingsFilePath, true);
+            File.Move(temporaryPath, _filePath, true);
             _currentSettings = settings;
             LastError = null;
         }
@@ -43,6 +54,11 @@ public class SettingsService
         {
             LastError = $"Nie zapisano ustawień: {ex.Message}";
             throw new IOException(LastError, ex);
+        }
+        finally
+        {
+            try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+            catch (Exception cleanupError) { System.Diagnostics.Trace.TraceWarning(cleanupError.Message); }
         }
     }
 }

@@ -13,6 +13,7 @@ public sealed class ExplorerViewModel : ObservableObject, IDisposable
     private string currentPath = "";
     private string status = "Wybierz wolumin lub folder.";
     private bool busy;
+    public int LargeFileThresholdMb { get; set; } = 500;
     public ObservableCollection<FileSystemItem> Items { get; } = new();
     public string CurrentPath { get => currentPath; private set => SetProperty(ref currentPath, value); }
     public string Status { get => status; private set => SetProperty(ref status, value); }
@@ -31,7 +32,7 @@ public sealed class ExplorerViewModel : ObservableObject, IDisposable
             CurrentPath = DriveModel.NormalizePath(path);
             Status = largeFiles ? $"Szukanie dużych plików: {CurrentPath}" : $"Odczytywanie: {CurrentPath}";
             var result = largeFiles
-                ? await service.FindLargeFilesAsync(CurrentPath, 500L * 1024 * 1024, ct: active.Token)
+                ? await service.FindLargeFilesAsync(CurrentPath, Math.Clamp(LargeFileThresholdMb, 100, 10240) * 1024L * 1024, ct: active.Token)
                 : await service.GetFolderContentsAsync(CurrentPath, active.Token);
             active.Token.ThrowIfCancellationRequested();
             if (!ReferenceEquals(request, active)) return;

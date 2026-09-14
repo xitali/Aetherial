@@ -36,6 +36,7 @@ internal static class Program
 
             VerifyExplorer(window, root);
             VerifyCleaner();
+            VerifyTopicsAndPreferences(window, root);
             if (args.Contains("--interactions-only"))
             {
                 PresentationTraceSources.DataBindingSource.Flush();
@@ -70,6 +71,15 @@ internal static class Program
                     switchView.Invoke(window, new object[] { Array.IndexOf(views, view) });
                     Render(root, output, $"{(light ? "light" : "dark")}-{view}-1366", 1366, 900, 1);
                     count++;
+                    if (view == "ViewSettings")
+                    {
+                        foreach (var topic in new[] { "SettingsAppsTab", "SettingsWindowsTab", "SettingsAppearanceTab" })
+                        {
+                            ((Button)window.FindName(topic)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                            Render(root, output, $"{(light ? "light" : "dark")}-{topic}-1180", 1180, 820, 1);
+                            count++;
+                        }
+                    }
                     if (view is "ViewCleaner" or "ViewExplorer" or "ViewDrivers")
                     {
                         Render(root, output, $"{(light ? "light" : "dark")}-{view}-1180", 1180, 820, 1);
@@ -96,6 +106,51 @@ internal static class Program
             return 0;
         }
         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+    }
+
+    private static void VerifyTopicsAndPreferences(MainWindow window, FrameworkElement root)
+    {
+        var topics = (FrameworkElement)window.FindName("ToolTopicsBar");
+        foreach (var name in new[] { "TopicHardware", "TopicCleaner", "TopicApps", "TopicExplorer", "TopicAdvanced", "TopicHardware" })
+        {
+            ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            root.Measure(new Size(1180, 820)); root.Arrange(new Rect(0, 0, 1180, 820)); root.UpdateLayout();
+            Check(topics.Visibility == Visibility.Visible && topics.ActualHeight > 0, "Topics remain visible after " + name);
+            foreach (var other in new[] { "TopicHardware", "TopicCleaner", "TopicApps", "TopicExplorer", "TopicAdvanced" })
+                Check(((Button)window.FindName(other)).Visibility == Visibility.Visible && ((Button)window.FindName(other)).ActualWidth > 0, "Every topic stays reachable: " + other);
+        }
+        var settings = App.Services.GetService(typeof(SettingsService)) as SettingsService ?? throw new Exception("Missing settings");
+        foreach (var name in new[] { "SettingsAppsTab", "SettingsWindowsTab", "SettingsAppearanceTab" })
+        {
+            ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(new[] { "SettingsAppearancePage", "SettingsAppsPage", "SettingsWindowsPage" }.Count(p => ((FrameworkElement)window.FindName(p)).Visibility == Visibility.Visible) == 1, "Exactly one settings topic visible");
+        }
+        var original = settings.Current.MetricsRefreshSeconds;
+        var oldThreshold = settings.Current.LargeFileThresholdMb;
+        try
+        {
+            settings.Current.MetricsRefreshSeconds = 9;
+            settings.Current.LargeFileThresholdMb = 1234;
+            typeof(MainWindow).GetMethod("ApplyLivePreferences", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(window, null);
+            var timer = (DispatcherTimer)typeof(MainWindow).GetField("_metricsTimer", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(window)!;
+            var explorer = (ExplorerViewModel)typeof(MainWindow).GetField("_explorerViewModel", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(window)!;
+            Check(timer.Interval == TimeSpan.FromSeconds(9), "Preference updates actual metrics timer");
+            Check(explorer.LargeFileThresholdMb == 1234, "Preference updates actual file search threshold");
+        }
+        finally { settings.Current.MetricsRefreshSeconds = original; settings.Current.LargeFileThresholdMb = oldThreshold; typeof(MainWindow).GetMethod("ApplyLivePreferences", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(window, null); }
+        foreach (var orientation in new[] { Orientation.Vertical, Orientation.Horizontal })
+        {
+            var bar = new System.Windows.Controls.Primitives.ScrollBar { Style = (Style)App.Current.FindResource(typeof(System.Windows.Controls.Primitives.ScrollBar)), Orientation = orientation, Minimum = 0, Maximum = 100, ViewportSize = 20, Value = 40 };
+            bar.Measure(new Size(300, 300)); bar.Arrange(new Rect(0, 0, 300, 300)); bar.ApplyTemplate();
+            var track = (System.Windows.Controls.Primitives.Track)bar.Template.FindName("PART_Track", bar);
+            Check(track != null && track.Thumb != null, "Scrollbar exposes functional track and thumb");
+            bar.Value = 75;
+            Check(Math.Abs(track!.Value - 75) < 0.01, "Scrollbar tracks value in " + orientation);
+            var delta = new System.Windows.Controls.Primitives.DragDeltaEventArgs(20, 20) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragDeltaEvent };
+            track!.Thumb!.RaiseEvent(delta);
+            Check(bar.Value > 75, "Dragging scrollbar thumb changes value in " + orientation);
+        }
+        Console.WriteLine("PASS persistent tool topics, applied settings, vertical/horizontal scrollbar templates.");
     }
 
     private static void VerifyCleaner()

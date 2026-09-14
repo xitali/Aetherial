@@ -1,0 +1,43 @@
+<UserControl x:Class="DiskOptimizer.Views.PreferencesView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <UserControl.Resources>
+  <Style x:Key="OptionTitle" TargetType="TextBlock"><Setter Property="FontSize" Value="15"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/></Style>
+  <Style x:Key="OptionDetail" TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="0,4,0,10"/><Setter Property="FontSize" Value="12"/></Style>
+ </UserControl.Resources>
+ <Border Style="{StaticResource SurfaceCardStyle}" Padding="18" Margin="0,0,0,16">
+  <StackPanel>
+   <TextBlock Text="TWÓJ SPOSÓB PRACY" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="11"/>
+   <TextBlock Text="Wygląd i automatyzacja" FontSize="23" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,8"/>
+   <TextBlock Style="{StaticResource OptionDetail}" Text="Ustawienia są zapisywane lokalnie i stosowane po zapisaniu. Automatyczny skan tylko odczytuje dane; czyszczenie i instalacje wymagają Twojej decyzji."/>
+   <Grid>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <StackPanel>
+     <TextBlock Style="{StaticResource OptionTitle}" Text="Motyw interfejsu"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Zmieniaj wygląd bez ponownego uruchamiania aplikacji."/>
+     <ComboBox x:Name="ThemePicker" HorizontalAlignment="Left" MinWidth="180" SelectedValuePath="Tag" Margin="0,0,0,22"><ComboBoxItem Content="Ciemny" Tag="Dark"/><ComboBoxItem Content="Jasny" Tag="Light"/></ComboBox>
+     <CheckBox x:Name="RefreshMetrics" Content="Odświeżaj parametry komputera" Foreground="{DynamicResource TextPrimaryBrush}"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Aktualizuje metryki pulpitu, kiedy aplikacja jest otwarta. Wyłączenie zatrzymuje cykliczne odczyty."/>
+     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+      <TextBlock Text="Co" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+      <TextBox Padding="10,6" x:Name="RefreshSeconds" Width="74" Margin="10,0" AutomationProperties.Name="Interwał odświeżania w sekundach"/>
+      <TextBlock Text="sekund  ·  5–120" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+     </StackPanel>
+     <TextBlock Style="{StaticResource OptionTitle}" Text="Próg dużych plików"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Eksplorator wyszukuje pliki przekraczające ten rozmiar. Zmiana zadziała przy następnym wyszukiwaniu."/>
+     <StackPanel Orientation="Horizontal"><TextBox Padding="10,6" x:Name="LargeFilesMb" Width="90" AutomationProperties.Name="Próg dużych plików w MB"/><TextBlock Text="MB  ·  100–10 240" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
+    </StackPanel>
+    <StackPanel Grid.Column="2">
+     <TextBlock Style="{StaticResource OptionTitle}" Text="Skanowanie przy wejściu"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Oszczędzaj kliknięcia: wybrane moduły rozpoczynają odczyt po otwarciu. Wyniki pozostają dostępne w bieżącej sesji."/>
+     <CheckBox x:Name="HardwareScan" Content="Sprawdź sprzęt po otwarciu modułu" Foreground="{DynamicResource TextPrimaryBrush}"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Rozpoznaje urządzenia i sprawdza obsługiwane katalogi producentów. Korzysta z połączenia internetowego; nie instaluje sterowników."/>
+     <CheckBox x:Name="CleanerScan" Content="Skanuj pamięci podręczne po otwarciu" Foreground="{DynamicResource TextPrimaryBrush}"/>
+     <TextBlock Style="{StaticResource OptionDetail}" Text="Wylicza dane do przejrzenia. Nie zaznacza ani nie usuwa plików automatycznie. Na wolnym dysku odczyt może chwilę potrwać."/>
+     <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Padding="16" Margin="0,12,0,0"><TextBlock Text="Możesz zawsze uruchomić skan lub odświeżenie ręcznie. Wyłączenie automatyzacji nie ukrywa tych funkcji." Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/></Border>
+    </StackPanel>
+   </Grid>
+   <WrapPanel Margin="0,16,0,0"><Button Content="Zapisz preferencje" Style="{StaticResource PrimaryButtonStyle}" Click="Save_Click"/><TextBlock x:Name="SaveStatus" Margin="16,8,0,0" MaxWidth="580" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" AutomationProperties.LiveSetting="Polite"/></WrapPanel>
+  </StackPanel>
+ </Border>
+</UserControl>
