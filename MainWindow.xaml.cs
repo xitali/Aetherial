@@ -53,7 +53,6 @@ public partial class MainWindow : Window
     public ObservableCollection<HistoryEntry> HistoryItems { get; } = new();
 
     private List<AppPackageItem> _allApps = new();
-    private string _selectedCategory = "All";
     private static string SystemDrive => Path.GetPathRoot(Environment.SystemDirectory)!;
     private string _currentExplorerPath = SystemDrive;
     private bool _isBusy = false;
@@ -88,7 +87,12 @@ public partial class MainWindow : Window
                 ActiveVolumeText.Text = $"Aktywny wolumin: {Path.GetPathRoot(_currentExplorerPath)}";
             }
             if (args.PropertyName == nameof(ExplorerViewModel.Status)) ExplorerStatusText.Text = _explorerViewModel.Status;
-            if (args.PropertyName == nameof(ExplorerViewModel.IsBusy)) ExplorerReadProgress.IsIndeterminate = _explorerViewModel.IsBusy;
+            if (args.PropertyName == nameof(ExplorerViewModel.IsBusy))
+            {
+                ExplorerReadProgress.IsIndeterminate = _explorerViewModel.IsBusy;
+                ExplorerReadProgress.Visibility = ExplorerCancelButton.Visibility = _explorerViewModel.IsBusy ? Visibility.Visible : Visibility.Collapsed;
+                ExplorerSelectionBar.Visibility = !_explorerViewModel.IsBusy && ExplorerItems.Any(i => i.IsSelected) ? Visibility.Visible : Visibility.Collapsed;
+            }
         };
         Closed += (_, _) => _explorerViewModel.Dispose();
         SymlinkPresetsControl.ItemsSource = SymlinkPresets;
@@ -115,7 +119,7 @@ public partial class MainWindow : Window
         StateChanged += (s, e) =>
         {
             if (MaximizeIconText != null)
-                MaximizeIconText.Text = WindowState == WindowState.Maximized ? "❐" : "🗖";
+                MaximizeIconText.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
         };
     }
 
@@ -130,17 +134,10 @@ public partial class MainWindow : Window
             RefreshLiveMetrics();
             _metricsTimer.Tick += (_, _) => RefreshLiveMetrics();
             ApplyLivePreferences();
-            Closed += (_, _) => { _metricsTimer.Stop();  _modalTcs?.TrySetResult(false); };
+            Closed += (_, _) => { _metricsTimer.Stop(); _appsCts?.Cancel(); _cacheCts?.Cancel(); _modalTcs?.TrySetResult(false); };
             AppendLog($"Aetherial Suite {typeof(App).Assembly.GetName().Version} • Administrator: {(DiskHelper.IsAdministrator() ? "tak" : "nie")}");
-            await LoadSymlinkPresetsAsync();
-            await NavigateToFolderAsync(SystemDrive);
-            await RefreshHistoryAsync();
-            await RefreshDashboardHardwareAsync();
-            if (_settingsService.Current.AutoCheckUpdates)
-            {
-                await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
-                ApplyAppsFilter();
-            }
+            if (_settingsService.Current.AutoScanCleanerOnOpen) await ScanAllItemsAsync();
+
         }
         catch (Exception ex)
         {
@@ -215,12 +212,12 @@ public partial class MainWindow : Window
         if (WindowState == WindowState.Maximized)
         {
             WindowState = WindowState.Normal;
-            MaximizeIconText.Text = "🗖";
+            MaximizeIconText.Text = "\uE922";
         }
         else
         {
             WindowState = WindowState.Maximized;
-            MaximizeIconText.Text = "❐";
+            MaximizeIconText.Text = "\uE923";
         }
     }
 
@@ -297,10 +294,8 @@ public partial class MainWindow : Window
 
     private void SwitchView(int viewIndex)
     {
+        if (viewIndex is 0 or 7) viewIndex = 1;
         if (viewIndex == 6) PreferencesPanel.ReloadSettings();
-        ToolTopicsBar.Visibility = viewIndex is >= 1 and <= 5 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var pair in new[] { (TopicCleaner, 1), (TopicExplorer, 2), (TopicHardware, 3), (TopicAdvanced, 4), (TopicApps, 5) })
-            pair.Item1.Style = (Style)FindResource(pair.Item2 == viewIndex ? "PrimaryButtonStyle" : "SecondaryButtonStyle");
         CurrentSectionText.Text = viewIndex switch { 0 => "PULPIT", 1 => "CZYŚĆ", 2 => "DYSKI", 3 => "SPRZĘT", 4 => "NARZĘDZIA", 5 => "APLIKACJE", 6 => "USTAWIENIA", 7 => "SKANOWANIE", 8 => "HISTORIA", _ => "AETHERIAL" };
         LegacyHardwarePanel.Visibility = Visibility.Collapsed;
         ViewDashboard.Visibility = viewIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -313,15 +308,24 @@ public partial class MainWindow : Window
         ViewScanner.Visibility = viewIndex == 7 ? Visibility.Visible : Visibility.Collapsed;
         ViewHistory.Visibility = viewIndex == 8 ? Visibility.Visible : Visibility.Collapsed;
 
-        if (viewIndex == 0 && NavDashboardRadio != null) NavDashboardRadio.IsChecked = true;
-        else if (viewIndex >= 1 && viewIndex <= 5 && NavToolsRadio != null) NavToolsRadio.IsChecked = true;
-        else if (viewIndex == 6 && NavSettingsRadio != null) NavSettingsRadio.IsChecked = true;
-        else if (viewIndex == 7 && NavScannerRadio != null) NavScannerRadio.IsChecked = true;
-        else if (viewIndex == 8 && NavHistoryRadio != null) NavHistoryRadio.IsChecked = true;
+        foreach (var pair in new[] { (NavCleanerRadio, 1), (NavExplorerRadio, 2), (NavDriversRadio, 3), (NavToolsRadio, 4), (NavAppsRadio, 5), (NavSettingsRadio, 6), (NavHistoryRadio, 8) }) pair.Item1.IsChecked = pair.Item2 == viewIndex;
+        if (viewIndex == 4) ShowToolHome();
         if (IsLoaded) RefreshSectionOnOpen(viewIndex);
     }
 
     private readonly Dictionary<int, DateTime> _sectionRefresh = new();
+    private void ShowToolHome() { ToolHomePanel.Visibility = Visibility.Visible; ToolDetailPanel.Visibility = Visibility.Collapsed; }
+    private void BackToTools_Click(object sender, RoutedEventArgs e) => ShowToolHome();
+    private async void OpenTool_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || !int.TryParse(button.Tag?.ToString(), out var index)) return;
+        ToolHomePanel.Visibility = Visibility.Collapsed; ToolDetailPanel.Visibility = Visibility.Visible;
+        var sections = new[] { ToolMigrationSection, ToolDevSection, ToolSystemSection, ToolMemorySection };
+        for (var i = 0; i < sections.Length; i++) sections[i].Visibility = i == index ? Visibility.Visible : Visibility.Collapsed;
+        GlobalStatusText.Text = "";
+        try { if (index == 0) await LoadSymlinkPresetsAsync(); if (index == 3) UpdateRamMetricsDisplay(); }
+        catch (Exception ex) { GlobalStatusText.Text = $"Nie odczytano danych: {ex.Message}"; }
+    }
     private readonly HashSet<int> _refreshingSections = new();
     private async void RefreshSectionOnOpen(int section)
     {
@@ -335,9 +339,9 @@ public partial class MainWindow : Window
                 case 1 when settings.AutoScanCleanerOnOpen && !_hasCompletedScan: await ScanAllItemsAsync(); break;
                 case 2 when !_explorerViewModel.IsBusy: await NavigateToFolderAsync(string.IsNullOrWhiteSpace(_currentExplorerPath) ? SystemDrive : _currentExplorerPath); break;
                 case 3 when settings.AutoScanHardwareOnOpen && !_hardwareViewModel.IsBusy: await _hardwareViewModel.ScanAsync(); break;
-                case 4: await LoadSymlinkPresetsAsync(); break;
+
                 case 5 when settings.AutoCheckUpdates:
-                    await _appInstaller.RefreshInstalledStatusesAsync(_allApps, settings.DefaultInstallFolder, AppendLog); ApplyAppsFilter(); break;
+                    await RefreshProgramsAsync(); break;
                 case 6: PreferencesPanel.ReloadSettings(); break;
                 case 8: await RefreshHistoryAsync(); break;
             }
@@ -422,8 +426,8 @@ public partial class MainWindow : Window
     private async void BigScanButton_Click(object sender, RoutedEventArgs e)
     {
         if (_isBusy) return;
-        SwitchView(7);
-        await RunWizardScanAsync();
+        SwitchView(1);
+        await ScanAllItemsAsync();
     }
 
     private async Task RunWizardScanAsync()
@@ -754,6 +758,8 @@ public partial class MainWindow : Window
 
         if (ExplorerSelectedSummaryText != null)
             ExplorerSelectedSummaryText.Text = $"Zaznaczono: {DriveModel.FormatBytes(explorerBytes)} ({explorerSelectedCount} el.)";
+        if (ExplorerSelectionBar != null)
+            ExplorerSelectionBar.Visibility = explorerSelectedCount > 0 && !_explorerViewModel.IsBusy ? Visibility.Visible : Visibility.Collapsed;
 
         // Obliczanie rozmiaru shaderów GPU z CleanItems lub bezpośrednio z dysku
         var shaderItem = CleanItems.FirstOrDefault(i => i.Id == "nvidia_dxcache");
@@ -1166,7 +1172,7 @@ public partial class MainWindow : Window
         try
         {
             var report = await App.Services.GetRequiredService<CleanupWorkflowService>().ExecuteAsync(selected, AppendLog, _cacheCts.Token);
-            CleanerPanel.SetResult(report.FreedBytes, report.DeletedFiles, report.Errors + (report.Cancelled ? 1 : 0));
+            CleanerPanel.SetResult(report.FreedBytes, report.DeletedFiles, report.Errors, report.Cancelled);
             GlobalStatusText.Text = report.Summary;
             RefreshDrives(); UpdateSummaries();
             await RefreshHistoryAsync();
@@ -1522,18 +1528,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private Window? _logWindow;
     private void ToggleLogButton_Click(object sender, RoutedEventArgs e)
     {
-        if (LogDrawerBorder.Visibility == Visibility.Visible)
-        {
-            LogDrawerBorder.Visibility = Visibility.Collapsed;
-            ToggleLogButton.Content = "📋 Pokaż dziennik zdarzeń";
-        }
-        else
-        {
-            LogDrawerBorder.Visibility = Visibility.Visible;
-            ToggleLogButton.Content = "📋 Ukryj dziennik zdarzeń";
-        }
+        if (_logWindow != null) { _logWindow.Activate(); return; }
+        var log = new TextBox { IsReadOnly = true, TextWrapping = TextWrapping.Wrap,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin = new Thickness(16),
+            FontFamily = new FontFamily("Consolas"), FontSize = 13 };
+        log.SetBinding(TextBox.TextProperty, new System.Windows.Data.Binding(nameof(TextBox.Text)) { Source = LogTextBox, Mode = System.Windows.Data.BindingMode.OneWay });
+        _logWindow = new Window { Title = "Dziennik zdarzeń — Aetherial", Owner = this,
+            Width = 900, Height = 560, MinWidth = 600, MinHeight = 360,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = log };
+        _logWindow.SetResourceReference(BackgroundProperty, "BgDarkBrush");
+        _logWindow.Closed += (_, _) => _logWindow = null;
+        _logWindow.Show();
     }
 
     private void ClearLog_Click(object sender, RoutedEventArgs e) => LogTextBox.Clear();
@@ -1552,170 +1560,158 @@ public partial class MainWindow : Window
 
     // ==================== CENTRUM PROGRAMÓW & AKTUALIZATOR (100 APLIKACJI) ====================
 
+    private List<AppPackageItem> _installedApps = new();
+    private string _appsView = "Installed";
+    private bool _appsReading;
+    private bool _appsReadCompleted;
+    private bool _appsUpdatesChecked;
+    private CancellationTokenSource? _appsCts;
+
     private void InitializeAppsCatalog()
     {
         _allApps = _appInstaller.GetCuratedCatalog();
+        ObserveApps(_allApps);
         ApplyAppsFilter();
     }
 
-    private void ApplyAppsFilter()
+    private void ObserveApps(IEnumerable<AppPackageItem> items)
     {
-        string search = AppsSearchTextBox?.Text?.Trim().ToLowerInvariant() ?? "";
-        var filtered = _allApps.Where(a =>
-            (_selectedCategory == "All" || a.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrEmpty(search) ||
-             a.Name.ToLowerInvariant().Contains(search) ||
-             a.Description.ToLowerInvariant().Contains(search) ||
-             a.Id.ToLowerInvariant().Contains(search))
-        ).ToList();
-
-        AppsList.Clear();
-        foreach (var app in filtered)
+        foreach (var item in items)
         {
-            AppsList.Add(app);
+            item.PropertyChanged -= AppItem_PropertyChanged;
+            item.PropertyChanged += AppItem_PropertyChanged;
         }
     }
 
-    private void AppsSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void AppItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        ApplyAppsFilter();
+        if (e.PropertyName is nameof(AppPackageItem.IsSelected) or nameof(AppPackageItem.IsBusy))
+            Dispatcher.Invoke(UpdateAppsSelection);
     }
 
-    private void FilterCategory_Click(object sender, RoutedEventArgs e)
+    private IEnumerable<AppPackageItem> CurrentApps => _appsView == "Catalog" ? _allApps : _installedApps;
+
+    private void ApplyAppsFilter()
     {
-        if (sender is Button btn && btn.Tag is string cat)
+        if (AppsItemsControl == null) return;
+        var search = AppsSearchTextBox?.Text?.Trim() ?? "";
+        var filtered = CurrentApps.Where(a =>
+            (_appsView != "Updates" || a.HasUpdate) &&
+            (search.Length == 0 || a.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)
+                || a.Id.Contains(search, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name).ToList();
+        AppsList.Clear();
+        foreach (var app in filtered) AppsList.Add(app);
+        AppsEmptyText.Visibility = filtered.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        AppsEmptyText.Text = search.Length > 0 ? "Brak programów pasujących do wyszukiwania."
+            : _appsReading ? "Odczytywanie programów…"
+            : !_appsReadCompleted && _appsView != "Catalog" ? "Użyj przycisku „Sprawdź aktualizacje”, aby odczytać programy."
+            : _appsView == "Updates" ? (_appsUpdatesChecked ? "Winget nie zgłosił dostępnych aktualizacji." : "Aktualizacje nie zostały potwierdzone. Spróbuj sprawdzić ponownie.")
+            : "Brak programów w tym widoku.";
+        AppsUpdatesTab.Content = _appsReadCompleted ? $"Aktualizacje ({_installedApps.Count(a => a.HasUpdate)})" : "Aktualizacje";
+        foreach (var pair in new[] { (AppsInstalledTab, "Installed"), (AppsUpdatesTab, "Updates"), (AppsCatalogTab, "Catalog") })
+            pair.Item1.Style = (Style)FindResource(pair.Item2 == _appsView ? "PrimaryButtonStyle" : "SecondaryButtonStyle");
+        UpdateAppsSelection();
+    }
+
+    private void UpdateAppsSelection()
+    {
+        if (AppsSelectionBar == null) return;
+        var selected = AppsList.Count(a => a.IsSelected && a.ActionButtonVisible && a.CanAction);
+        AppsSelectionBar.Visibility = selected > 0 && !_appsReading && !_isBusy ? Visibility.Visible : Visibility.Collapsed;
+        AppsSelectionText.Text = $"Zaznaczone programy: {selected}";
+    }
+
+    private void AppsView_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string view }) { _appsView = view; ApplyAppsFilter(); }
+    }
+
+    private void AppsSearchTextBox_TextChanged(object sender, TextChangedEventArgs e) => ApplyAppsFilter();
+    private void DeselectAllApps_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var app in _allApps.Concat(_installedApps)) app.IsSelected = false;
+    }
+
+    private async Task RefreshProgramsAsync()
+    {
+        if (_appsReading || _isBusy) return;
+        _appsReading = true;
+        _appsCts = new CancellationTokenSource();
+        AppsRefreshButton.IsEnabled = false;
+        AppsReadProgress.Visibility = Visibility.Visible;
+        AppsStatusText.Text = "Odczytywanie programów i dostępnych wersji…";
+        ApplyAppsFilter();
+        try
         {
-            _selectedCategory = cat;
+            var result = await _appInstaller.GetInstalledAppsAsync(AppendLog, _appsCts.Token);
+            foreach (var app in _installedApps) app.PropertyChanged -= AppItem_PropertyChanged;
+            _installedApps = result.Apps.ToList();
+            ObserveApps(_installedApps);
+            _appsReadCompleted = true;
+            _appsUpdatesChecked = result.UpdatesChecked;
+            AppsStatusText.Text = result.Status;
+            SoftwareInstallerService.ApplyInventoryToCatalog(_allApps, result);
+        }
+        catch (OperationCanceledException) { AppsStatusText.Text = "Odczyt anulowany. Poprzednie wyniki mogą być nieaktualne."; }
+        catch (Exception ex) { AppsStatusText.Text = "Nie udało się odczytać programów. Spróbuj ponownie."; AppendLog(ex.Message); }
+        finally
+        {
+            _appsReading = false; _appsCts?.Dispose(); _appsCts = null;
+            AppsRefreshButton.IsEnabled = true;
+            AppsReadProgress.Visibility = Visibility.Collapsed;
             ApplyAppsFilter();
         }
     }
 
-    private void SelectVisibleApps_Click(object sender, RoutedEventArgs e)
-    {
-        foreach (var app in AppsList)
-        {
-            app.IsSelected = true;
-        }
-    }
-
-    private void DeselectAllApps_Click(object sender, RoutedEventArgs e)
-    {
-        foreach (var app in _allApps)
-        {
-            app.IsSelected = false;
-        }
-    }
-
-    private async void RefreshAppsStatus_Click(object sender, RoutedEventArgs e)
-    {
-        AppendLog("🔄 Rozpoczynam sprawdzanie zainstalowanych programów i aktualizacji winget...");
-        GlobalStatusText.Text = "Sprawdzanie zainstalowanych programów winget...";
-        await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
-        ApplyAppsFilter();
-        GlobalStatusText.Text = "Zakończono próbę odczytu programów. Szczegóły w dzienniku.";
-        int installed = _allApps.Count(a => a.IsInstalled);
-        int updates = _allApps.Count(a => a.HasUpdate);
-        await ShowAlertAsync("Centrum Programów", $"Katalog: {_allApps.Count} programów. Dostępne wyniki odczytu:\n• Zainstalowane: {installed}\n• Dostępne aktualizacje: {updates}", "Rozumiem", "✅", isSuccess: true);
-    }
+    private async void RefreshAppsStatus_Click(object sender, RoutedEventArgs e) => await RefreshProgramsAsync();
 
     private async void InstallSingleApp_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is AppPackageItem app)
-        {
-            if (app.HasUpdate)
-            {
-                bool ok = await _appInstaller.UpgradeAppAsync(app, AppendLog);
-                ApplyAppsFilter();
-                if (ok)
-                {
-                    await ShowAlertAsync("Aktualizacja ukończona", $"Pomyślnie zaktualizowano program {app.Name}.", "OK", "🎉", isSuccess: true);
-                }
-            }
-            else
-            {
-                string targetPath = _settingsService.Current.DefaultInstallFolder;
-                bool ok = await _appInstaller.InstallAppAsync(app, targetPath, AppendLog);
-                ApplyAppsFilter();
-                if (ok)
-                {
-                    string msg = app.Status.Contains("Aktualn", StringComparison.OrdinalIgnoreCase)
-                        ? $"Program {app.Name} jest już zainstalowany w najnowszej wersji na Twoim komputerze."
-                        : $"Pomyślnie zainstalowano {app.Name} w katalogu:\n{targetPath}";
-                    await ShowAlertAsync("Centrum Programów", msg, "Świetnie", "🎉", isSuccess: true);
-                }
-            }
-        }
+        if (sender is Button { Tag: AppPackageItem app }) await ApplyProgramChangesAsync(new[] { app });
     }
 
     private async void InstallSelectedApps_Click(object sender, RoutedEventArgs e)
+        => await ApplyProgramChangesAsync(AppsList.Where(a => a.IsSelected).ToArray());
+
+    private async Task ApplyProgramChangesAsync(IEnumerable<AppPackageItem> selected)
     {
-        var selected = _allApps.Where(a => a.IsSelected && (!a.IsInstalled || a.HasUpdate)).ToList();
-        if (selected.Count == 0)
+        if (_isBusy || _appsReading) return;
+        var apps = selected.Where(a => a.ActionButtonVisible && a.CanAction).Distinct().ToArray();
+        if (apps.Length == 0) return;
+        var preview = string.Join("\n", apps.Select(a => $"• {a.Name} — {(a.HasUpdate ? "aktualizacja" : "instalacja")}"));
+        if (!await ShowConfirmAsync("Potwierdź zmiany programów", preview + "\n\nZapisz otwarte dokumenty. Instalatory mogą zamknąć aktualizowane aplikacje.", "Zastosuj", "Anuluj")) return;
+        if (_isBusy || _appsReading) return;
+        _isBusy = true;
+        AppsRefreshButton.IsEnabled = false;
+        AppsReadProgress.Visibility = Visibility.Visible;
+        AppsItemsControl.IsEnabled = false;
+        UpdateAppsSelection();
+        var successes = 0;
+        try
         {
-            await ShowAlertAsync("Brak zaznaczenia", "Zaznacz programy do zainstalowania przy użyciu checkboxów.", "Rozumiem", "ℹ️");
-            return;
+            foreach (var app in apps)
+            {
+                AppsStatusText.Text = $"{(app.HasUpdate ? "Aktualizowanie" : "Instalowanie")}: {app.Name}…";
+                var ok = app.HasUpdate
+                    ? await _appInstaller.UpgradeAppAsync(app, AppendLog, silent: _settingsService.Current.SilentInstall)
+                    : await _appInstaller.InstallAppAsync(app, _settingsService.Current.DefaultInstallFolder, AppendLog, silent: _settingsService.Current.SilentInstall);
+                if (ok) { successes++; app.IsSelected = false; }
+            }
+            await _historyService.AddEntryAsync(new HistoryEntry { OperationType = "Programy", ItemsFixed = successes,
+                Success = successes == apps.Length, Summary = $"Zakończono: {successes} z {apps.Length} wybranych instalacji lub aktualizacji." });
         }
-
-        string targetPath = _settingsService.Current.DefaultInstallFolder;
-        bool confirm = await ShowConfirmAsync("Instalacja pakietu programów",
-            $"Czy chcesz zainstalować {selected.Count} zaznaczonych programów?\nFolder docelowy: {targetPath}\n\nOperacja może potrwać kilka minut.", "Zainstaluj", "Anuluj");
-        if (!confirm) return;
-
-        AppendLog($"🚀 Rozpoczynam masową instalację {selected.Count} programów...");
-        int success = 0;
-        int failed = 0;
-
-        foreach (var app in selected)
+        catch (Exception ex) { AppendLog(ex.Message); }
+        finally
         {
-            GlobalStatusText.Text = $"Instalowanie: {app.Name}...";
-            bool ok = app.HasUpdate
-                ? await _appInstaller.UpgradeAppAsync(app, AppendLog)
-                : await _appInstaller.InstallAppAsync(app, targetPath, AppendLog);
-            if (ok) success++; else failed++;
+            _isBusy = false;
+            AppsItemsControl.IsEnabled = true;
+            AppsRefreshButton.IsEnabled = true;
+            AppsReadProgress.Visibility = Visibility.Collapsed;
+            ApplyAppsFilter();
         }
-
-        ApplyAppsFilter();
-        GlobalStatusText.Text = $"Instalacja ukończona: {success} sukces, {failed} błędów.";
-        await ShowAlertAsync("Wynik instalacji", $"Zakończono instalację pakietu programów!\n• Zainstalowano pomyślnie: {success}\n• Błędy: {failed}", "Zamknij", "ℹ️", isSuccess: failed == 0);
+        await RefreshProgramsAsync();
+        await ShowAlertAsync("Wynik operacji", $"Ukończono: {successes} z {apps.Length}." + (successes < apps.Length ? " Szczegóły błędów znajdziesz w dzienniku zdarzeń." : ""), "Zamknij", isSuccess: successes == apps.Length);
     }
-
-    private async void UpgradeAllInstalledApps_Click(object sender, RoutedEventArgs e)
-    {
-        bool confirm = await ShowConfirmAsync("Automatyczna aktualizacja oprogramowania (Always Up-To-Date)",
-            "Ta operacja sprawdzi i automatycznie zaktualizuje wszystkie zainstalowane programy na Twoim komputerze do najnowszych stabilnych wersji w tle (silent upgrade).\n\n" +
-            "Czy chcesz rozpocząć pobieranie i instalację najnowszych wersji?", "⚡ Zaktualizuj wszystkie programy", "Anuluj");
-        if (!confirm) return;
-
-        LogDrawerBorder.Visibility = Visibility.Visible;
-        ToggleLogButton.Content = "📋 Ukryj dziennik zdarzeń";
-        AppendLog("===============================================================");
-        AppendLog("🚀 ROZPOCZĘTO AUTOMATYCZNĄ AKTUALIZACJĘ WSZYSTKICH PROGRAMÓW 🚀");
-        AppendLog("===============================================================");
-        GlobalStatusText.Text = "Aktualizowanie programów do najnowszych wersji...";
-
-        int count = 0;
-        var toUpgrade = _allApps.Where(a => a.HasUpdate).ToList();
-        foreach (var app in toUpgrade)
-        {
-            GlobalStatusText.Text = $"Aktualizowanie: {app.Name}...";
-            bool ok = await _appInstaller.UpgradeAppAsync(app, AppendLog);
-            if (ok) count++;
-        }
-
-        AppendLog("🔍 Sprawdzanie i automatyczna aktualizacja pozostałych pakietów systemowych...");
-        var (upgradeOk, upgradeOutput) = await DiskHelper.RunProcessAsync("winget", "upgrade --all --silent --accept-package-agreements --accept-source-agreements", AppendLog);
-
-        await _appInstaller.RefreshInstalledStatusesAsync(_allApps, _settingsService.Current.DefaultInstallFolder, AppendLog);
-        ApplyAppsFilter();
-
-        AppendLog("===============================================================");
-        AppendLog("🎉 ZAKOŃCZONO PROCES AKTUALIZACJI OPROGRAMOWANIA!");
-        AppendLog("===============================================================");
-        GlobalStatusText.Text = upgradeOk ? "Zakończono polecenie aktualizacji. Sprawdź pozostałe aktualizacje." : "Aktualizacja zgłosiła błąd. Sprawdź dziennik.";
-
-        await ShowAlertAsync("Wynik aktualizacji", $"Zaktualizowano {count} programów z katalogu. Pozostałe widoczne aktualizacje: {_allApps.Count(a => a.HasUpdate)}.\nWynik zbiorczego polecenia winget: {(upgradeOk ? "ukończono" : "błąd; sprawdź dziennik")}", "Zamknij", "ℹ️", isSuccess: upgradeOk);
-    }
-
     // ==================== USTAWIENIA SYSTEMU & MODUŁY KLIENTSKIE ====================
 
     private void BrowseInstallFolder_Click(object sender, RoutedEventArgs e)

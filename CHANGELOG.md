@@ -3,6 +3,16 @@
 Wszystkie istotne zmiany w projekcie są dokumentowane w tym pliku.
 Format jest oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/), a wersjonowanie na [Semantic Versioning](https://semver.org/).
 
+## [6.3.0] - 2026-09-21
+
+- Jedno menu i jeden pasek tytułu; Czyść zastępuje powielony pulpit/skan.
+- Oddzielne stany startu, skanowania, wyników i zakończenia; szczegóły na żądanie.
+- Zwięzłe widoki dysków, sterowników, programów i historii; cztery kategorie narzędzi.
+- Akcje usuwania i instalacji pojawiają się przy wyborze; dziennik otwiera się osobno.
+- Rzeczywisty spis programów i wersji WinGet, jawny fallback rejestru, dokładne ID i reset starych aktualizacji.
+- Usunięto zbiorczą aktualizację niezaznaczonych programów. Operacje wymagają podglądu i respektują ustawienie silent.
+- Naprawiono błędy odczytu/progresu czyszczenia, reset szczegółów i powiązania liczników sprzętu.
+- Zasoby interfejsu wydzielono do Themes/Controls.xaml; testy WPF nie uruchamiają już dodatkowego okna aplikacji.
 ## [6.2.0] - 2026-09-14
 
 ### Dodano

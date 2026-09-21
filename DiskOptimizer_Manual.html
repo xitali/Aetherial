@@ -1,37 +1,15 @@
 <!doctype html>
 <html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aetherial — instrukcja</title>
-<style>body{font:17px/1.7 system-ui;margin:48px auto;padding:0 24px;max-width:850px;color:#dce5ef;background:#11151c}h1,h2{color:#fff}h2{margin-top:36px}strong{color:#83b5ff}li{margin:10px 0}code{color:#a5d5bf}</style>
-<h1>Aetherial — instrukcja użytkownika</h1>
-<p>Narzędzie Windows do przeglądu pamięci masowej, diagnostyki i obsługi oprogramowania.
-Zacznij od podsumowania i aktualnego skanu. Uruchamiaj tylko potrzebne operacje.</p>
-<h2>Podsumowanie i urządzenia</h2>
-<p>Dashboard przedstawia wykryte woluminy, RAM, czas pracy i odczytane nazwy sprzętu.
-Brak danych oznacza nieudany lub niedostępny odczyt. Stan PnP opisuje urządzenie,
-a wyszukiwanie Windows Update sprawdza dostępne w nim aktualizacje sterowników.
-Nie jest to pomiar zdrowia SSD ani gwarancja najnowszej wersji od producenta.</p>
-<h2>Czyszczenie i eksplorator</h2>
-<ol><li>Przeskanuj dostępne kategorie i przeczytaj ich opisy.</li>
-<li>Zaznacz tylko dane, które chcesz usunąć. Szczególnie sprawdź kosz i własne foldery.</li>
-<li>Potwierdź operację i sprawdź dziennik oraz wynik ponownego skanu.</li></ol>
-<p>Usuwanie może być nieodwracalne. Zablokowane pliki mogą pozostać. Nie traktuj
-potencjalnego rozmiaru skanu jako gwarantowanej ilości odzyskanego miejsca.</p>
-<h2>Narzędzia zaawansowane</h2>
-<p>Przed przeniesieniem folderu zamknij korzystające z niego programy i zadbaj o kopię danych.
-Wybierz osobny pusty folder docelowy. Program weryfikuje kopiowanie przed utworzeniem
-dowiązania. Zachowana kopia źródła wymaga osobnej oceny przed usunięciem.</p>
-<p>Skaner projektów szuka odtwarzalnych artefaktów na podstawie plików projektu.
-Przejrzyj wyniki. Kompresja systemu, VHDX, hibernacja i narzędzia sterowników
-zależą od możliwości Windows i mogą wymagać administratora lub restartu.</p>
-<h2>Oprogramowanie</h2>
-<p>Katalog zawiera identyfikatory pakietów winget. Obecność, wersje i aktualizacje
-są odczytywane osobno. Instalatory mogą ignorować wybrany folder lub wymagać interakcji.
-Nie uruchamiaj zbiorczej aktualizacji bez przejrzenia listy.</p>
-<h2>Motyw, ustawienia i raporty</h2>
-<p>Przycisk motywu przełącza jasny i ciemny wygląd. Ustawienia i logi są przechowywane
-w profilu użytkownika. Raport zapisz w wybranym miejscu; może zawierać nazwy urządzeń
-i informacje o komputerze, więc sprawdź go przed udostępnieniem.</p>
-<h2>Wydania</h2>
-<p>Najnowszy pakiet znajduje się w <code>release/latest</code>. Repozytorium zawiera
-źródła, a pliki wykonywalne są dystrybuowane jako zasoby release.</p>
+<style>body{font:17px/1.7 system-ui;margin:48px auto;padding:0 24px;max-width:850px;color:#dce5ef;background:#11151c}h1,h2{color:#fff}h2{margin-top:36px}strong{color:#a6aaff}li{margin:10px 0}code{color:#a5d5bf}</style>
+<h1>Aetherial — instrukcja</h1>
+<p>Wybierz zadanie w lewym menu. Szczegóły są dostępne po rozwinięciu wiersza.</p>
+<h2>Czyść</h2><ol><li>Kliknij Skanuj i zaczekaj na pomiar.</li><li>Zaznacz kategorie do usunięcia. Sprawdź ostrzeżenia, szczególnie przy Koszu i modelach AI.</li><li>Wybierz Przejrzyj i wyczyść. Przeczytaj zakres i potwierdź.</li><li>Sprawdź wynik. Błędy i anulowanie oznaczają, że część plików mogła pozostać.</li></ol>
+<p>Przed czyszczeniem powstaje punkt przywracania. Nie zastępuje kopii plików. Błąd utworzenia zatrzymuje czyszczenie. Automatyczny skan nie usuwa danych.</p>
+<h2>Dyski</h2><p>Kliknij wybrany wolumin, aby zmienić odczytywaną zawartość. Otwieraj foldery albo wyszukaj duże pliki. Próg rozmiaru zmienisz w Ustawieniach. Usuwanie pojawia się po zaznaczeniu. Nieobliczony rozmiar folderu nie oznacza pustego folderu.</p>
+<h2>Sterowniki</h2><p>Sprawdź sterowniki, wybierz filtr i rozwiń urządzenie, aby zobaczyć wersję lokalną, źródło i wynik. Automatyczne porównanie katalogu dotyczy obsługiwanych NVIDIA Game Ready WHQL DCH. Pozostałe urządzenia wymagają sprawdzenia u producenta. „Bez potwierdzenia” nie oznacza aktualnej wersji.</p>
+<h2>Programy</h2><p>Zainstalowane pokazuje odczyt WinGet, Aktualizacje — znalezione nowsze wersje, Dodaj program — katalog instalacyjny. Wybierz programy i potwierdź zakres. Aplikacja nie aktualizuje niezaznaczonych pozycji. Błąd źródła jest zgłaszany; wpisy odczytane tylko z rejestru nie oferują niezweryfikowanych aktualizacji.</p>
+<h2>Narzędzia</h2><p>Wybierz przenoszenie folderów, projekty programistyczne, opcje systemowe lub RAM. Przycisk Narzędzia wraca do wszystkich kategorii. Kopia folderu po migracji pozostaje do ręcznej weryfikacji. Pamięć RAM zwolniona z procesów może zostać ponownie wykorzystana; jej zajętość nie jest oceną zdrowia.</p>
+<h2>Ustawienia i historia</h2><p>Preferencje sterują motywem, automatycznymi odczytami, ich interwałem i progiem dużych plików. Programy i pliki zawierają katalog instalacji, tryb cichy, sprawdzanie aktualizacji i użycie Kosza. Zmiany systemowe wymagają świadomego wyboru. Historia zapisuje wyniki operacji; Dziennik zdarzeń pokazuje szczegóły bieżącej sesji.</p>
+<p>Dane aplikacji: <code>%LocalAppData%\Aetherial</code>. Deinstalacja zachowuje ustawienia i historię.</p>
 </html>

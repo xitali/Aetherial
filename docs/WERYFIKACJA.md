@@ -1,41 +1,38 @@
-# Weryfikacja Aetherial 6.2.0
+# Weryfikacja Aetherial 6.3.0
 
-Stan lokalnych sprawdzeń z 2026-09-14. Końcowy pakiet i publikacja 6.2 wymagają
-oddzielnego potwierdzenia; poniższe wyniki nie deklarują powodzenia GitHub CI.
+Sprawdzenia lokalne: 2026-09-21. Wyniki dotyczą przebudowanego interfejsu i pakietu 6.3.
 
-## Testy lokalne
+## Wykonane
 
-- `Aetherial.Regression`: 26 sprawdzeń zakończonych powodzeniem; m.in. ochrona
-  ścieżek, filtry wieku, anulowanie, pliki zablokowane i rzetelność pomiarów.
-- `Aetherial.DriverTests`: 25 sprawdzeń offline zakończonych powodzeniem; dopasowanie
-  PCI/modelu/systemu, wersje, adresy źródłowe, brak pokrycia, błędy sieci i anulowanie.
-- `Aetherial.ScanTests`: 30 sprawdzeń zakończonych powodzeniem. Do skanera,
-  wykonawcy i historii dodano 13 sprawdzeń ustawień: zapis wszystkich preferencji,
-  odczyt po ponownym utworzeniu usługi, walidację zakresów, zachowanie poprawnej
-  konfiguracji przy błędzie, uszkodzony JSON i sprzątanie plików transakcji.
-- Testy wewnątrz procesu WPF potwierdziły nawigację po tematach, działanie timera
-  odświeżania, wpływ progu na wyszukiwanie dużych plików oraz działanie paska
-  przewijania. Są to zdarzenia w rzeczywistym drzewie WPF, nie fizyczne kliknięcia
-  w otwartym oknie na pulpicie.
+- Release build: 0 błędów, 0 ostrzeżeń.
+- Regression: 41 sprawdzeń, w tym parser rzeczywistej tabeli WinGet, źródła,
+  dokładne ID, reset starego stanu, fallback, wersje i blokada niezweryfikowanych instalacji.
+- DriverTests: 25 sprawdzeń dopasowania modeli/systemu, wersji i błędów źródeł.
+- ScanTests: 30 sprawdzeń skanowania, wykonania, historii oraz trwałych ustawień.
+- WPF: wszystkie 7 sekcji, powrót z 4 kategorii narzędzi, wybór rzeczywistych
+  woluminów, anulowanie/spóźnione odpowiedzi, stany czyszczenia, szczegóły,
+  Programy (instalacje/aktualizacje/katalog), wyszukiwanie, timer, próg i scrollbar.
+- 84 rendery obu motywów przy różnych rozmiarach i DPI; kontrola wizualna głównych
+  ekranów i szczegółów. Dane wyników czyszczenia/historii w renderach to jawne
+  fixtures testowe. Odczyty woluminów, sprzętu i programów pochodzą z systemu.
+- Bieżący odczyt WinGet: 158 programów, 11 aktualizacji, pełna odpowiedź parsera.
+  Katalog sprzętu: 219 urządzeń, 1 zweryfikowana karta NVIDIA; inne bez potwierdzenia.
+- release.ps1 zakończył pełny przebieg, zachował tylko release/latest i usunął
+  bin/obj znanych projektów. Zastąpiono instalację 6.2 wersją 6.3, sprawdzono SHA-256
+  i wersję wpisu deinstalacji. Uruchomiony proces odpowiada; przechwycono jego okno.
 
-Końcowe rendery interfejsu po zmianach 6.2 będą odświeżone osobno. Wyników i liczby
-renderów poprzedniej wersji nie należy przypisywać bieżącemu wyglądowi.
-Proces wydania uruchamia testy offline i `Aetherial.VisualSmoke --interactions-only`
-przed przygotowaniem pakietu. Końcowy lokalny przebieg wydania zakończył się powodzeniem.
+## Granice dowodów
 
-## Zakres niewykonany i ograniczenia
+Testy WPF wywołują zdarzenia w rzeczywistym drzewie kontrolek. Harness używa tych
+samych zasobów Themes/Controls.xaml, ale nie uruchamia produkcyjnego StartupUri.
+Nie są to fizyczne kliknięcia w pulpicie. Narzędzie computer-use odczytało zrzut
+zainstalowanego, podniesionego procesu, lecz próby kliknięcia nie zmieniły widoku.
+Pełny test pulpitu z UAC/klawiaturą pozostaje niepotwierdzony.
 
-- Nie potwierdzono pełnego testu na fizycznym pulpicie: instalacji sterowników,
-  winget, dwóch równoległych uruchomień ani migracji czynnych folderów.
-- `scripts/install-local.ps1` jest dostępny, lecz obecność skryptu nie stanowi dowodu
-  instalacji końcowego pakietu 6.2. Nie dodano automatycznego aktualizatora.
-- Nie wykonywano zbiorczych operacji na danych użytkownika. Testy korzystają
-  z izolowanych plików lub zastępczych zależności. Punkt przywracania nie jest
-  kopią kasowanych plików, a anulowanie nie cofa wykonanych usunięć.
-- Automatyczne porównywanie sterowników obejmuje katalog NVIDIA Game Ready WHQL
-  DCH. Pozostali producenci są niezweryfikowani; brak dostępu do katalogu nie daje
-  statusu „aktualny”. Nie ma pełnej diagnostyki zużycia SSD ani temperatur.
-- Niedostępne podkatalogi i niestandardowe lokalizacje mogą ograniczać pomiar cache.
-  Starsze narzędzia pozostają częściowo w code-behind.
+Nie uruchamiano usuwania danych użytkownika ani instalacji sterowników/programów
+w ramach QA. Odczyt jednej karty NVIDIA nie dowodzi pokrycia AMD/Intel/OEM.
+Pełne kryteria planu pozostają otwarte w BACKLOG.md. Podpisany instalator,
+automatyczny aktualizator, pełna migracja MVVM i zasoby językowe nie są ukończone.
 
-Lista pozostałych prac: [BACKLOG.md](../BACKLOG.md).
+Publikację GitHub i retencję jednej paczki należy sprawdzać w wynikach workflow
+bieżącego taga; powyższy raport nie zastępuje wyniku CI.

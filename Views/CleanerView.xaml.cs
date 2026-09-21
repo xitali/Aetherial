@@ -20,7 +20,7 @@ public partial class CleanerView : UserControl
     public void SetScanState(bool active) => ViewModel.SetScanState(active);
     public void SetScanCompleted() => ViewModel.SetScanCompleted();
     public void SetCleaningState(bool active) => ViewModel.SetCleaningState(active);
-    public void SetResult(long freed, int count, int errors) => ViewModel.SetResult(freed, count, errors);
+    public void SetResult(long freed, int count, int errors, bool cancelled = false) => ViewModel.SetResult(freed, count, errors, cancelled);
     private void Scan_Click(object sender, RoutedEventArgs e) { if (ViewModel.CanScan) ScanRequested?.Invoke(this, EventArgs.Empty); }
     private void Clean_Click(object sender, RoutedEventArgs e) { if (ViewModel.CanClean) CleanRequested?.Invoke(this, EventArgs.Empty); }
     private void Deselect_Click(object sender, RoutedEventArgs e) => ViewModel.DeselectAll();

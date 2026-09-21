@@ -6,9 +6,9 @@
         xmlns:models="clr-namespace:DiskOptimizer.Models;assembly=Aetherial.Core"
         xmlns:services="clr-namespace:DiskOptimizer.Services;assembly=Aetherial.Services"
         mc:Ignorable="d"
-        Title="Aetherial Suite — Przestrzeń i diagnostyka"
+        Title="Aetherial"
         Icon="Assets/app_icon.png"
-        Height="1000" Width="1600"
+        Height="820" Width="1280"
         MinHeight="760" MinWidth="1180"
         Background="{DynamicResource BgDarkBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
@@ -32,165 +32,39 @@
             <RowDefinition Height="*" />  <!-- Główny interfejs (Sidebar + Workspace) -->
         </Grid.RowDefinitions>
 
-        <!-- ==================== NOWOCZESNY PASEK TYTUŁOWY AETHERIAL ==================== -->
         <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <!-- Lewa strona: Nowe Logo AETHERIAL i podtytuł -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                    <Border Width="30" Height="30" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="8" Margin="0,0,10,0" VerticalAlignment="Center">
-                        <Image Source="Assets/app_icon.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="AETHERIAL" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text=" SUITE" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="2,0,0,0" />
-                        </StackPanel>
-                        <TextBlock Text="PORZĄDEK W TWOIM SYSTEMIE" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0" />
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Środek: STORAGE & DIAGNOSTICS DASHBOARD + SYSTEM HEALTH + UPTIME + SECURITY -->
-                <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="PRZESTRZEŃ I DIAGNOSTYKA" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" />
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
-                            <TextBlock Text="Czas pracy: " FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
-                            <TextBlock x:Name="TopUptimeText" Text="Odczyt…" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
-                        </StackPanel>
-                    </StackPanel>
-                <!-- Prawa strona: Ustawienia oraz Przyciski sterowania oknem (—, 🗖, Exit) -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch">
-                    <Button x:Name="ThemeToggleButton" Content="◐" ToolTip="Przełącz jasny / ciemny motyw" AutomationProperties.Name="Przełącz motyw" WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource TitleBarButtonStyle}" Width="42" Click="ToggleTheme_Click"/>
-                    <Button Style="{StaticResource TitleBarButtonStyle}"
-                            WindowChrome.IsHitTestVisibleInChrome="True"
-                            Click="NavToSettings_Click"
-                            ToolTip="Ustawienia Aetherial"
-                            Width="40" Height="46">
-                        <TextBlock Text="⚙" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Button>
-
-                    <Button x:Name="MinimizeButton"
-                            WindowChrome.IsHitTestVisibleInChrome="True"
-                            Click="MinimizeButton_Click"
-                            ToolTip="Minimalizuj"
-                            Width="48" Height="42"
-                            Style="{StaticResource TitleBarButtonStyle}">
-                        <TextBlock Text="—" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Button>
-
-                    <Button x:Name="MaximizeButton"
-                            WindowChrome.IsHitTestVisibleInChrome="True"
-                            Click="MaximizeButton_Click"
-                            ToolTip="Maksymalizuj / Przywróć"
-                            Width="48" Height="42"
-                            Style="{StaticResource TitleBarButtonStyle}">
-                        <TextBlock x:Name="MaximizeIconText" Text="🗖" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Button>
-
-                    <Button x:Name="CloseButton"
-                            WindowChrome.IsHitTestVisibleInChrome="True"
-                            Click="CloseButton_Click"
-                            ToolTip="Zamknij program (Exit)"
-                            Height="42" Padding="14,0"
-                            Style="{StaticResource TitleBarCloseButtonStyle}">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="✕" FontSize="14" FontWeight="Bold" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Zamknij" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+              <Button x:Name="MinimizeButton" Content="&#xE921;" FontFamily="Segoe MDL2 Assets" Width="46" Style="{StaticResource TitleBarButtonStyle}" Click="MinimizeButton_Click" WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="Minimalizuj"/>
+              <Button x:Name="MaximizeButton" Width="46" Style="{StaticResource TitleBarButtonStyle}" Click="MaximizeButton_Click" WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="Maksymalizuj lub przywróć"><TextBlock x:Name="MaximizeIconText" Text="&#xE922;" FontFamily="Segoe MDL2 Assets"/></Button>
+              <Button x:Name="CloseButton" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" Width="46" Style="{StaticResource TitleBarCloseButtonStyle}" Click="CloseButton_Click" WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="Zamknij"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="18,0" VerticalAlignment="Center"><Image Source="Assets/app_icon.png" Width="23" Height="23" Margin="0,0,10,0"/><TextBlock Text="Aetherial" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/><TextBlock x:Name="TopUptimeText" Visibility="Collapsed"/></StackPanel>
+          </DockPanel>
         </Border>
-
         <!-- ==================== GŁÓWNA ZAWARTOŚĆ OKNA ==================== -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200" /> <!-- ~200px SIDEBAR (IObit Style) -->
+                <ColumnDefinition Width="184" /> <!-- SIDEBAR (IObit Style) -->
                 <ColumnDefinition Width="*" />   <!-- GŁÓWNY OBSZAR ROBOCZY -->
             </Grid.ColumnDefinitions>
 
-            <!-- ==================== BOCZNY PASEK NAWIGACJI (IObit Style ~200px) ==================== -->
-            <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0" Padding="12,18">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" /> <!-- Logo Badge -->
-                        <RowDefinition Height="*" />    <!-- Przyciski nawigacyjne -->
-                        <RowDefinition Height="Auto" /> <!-- Status Administratora -->
-                    </Grid.RowDefinitions>
-
-                    <!-- 1. Logo AETHERIAL z neonowym akcentem -->
-                    <Border Grid.Row="0" Background="{DynamicResource BgDarkBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,22" ToolTip="Aetherial System Suite">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image Source="Assets/app_icon.png" Width="26" Height="26" Margin="0,0,10,0" VerticalAlignment="Center" />
-                            <StackPanel VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="AETHERIAL" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource SuccessBrush}" />
-                                    <TextBlock Text="{Binding ProductVersion, RelativeSource={RelativeSource AncestorType=Window}}" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource AccentBrush}" Margin="2,0,0,0" />
-                                </StackPanel>
-                                <TextBlock Text="SYSTEM SUITE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 2. Menu Modułów (~200px IObit 5-sekcyjny układ) -->
-                    <StackPanel Grid.Row="1">
-                        <RadioButton x:Name="NavDashboardRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="0" ToolTip="Pulpit — Główny wskaźnik zdrowia systemu i 1-klik skan" IsChecked="True">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE80F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <TextBlock Text="Główna" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton x:Name="NavScannerRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="7" ToolTip="Skan — Kreator analizy, wykrywania problemów i naprawy">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <TextBlock Text="Skan" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton x:Name="NavToolsRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="4" ToolTip="Narzędzia — Czyszczenie, Eksplorator, PnP, Symlinki, RAM, Programy">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE90F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <TextBlock Text="Narzędzia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton x:Name="NavHistoryRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="8" ToolTip="Historia — Dziennik i rejestr operacji optymalizacyjnych">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <TextBlock Text="Historia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton x:Name="NavSettingsRadio" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click" Tag="6" ToolTip="Ustawienia — Preferencje, motyw i konfiguracja">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <TextBlock Text="Ustawienia" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </RadioButton>
-
-                        <!-- Ukryte referencje dla kompatybilności wstecznej -->
-                        <RadioButton x:Name="NavCleanerRadio" Visibility="Collapsed" Tag="1" Click="NavButton_Click" />
-                        <RadioButton x:Name="NavExplorerRadio" Visibility="Collapsed" Tag="2" Click="NavButton_Click" />
-                        <RadioButton x:Name="NavDriversRadio" Visibility="Collapsed" Tag="3" Click="NavButton_Click" />
-                        <RadioButton x:Name="NavAppsRadio" Visibility="Collapsed" Tag="5" Click="NavButton_Click" />
-                    </StackPanel>
-
-                    <!-- 3. Status Windows -->
-                    <Border Grid.Row="2" CornerRadius="8" Padding="10,8" Background="{DynamicResource AccentSoftBrush}" ToolTip="Aetherial Suite działa lokalnie w systemie Windows.">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="🛡️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="DZIAŁA LOKALNIE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
+            <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0" Padding="12,24,12,16">
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom">
+                  <RadioButton x:Name="NavHistoryRadio" GroupName="MainNavigation" Tag="8" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Historia" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavSettingsRadio" GroupName="MainNavigation" Tag="6" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Ustawienia" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                </StackPanel>
+                <StackPanel>
+                  <RadioButton x:Name="NavCleanerRadio" GroupName="MainNavigation" Tag="1" IsChecked="True" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE75C;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Czyść" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavExplorerRadio" GroupName="MainNavigation" Tag="2" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Dyski" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavDriversRadio" GroupName="MainNavigation" Tag="3" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Sterowniki" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavAppsRadio" GroupName="MainNavigation" Tag="5" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE74C;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Programy" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavToolsRadio" GroupName="MainNavigation" Tag="4" Style="{StaticResource NavSidebarButtonStyle}" Click="NavButton_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="17" Width="28" VerticalAlignment="Center"/><TextBlock Text="Narzędzia" VerticalAlignment="Center"/></StackPanel></RadioButton>
+                  <RadioButton x:Name="NavDashboardRadio" Visibility="Collapsed"/><RadioButton x:Name="NavScannerRadio" Visibility="Collapsed"/>
+                </StackPanel>
+              </DockPanel>
             </Border>
-
             <!-- ==================== GŁÓWNY OBSZAR ROBOCZY (WORKSPACE) ==================== -->
             <Grid Grid.Column="1" Margin="22,16,22,16">
                 <Grid.RowDefinitions>
@@ -201,7 +75,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- 1. KARTY DYSKÓW (C, D, E, F) - W JEDNYM RZĘDZIE (1-ROW ULTRA-SLICK STATUS STRIP) -->
-                <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="12,8" Margin="0,0,0,12">
+                <Border x:Name="LegacyStatusHeader" Visibility="Collapsed" Grid.Row="0" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="12,8" Margin="0,0,0,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -267,23 +141,11 @@
                     </Grid>
                 </Border>
 
-                                <!-- Pasek nawigacyjny podnarzędzi Aetherial -->
-                                <Border x:Name="ToolTopicsBar" Grid.Row="1" Visibility="Collapsed" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8,6" Margin="0,0,0,14">
-                                    <WrapPanel>
-                                        <Button x:Name="TopicAdvanced" Content="🛠 Narzędzia zaawansowane" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToTools_Click" />
-                                        <Button x:Name="TopicCleaner" Content="🧹 Pamięci podręczne i śmieci" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToCleaner_Click" />
-                                        <Button x:Name="TopicExplorer" Content="💾 Eksplorator woluminów" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToExplorer_Click" />
-                                        <Button x:Name="TopicHardware" Content="🔌 Sprzęt &amp; PnP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" FontSize="12" Click="NavToDrivers_Click" />
-                                        <Button x:Name="TopicApps" Content="📦 Programy &amp; Winget" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" FontSize="12" Click="NavToApps_Click" />
-                                    </WrapPanel>
-                                </Border>
-
-
                 <!-- 2. PRZEŁĄCZANE WIDOKI MODUŁÓW -->
                 <Grid Grid.Row="2">
 
                     <!-- ==================== WIDOK 0: GŁÓWNA (IObit Dashboard: Circular Gauge + Big CTA + 4 Moduły) ==================== -->
-                    <Grid x:Name="ViewDashboard" Visibility="Visible">
+                    <Grid x:Name="ViewDashboard" Visibility="Collapsed">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="0,0,12,16">
                                 <Border Style="{StaticResource SurfaceCardStyle}" Margin="0,0,0,16" Padding="24">
@@ -414,110 +276,33 @@
                     </Grid>
 
                     <!-- Czyszczenie: zakres i wyniki skanowania -->
-                    <Grid x:Name="ViewCleaner" Visibility="Collapsed"><views:CleanerView x:Name="CleanerPanel"/></Grid>
+                    <Grid x:Name="ViewCleaner" Visibility="Visible"><views:CleanerView x:Name="CleanerPanel"/></Grid>
 <!-- ==================== WIDOK 2: EKSPLORATOR PARTYCJII (DYSKI & GIGANTY) ==================== -->
                     <Grid x:Name="ViewExplorer" Visibility="Collapsed">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" /><RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <!-- Pasek 1: Wybór partycji & Ścieżka -->
-                        <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Przyciski partycji -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,16,0">
-                                    <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=DrivesItemsControl}">
-                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate><DataTemplate><Button Content="{Binding DriveLetter}" Tag="{Binding RootPath}" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Margin="0,0,6,0" Click="SwitchPartition_Click" /></DataTemplate></ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-
-                                <!-- Ścieżka tekstowa -->
-                                <TextBox Grid.Column="1" x:Name="CurrentPathTextBox" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="10,6" FontSize="14" KeyDown="CurrentPathTextBox_KeyDown" VerticalAlignment="Center" />
-
-                                <Button Grid.Column="2" Content="➔ Przejdź" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" Margin="8,0,0,0" Click="NavigatePath_Click" />
-                                <Button Grid.Column="3" Content="⬆️ W górę" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6" Margin="8,0,0,0" Click="NavigateUp_Click" />
-                            </Grid>
-                        </Border>
-
-                        <!-- Pasek 2: Filtry wieku & Akcje usuwania -->
-                        <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-
-                                <WrapPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                                    <Button x:Name="LargeFilesButton" Content="Znajdź duże pliki" Style="{StaticResource PrimaryButtonStyle}" Padding="12,6" Margin="0,0,14,0" Click="FindLargeFiles_Click" />
-                                    <TextBlock Text="Zaznacz starsze:" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                    <Button Content="Wszystkie" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="0" Click="SelectByAge_Click" />
-                                    <Button Content="> 7 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="7" Click="SelectByAge_Click" />
-                                    <Button Content="> 30 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="30" Click="SelectByAge_Click" />
-                                    <Button Content="> 90 dni" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,4,0" Tag="90" Click="SelectByAge_Click" />
-                                    <Button Content="> 1 rok" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Margin="0,0,10,0" Tag="365" Click="SelectByAge_Click" />
-                                    <Button Content="Odznacz" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" Click="DeselectExplorer_Click" />
-                                </WrapPanel>
-
-                                <WrapPanel Grid.Row="1" VerticalAlignment="Center">
-                                    <CheckBox x:Name="RecycleBinCheckBox" Content="🗑️ Przenoś do Kosza" IsChecked="True" VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="Gdy zaznaczone, usunięte pliki trafią do Kosza (bezpiecznie)" />
-                                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,0,12,0">
-                                        <TextBlock x:Name="ExplorerSelectedSummaryText" Text="Zaznaczono: 0 B (0 el.)" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                                    </Border>
-                                    <Button Content="🗑️ Usuń zaznaczone pliki" Style="{StaticResource DangerButtonStyle}" Click="DeleteSelectedExplorerFiles_Click" />
-                                </WrapPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- Lista plików w eksploratorze z tarczą bezpieczeństwa -->
-                        <Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="ExplorerItemsControl" Margin="10">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:FileSystemItem}">
-                                            <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,6" Padding="12,8">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="160" />
-                                                        <ColumnDefinition Width="130" />
-                                                        <ColumnDefinition Width="130" />
-                                                        <ColumnDefinition Width="120" />
-                                                        <ColumnDefinition Width="80" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanDelete}" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding TypeIcon}" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                                    <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding ParentDirectory}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="{Binding Path}" />
-                                                    <TextBlock Grid.Column="4" Text="{Binding FormattedSize}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                                    <TextBlock Grid.Column="5" Text="{Binding FormattedDate}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" />
-
-                                                    <Border Grid.Column="6" Background="{Binding AgeBadgeBackground}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                        <TextBlock Text="{Binding RelativeAgeText}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding AgeBadgeColor}" />
-                                                    </Border>
-
-                                                    <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                        <Button Content="➔" ToolTip="Wejdź do folderu" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" Margin="0,0,4,0" Tag="{Binding Path}" Click="EnterFolder_Click" Visibility="{Binding IsDirectory, Converter={StaticResource BoolToVis}}" />
-                                                        <Button Content="📂" ToolTip="Pokaż w Eksploratorze" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" Tag="{Binding Path}" Click="OpenExplorerPath_Click" />
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Border>
-                    <StackPanel Grid.Row="3" Margin="0,10,0,0"><ProgressBar x:Name="ExplorerReadProgress" Height="3" Maximum="100" Value="0"/><DockPanel Margin="0,8,0,0"><Button Content="Anuluj odczyt" DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}" Click="CancelExplorer_Click"/><StackPanel><TextBlock x:Name="ActiveVolumeText" Text="Wybierz wolumin" FontWeight="SemiBold"/><TextBlock x:Name="ExplorerStatusText" Text="Zawartość pojawi się po odczycie." Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel></DockPanel></StackPanel></Grid>
-
+                      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                      <DockPanel Margin="0,4,0,22"><Button x:Name="LargeFilesButton" DockPanel.Dock="Right" Content="Znajdź duże pliki" Style="{StaticResource PrimaryButtonStyle}" Click="FindLargeFiles_Click" VerticalAlignment="Center"/><StackPanel><TextBlock Text="Dyski" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="Sprawdź, co zajmuje miejsce." Style="{StaticResource SubtitleStyle}"/></StackPanel></DockPanel>
+                      <ItemsControl Grid.Row="1" ItemsSource="{Binding ItemsSource, ElementName=DrivesItemsControl}" Margin="0,0,0,16">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><Button Tag="{Binding RootPath}" Style="{StaticResource SecondaryButtonStyle}" Padding="16,12" Margin="0,0,10,8" Width="210" HorizontalContentAlignment="Stretch" Click="SwitchPartition_Click"><StackPanel><TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}"/><ProgressBar Value="{Binding UsedPercent, Mode=OneWay}" Maximum="100" Height="4" Margin="0,10,0,8"/><TextBlock Text="{Binding FormattedFree, StringFormat={}Wolne: {0}}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/></StackPanel></Button></DataTemplate></ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <StackPanel Grid.Row="2">
+                        <DockPanel Margin="0,0,0,12"><Button DockPanel.Dock="Left" Content="W górę" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="NavigateUp_Click"/><Button DockPanel.Dock="Right" Content="Przejdź" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="NavigatePath_Click"/><TextBox x:Name="CurrentPathTextBox" KeyDown="CurrentPathTextBox_KeyDown" AutomationProperties.Name="Ścieżka folderu"/></DockPanel>
+                        <Expander Header="Opcje zaznaczania" Margin="0,0,0,10" Foreground="{DynamicResource TextSecondaryBrush}"><WrapPanel Margin="0,10,0,0"><Button Content="Wszystkie" Tag="0" Click="SelectByAge_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button Content="Starsze niż 30 dni" Tag="30" Click="SelectByAge_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button Content="Starsze niż rok" Tag="365" Click="SelectByAge_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button Content="Odznacz" Click="DeselectExplorer_Click" Style="{StaticResource SecondaryButtonStyle}"/></WrapPanel></Expander>
+                      </StackPanel>
+                      <Grid Grid.Row="3">
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><ItemsControl x:Name="ExplorerItemsControl"><ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type models:FileSystemItem}">
+                          <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="10,12"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanDelete}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Name}"/>
+                            <StackPanel Grid.Column="1" Margin="8,0,16,0" VerticalAlignment="Center"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}"/><TextBlock Text="{Binding ParentDirectory}" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
+                            <TextBlock Grid.Column="2" Text="{Binding FormattedSize}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,18,0" ToolTip="{Binding FormattedDate}"/>
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="Otwórz" Tag="{Binding Path}" Click="EnterFolder_Click" Visibility="{Binding IsDirectory, Converter={StaticResource BoolToVis}}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,6" Margin="0,0,6,0"/><Button Content="⋯" Tag="{Binding Path}" Click="OpenExplorerPath_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="10,6" ToolTip="Pokaż w Eksploratorze Windows" AutomationProperties.Name="Pokaż w Eksploratorze Windows"/></StackPanel>
+                          </Grid></Border>
+                        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+                        <Border x:Name="ExplorerSelectionBar" Grid.Row="1" Visibility="Collapsed" Style="{StaticResource SurfaceCardStyle}" Padding="14" Margin="0,12,0,0"><DockPanel><Button DockPanel.Dock="Right" Content="Usuń zaznaczone" Click="DeleteSelectedExplorerFiles_Click" Style="{StaticResource DangerButtonStyle}"/><StackPanel VerticalAlignment="Center"><TextBlock x:Name="ExplorerSelectedSummaryText" FontWeight="SemiBold"/><CheckBox x:Name="RecycleBinCheckBox" Content="Przenieś do Kosza" IsChecked="True" Margin="0,6,0,0"/></StackPanel></DockPanel></Border>
+                      </Grid>
+                      <StackPanel Grid.Row="4" Margin="0,12,0,0"><ProgressBar x:Name="ExplorerReadProgress" Height="3" Maximum="100" Value="0" Visibility="Collapsed"/><DockPanel Margin="0,8,0,0"><Button x:Name="ExplorerCancelButton" Content="Anuluj odczyt" DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}" Click="CancelExplorer_Click" Visibility="Collapsed"/><StackPanel><TextBlock x:Name="ActiveVolumeText" Text="Wybierz dysk" FontWeight="SemiBold" FontSize="12"/><TextBlock x:Name="ExplorerStatusText" Text="" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/></StackPanel></DockPanel></StackPanel>
+                    </Grid>
                     <!-- ==================== WIDOK 3: SPRZĘT & CENTRUM STEROWNIKÓW (WHQL + PERYFERIA) ==================== -->
                     <Grid x:Name="ViewDrivers" Visibility="Collapsed"><views:HardwareView x:Name="HardwarePanel"/></Grid>
 <Grid x:Name="LegacyHardwarePanel" Visibility="Collapsed">
@@ -529,7 +314,7 @@
 
                         <Border Grid.Row="0" Style="{StaticResource SurfaceCardStyle}" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="Sprzęt i sterowniki" Style="{StaticResource PageTitleStyle}" />
+                                <DockPanel><Button Content="← Sterowniki" Click="NavToDrivers_Click" DockPanel.Dock="Right" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}"/><TextBlock Text="Diagnostyka sprzętu" Style="{StaticResource PageTitleStyle}"/></DockPanel>
                                 <TextBlock x:Name="HardwareSummaryText" Text="Skan urządzeń odczyta konfigurację tego komputera." Style="{StaticResource SubtitleStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                             </StackPanel>
                         </Border>
@@ -718,344 +503,46 @@
 
                     <!-- ==================== WIDOK 4: NARZĘDZIA & MAGAZYN (POŁĄCZONE BEZ DUPLIKATÓW) ==================== -->
                     <Grid x:Name="ViewTools" Visibility="Collapsed">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Margin="0,0,8,0">
-
-                                <!-- KARTA 1: ASYSTENT MIGRACJI DANYCH NA DYSK D/E (NTFS JUNCTION) -->
-                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,14">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,12">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="🔗" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Przenoszenie folderów i dowiązania NTFS" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Grid>
-                                        <TextBlock Text="Kopiuje dane do wskazanej lokalizacji i zachowuje dostęp przez dowiązanie. Zamknij używające folderu programy. Kopia źródłowa pozostaje do czasu ręcznej weryfikacji." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="34,0,0,14" TextWrapping="Wrap" LineHeight="19" />
-
-                                        <ItemsControl x:Name="SymlinkPresetsControl">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type services:SymlinkPreset}">
-                                                    <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,8">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="130" />
-                                                                <ColumnDefinition Width="130" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="24" VerticalAlignment="Center" Margin="0,0,14,0" Width="32" TextAlignment="Center" />
-
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                                <TextBlock Text="{Binding SourcePath, StringFormat={}Źródło: {0}}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                                                <TextBlock Text="{Binding SuggestedDestPath, StringFormat={}Cel: {0}}" FontSize="12" Foreground="{DynamicResource AccentBrush}" TextTrimming="CharacterEllipsis" />
-                                                            </StackPanel>
-
-                                                            <TextBlock Grid.Column="2" Text="{Binding FormattedSize}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
-
-                                                            <Button Grid.Column="4" Content="Przenieś i stwórz Symlink" Style="{StaticResource PrimaryButtonStyle}" FontSize="13" Padding="12,6" Tag="{Binding}" Click="ExecutePresetRelocation_Click" IsEnabled="{Binding CanRelocate}" VerticalAlignment="Center" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- KARTA 2: SPRZĄTACZ PROJEKTÓW DEWELOPERSKICH -->
-                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,14">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,12">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="💻" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Sprzątacz Zbędnych Pakietów Deweloperskich (node_modules, .venv, bin/obj)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Grid>
-                                        <TextBlock Text="Wykrywa artefakty na podstawie plików projektu. Przejrzyj listę i zaznacz foldery, które można odtworzyć." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="34,0,0,14" LineHeight="19" />
-
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,0,12">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-                                                    <TextBlock Text="Folder projektów:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                                    <TextBox x:Name="DevRootPathTextBox" Text="" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8,5" FontSize="13" Width="260" VerticalAlignment="Center" />
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-                                                    <TextBlock Text="Filtr nieaktywności:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                                    <ComboBox x:Name="DevInactiveComboBox" SelectedIndex="0" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" Padding="8,4" FontSize="13" VerticalAlignment="Center">
-                                                        <ComboBoxItem Content="Wszystkie projekty" Tag="0" />
-                                                        <ComboBoxItem Content="> 30 dni" Tag="30" />
-                                                        <ComboBoxItem Content="> 60 dni" Tag="60" />
-                                                        <ComboBoxItem Content="> 90 dni" Tag="90" />
-                                                    </ComboBox>
-                                                </StackPanel>
-
-                                                <Button Grid.Column="2" Content="🔍 Skanuj pakiety" Style="{StaticResource PrimaryButtonStyle}" Click="ScanDevArtifacts_Click" Margin="0,0,10,0" />
-                                                <Button Grid.Column="3" Content="🧹 Wyczyść zaznaczone pakiety" Style="{StaticResource DangerButtonStyle}" HorizontalAlignment="Right" Click="CleanDevArtifacts_Click" />
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl x:Name="DevArtifactsControl">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type services:DevArtifactItem}">
-                                                    <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,8" Padding="14,10">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="140" />
-                                                                <ColumnDefinition Width="130" />
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding TypeIcon}" FontSize="22" VerticalAlignment="Center" Margin="0,0,12,0" />
-
-                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="{Binding ProjectName}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                                    <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
-                                                                        <TextBlock Text="{Binding ArtifactType}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                                                    </Border>
-                                                                </StackPanel>
-                                                                <TextBlock Text="{Binding FullPath}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
-                                                            </StackPanel>
-
-                                                            <TextBlock Grid.Column="3" Text="{Binding RelativeAgeText}" FontSize="13" Foreground="{DynamicResource ErrorBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" />
-                                                            <TextBlock Grid.Column="4" Text="{Binding FormattedSize}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- KARTA 3: ZAAWANSOWANY TUNING SYSTEMU & DYSKÓW -->
-                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,12">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="🛠️" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                                <TextBlock Text="Zaawansowany Tuning Systemu (Hibernacja, VHDX, CompactOS)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- Hibernacja -->
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12" Margin="0,0,0,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="💤 Zarządzanie Plikiem Hibernacji (hiberfil.sys)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                                        <Border x:Name="HibernationBadgeBorder" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                            <TextBlock x:Name="HibernationStatusBadge" Text="OCZEKIWANIE NA ODCZYT" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}" />
-                                                        </Border>
-                                                    </StackPanel>
-                                                    <TextBlock Text="Plik hibernacji znajduje się na dysku systemowym. Rozmiar i dostępność odczytasz w skanie czyszczenia." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0" />
-                                                </StackPanel>
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Button Content="Wyłącz hibernację" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0" Click="DisableHibernation_Click" />
-                                                    <Button Content="Tryb zredukowany" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="ReduceHibernation_Click" />
-                                                    <Button Content="Włącz pełną" Style="{StaticResource SecondaryButtonStyle}" Click="EnableHibernation_Click" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-
-                                        <!-- Kompaktowanie VHDX -->
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12" Margin="0,0,0,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="🐳 Kompaktowanie Dysków VHDX (Docker &amp; WSL)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                    <TextBlock Text="Obcina puste gigabajty z plików docker_data.vhdx oraz ext4.vhdx po usunięciu kontenerów." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,3,0,0" />
-                                                </StackPanel>
-                                                <Button Grid.Column="1" Content="📉 Kompaktuj Docker VHDX" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="ShrinkDockerVhdx_Click" />
-                                            </Grid>
-                                        </Border>
-
-                                        <!-- CompactOS -->
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="🗜️ Bezstratna Kompresja NTFS (CompactOS / XPRESS8K)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                    <TextBlock Text="Kompresja NTFS zachowuje dostęp do plików. Efekt zależy od danych i nie jest gwarantowany." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,3,0,0" />
-                                                </StackPanel>
-                                                <Button Grid.Column="1" Content="🗜️ Wybierz folder do kompresji" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="CompactFolder_Click" />
-                                            </Grid>
-                                        </Border>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </ScrollViewer>
+                      <StackPanel x:Name="ToolHomePanel">
+                        <TextBlock Text="Narzędzia" FontSize="28" FontWeight="SemiBold" Margin="0,4,0,8"/>
+                        <TextBlock Text="Wybierz zadanie." Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,24"/>
+                        <UniformGrid Columns="2">
+                          <Button x:Name="ToolMigrationTile" Tag="0" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="24" Margin="0,0,12,12" HorizontalContentAlignment="Left"><StackPanel><TextBlock Text="Przenieś foldery" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Zmień lokalizację dużych folderów." Margin="0,10,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel></Button>
+                          <Button x:Name="ToolDevTile" Tag="1" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="24" Margin="0,0,0,12" HorizontalContentAlignment="Left"><StackPanel><TextBlock Text="Projekty programistyczne" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Znajdź pliki, które można odtworzyć." Margin="0,10,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel></Button>
+                          <Button x:Name="ToolSystemTile" Tag="2" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="24" Margin="0,0,12,12" HorizontalContentAlignment="Left"><StackPanel><TextBlock Text="Opcje systemowe" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Hibernacja, kompresja i dyski wirtualne." Margin="0,10,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel></Button>
+                          <Button x:Name="ToolMemoryTile" Tag="3" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" Padding="24" Margin="0,0,0,12" HorizontalContentAlignment="Left"><StackPanel><TextBlock Text="Pamięć RAM" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Sprawdź wykorzystanie pamięci." Margin="0,10,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel></Button>
+                        </UniformGrid>
+                      </StackPanel>
+                      <Grid x:Name="ToolDetailPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,18"><Button Content="← Narzędzia" Click="BackToTools_Click" Style="{StaticResource SecondaryButtonStyle}"/><Button Content="Dziennik operacji" Click="ToggleLogButton_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right"/></DockPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel><Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,14" d1p1:Name="ToolMigrationSection" Visibility="Collapsed" xmlns:d1p1="http://schemas.microsoft.com/winfx/2006/xaml" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"><StackPanel><Grid Margin="0,0,0,12"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="🔗" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Przenoszenie folderów i dowiązania NTFS" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" /></StackPanel></Grid><TextBlock Text="Kopiuje dane do wskazanej lokalizacji i zachowuje dostęp przez dowiązanie. Zamknij używające folderu programy. Kopia źródłowa pozostaje do czasu ręcznej weryfikacji." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="34,0,0,14" TextWrapping="Wrap" LineHeight="19" /><ItemsControl x:Name="SymlinkPresetsControl" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type services:SymlinkPreset}"><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="24" VerticalAlignment="Center" Margin="0,0,14,0" Width="32" TextAlignment="Center" /><StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" /><TextBlock Text="{Binding SourcePath, StringFormat={}Źródło: {0}}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" /><TextBlock Text="{Binding SuggestedDestPath, StringFormat={}Cel: {0}}" FontSize="12" Foreground="{DynamicResource AccentBrush}" TextTrimming="CharacterEllipsis" /></StackPanel><TextBlock Grid.Column="2" Text="{Binding FormattedSize}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" /><TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" /><Button Grid.Column="4" Content="Przenieś i stwórz Symlink" Style="{StaticResource PrimaryButtonStyle}" FontSize="13" Padding="12,6" Tag="{Binding}" Click="ExecutePresetRelocation_Click" IsEnabled="{Binding CanRelocate}" VerticalAlignment="Center" /></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
+<Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,14" d1p1:Name="ToolDevSection" Visibility="Collapsed" xmlns:d1p1="http://schemas.microsoft.com/winfx/2006/xaml" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"><StackPanel><Grid Margin="0,0,0,12"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="💻" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Pliki projektów programistycznych" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" /></StackPanel></Grid><TextBlock Text="Wykrywa artefakty na podstawie plików projektu. Przejrzyj listę i zaznacz foldery, które można odtworzyć." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="34,0,0,14" LineHeight="19" /><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,0,12"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock Text="Folder projektów:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" /><TextBox x:Name="DevRootPathTextBox" Text="" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="8,5" FontSize="13" Width="260" VerticalAlignment="Center" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" /></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock Text="Filtr nieaktywności:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" /><ComboBox x:Name="DevInactiveComboBox" SelectedIndex="0" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" Padding="8,4" FontSize="13" VerticalAlignment="Center" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><ComboBoxItem Content="Wszystkie projekty" Tag="0" /><ComboBoxItem Content="&gt; 30 dni" Tag="30" /><ComboBoxItem Content="&gt; 60 dni" Tag="60" /><ComboBoxItem Content="&gt; 90 dni" Tag="90" /></ComboBox></StackPanel><Button Grid.Column="2" Content="🔍 Skanuj pakiety" Style="{StaticResource PrimaryButtonStyle}" Click="ScanDevArtifacts_Click" Margin="0,0,10,0" /><Button Grid.Column="3" Content="🧹 Wyczyść zaznaczone pakiety" Style="{StaticResource DangerButtonStyle}" HorizontalAlignment="Right" Click="CleanDevArtifacts_Click" /></Grid></Border><ItemsControl x:Name="DevArtifactsControl" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type services:DevArtifactItem}"><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,8" Padding="14,10"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="140" /><ColumnDefinition Width="130" /></Grid.ColumnDefinitions><CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0" /><TextBlock Grid.Column="1" Text="{Binding TypeIcon}" FontSize="22" VerticalAlignment="Center" Margin="0,0,12,0" /><StackPanel Grid.Column="2" VerticalAlignment="Center"><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding ProjectName}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" /><Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0"><TextBlock Text="{Binding ArtifactType}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" /></Border></StackPanel><TextBlock Text="{Binding FullPath}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" /></StackPanel><TextBlock Grid.Column="3" Text="{Binding RelativeAgeText}" FontSize="13" Foreground="{DynamicResource ErrorBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,14,0" /><TextBlock Grid.Column="4" Text="{Binding FormattedSize}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" /></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
+<Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="18" d1p1:Name="ToolSystemSection" Visibility="Collapsed" xmlns:d1p1="http://schemas.microsoft.com/winfx/2006/xaml" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"><StackPanel><Grid Margin="0,0,0,12"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="🛠️" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Opcje systemowe" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" /></StackPanel></Grid><!-- Hibernacja --><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12" Margin="0,0,0,10"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Grid.Column="0"><StackPanel Orientation="Horizontal"><TextBlock Text="💤 Zarządzanie Plikiem Hibernacji (hiberfil.sys)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" /><Border x:Name="HibernationBadgeBorder" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><TextBlock x:Name="HibernationStatusBadge" Text="OCZEKIWANIE NA ODCZYT" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}" /></Border></StackPanel><TextBlock Text="Plik hibernacji znajduje się na dysku systemowym. Rozmiar i dostępność odczytasz w skanie czyszczenia." FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0" /></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="Wyłącz hibernację" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0" Click="DisableHibernation_Click" /><Button Content="Tryb zredukowany" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="ReduceHibernation_Click" /><Button Content="Włącz pełną" Style="{StaticResource SecondaryButtonStyle}" Click="EnableHibernation_Click" /></StackPanel></Grid></Border><!-- Kompaktowanie VHDX --><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12" Margin="0,0,0,10"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Grid.Column="0"><TextBlock Text="🐳 Kompaktowanie Dysków VHDX (Docker &amp; WSL)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" /><TextBlock Text="Obcina puste gigabajty z plików docker_data.vhdx oraz ext4.vhdx po usunięciu kontenerów." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,3,0,0" /></StackPanel><Button Grid.Column="1" Content="📉 Kompaktuj Docker VHDX" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="ShrinkDockerVhdx_Click" /></Grid></Border><!-- CompactOS --><Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Grid.Column="0"><TextBlock Text="🗜️ Bezstratna Kompresja NTFS (CompactOS / XPRESS8K)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" /><TextBlock Text="Kompresja NTFS zachowuje dostęp do plików. Efekt zależy od danych i nie jest gwarantowany." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,3,0,0" /></StackPanel><Button Grid.Column="1" Content="🗜️ Wybierz folder do kompresji" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="CompactFolder_Click" /></Grid></Border></StackPanel></Border>
+                          <Border x:Name="ToolMemorySection" Visibility="Collapsed" Style="{StaticResource SurfaceCardStyle}" Padding="24"><StackPanel><TextBlock Text="Pamięć RAM" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="{Binding Text, ElementName=RamStatusText}" Margin="0,20" FontSize="20"/><TextBlock Text="Zwolnienie pamięci procesów może spowolnić kolejne otwarcie ich danych." TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,20"/><Button Content="Zwolnij pamięć procesów" Click="OptimizeRamNow_Click" HorizontalAlignment="Left" Style="{StaticResource SecondaryButtonStyle}"/></StackPanel></Border>
+                        </StackPanel></ScrollViewer>
+                        <TextBlock Grid.Row="2" Text="{Binding Text, ElementName=GlobalStatusText}" TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      </Grid>
                     </Grid>
-
                     <!-- ==================== WIDOK 5: CENTRUM PROGRAMÓW & AKTUALIZATOR (100 APLIKACJI) ==================== -->
                     <Grid x:Name="ViewApps" Visibility="Collapsed">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" /> <!-- Pasek nagłówka i statusu folderu -->
-                            <RowDefinition Height="Auto" /> <!-- Pasek filtrów, wyszukiwarki i akcji masowych -->
-                            <RowDefinition Height="*" />    <!-- Lista 100 aplikacji -->
-                        </Grid.RowDefinitions>
-
-                        <!-- Pasek informacyjny i docelowy folder -->
-                        <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="16,12" Margin="0,0,0,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                        <TextBlock Text="📥" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Centrum Oprogramowania &amp; Automatycznych Aktualizacji" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                        <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="WINGET NATIVE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                        </Border>
-                                    </StackPanel>
-                                    <TextBlock Text="Kompaktowy hub programistyczny, homelab, AI (ChatGPT, Antigravity) oraz narzędzia graficzne dla Windows 11. Cicha instalacja, brak adware, auto-aktualizacje winget." FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                        <TextBlock Text="📁 Domyślna ścieżka instalacji:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock x:Name="AppsTargetFolderText" Text="Odczytywanie ustawień" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                                        <Button Content="⚙️ Zmień w Ustawieniach" Style="{StaticResource SecondaryButtonStyle}" Padding="8,2" FontSize="11" Margin="12,0,0,0" Click="NavToSettings_Click" />
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,5" Margin="0,0,10,0" VerticalAlignment="Center">
-                                        <TextBlock Text="● ZAWSZE NAJNOWSZE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" />
-                                    </Border>
-                                    <Button Content="🔄 Sprawdź wersje" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="RefreshAppsStatus_Click" />
-                                    <Button Content="⚡ ZAKTUALIZUJ WSZYSTKIE DO NAJNOWSZYCH" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" Click="UpgradeAllInstalledApps_Click" ToolTip="Automatycznie pobiera i bezszelestnie aktualizuje wszystkie programy na komputerze do najnowszych wersji" />
-                                    <Button Content="📥 Zainstaluj zaznaczone" Style="{StaticResource PrimaryButtonStyle}" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Click="InstallSelectedApps_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- Pasek wyszukiwania i kategorii -->
-                        <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <Grid Grid.Row="0" Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="AppsSearchTextBox" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="10,6" FontSize="13" TextChanged="AppsSearchTextBox_TextChanged" VerticalAlignment="Center" ToolTip="Wpisz nazwę programu, technologię lub kategorię..." />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                                        <Button Content="Zaznacz widoczne" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Margin="0,0,6,0" Click="SelectVisibleApps_Click" />
-                                        <Button Content="Odznacz wszystkie" Style="{StaticResource SecondaryButtonStyle}" Padding="8,4" FontSize="11" Click="DeselectAllApps_Click" />
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- Kafelki kategorii -->
-                                <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                                    <Button Content="Wszystkie" Tag="All" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="🖥️ Serwer Domowy &amp; Homelab" Tag="Serwer Domowy" Style="{StaticResource PrimaryButtonStyle}" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="🤖 AI &amp; Antigravity" Tag="AI" Style="{StaticResource PrimaryButtonStyle}" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="💻 Programowanie &amp; Dev" Tag="Programowanie" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="🎨 Grafika &amp; Wideo" Tag="Grafika" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="⚡ Narzędzia Systemu" Tag="Systemowe" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="🌐 Przeglądarki" Tag="Przeglądarki" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="💬 Komunikacja" Tag="Komunikacja" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="🎮 Gry &amp; Rozrywka" Tag="Gry" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                    <Button Content="📄 Biuro &amp; Bezpieczeństwo" Tag="Biuro" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" Margin="0,0,6,4" FontSize="12" Click="FilterCategory_Click" />
-                                </WrapPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- Lista aplikacji z wirtualizacją -->
-                        <Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="6">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                <ItemsControl x:Name="AppsItemsControl">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel Orientation="Horizontal" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:AppPackageItem}">
-                                            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="6" Width="480" MinHeight="110">
-                                                <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="*" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-
-                                                    <!-- Rząd 1: CheckBox, Ikona, Nazwa, Kategoria -->
-                                                    <Grid Grid.Row="0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-
-                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                                            <Border Background="{DynamicResource CardBgBrush}" CornerRadius="6" Width="36" Height="36" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                            </Border>
-                                                        </StackPanel>
-
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
-                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" LineHeight="17" />
-                                                            <TextBlock Text="{Binding Id}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                                                        </StackPanel>
-
-                                                        <!-- Kategoria -->
-                                                        <Border Grid.Column="2" Background="{DynamicResource CardBgBrush}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                            <TextBlock Text="{Binding Category}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                        </Border>
-                                                    </Grid>
-
-                                                    <!-- Rząd 2: Opis -->
-                                                    <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="46,6,0,8" MaxHeight="38" TextTrimming="CharacterEllipsis" />
-
-                                                    <!-- Rząd 3: Status i Przycisk akcji -->
-                                                    <Grid Grid.Row="2" Margin="46,0,0,0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <TextBlock Text="●" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,6,0" FontSize="11" VerticalAlignment="Center" />
-                                                            <TextBlock Text="{Binding Status}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="160" VerticalAlignment="Center" />
-                                                        </StackPanel>
-                                                        <Button Grid.Column="1" Content="{Binding ActionButtonText}" IsEnabled="{Binding CanAction}" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4" FontSize="11" Click="InstallSingleApp_Click" Tag="{Binding}" Visibility="{Binding ActionButtonVisible, Converter={StaticResource BoolToVis}}" />
-                                                    </Grid>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Border>
+                      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                      <DockPanel Margin="0,4,0,22"><Button x:Name="AppsRefreshButton" DockPanel.Dock="Right" Content="Sprawdź aktualizacje" Click="RefreshAppsStatus_Click" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/><StackPanel><TextBlock Text="Programy" Style="{StaticResource PageTitleStyle}"/><TextBlock x:Name="AppsStatusText" Text="Sprawdź zainstalowane programy i dostępne wersje." Style="{StaticResource SubtitleStyle}" TextWrapping="Wrap" MaxWidth="660" HorizontalAlignment="Left"/></StackPanel></DockPanel>
+                      <StackPanel Grid.Row="1"><DockPanel Margin="0,0,0,16"><TextBox x:Name="AppsSearchTextBox" DockPanel.Dock="Right" Width="240" TextChanged="AppsSearchTextBox_TextChanged" ToolTip="Szukaj programu" AutomationProperties.Name="Szukaj programu"/><StackPanel Orientation="Horizontal"><Button x:Name="AppsInstalledTab" Content="Zainstalowane" Tag="Installed" Click="AppsView_Click" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button x:Name="AppsUpdatesTab" Content="Aktualizacje" Tag="Updates" Click="AppsView_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button x:Name="AppsCatalogTab" Content="Dodaj program" Tag="Catalog" Click="AppsView_Click" Style="{StaticResource SecondaryButtonStyle}"/></StackPanel></DockPanel>
+                        <ProgressBar x:Name="AppsReadProgress" IsIndeterminate="True" Height="3" Visibility="Collapsed" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="AppsTargetFolderText" Visibility="Collapsed"/>
+                      </StackPanel>
+                      <Grid Grid.Row="2"><TextBlock x:Name="AppsEmptyText" Text="Użyj przycisku „Sprawdź aktualizacje”, aby odczytać programy." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" MaxWidth="500" TextAlignment="Center"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><ItemsControl x:Name="AppsItemsControl"><ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type models:AppPackageItem}">
+                          <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="6,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanAction}" Visibility="{Binding ActionButtonVisible, Converter={StaticResource BoolToVis}}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Name}"/>
+                            <Expander Grid.Column="1" Margin="0,0,16,0" HorizontalContentAlignment="Stretch"><Expander.Header><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Status}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/></StackPanel></Expander.Header><StackPanel Margin="24,10,0,0"><TextBlock Text="{Binding InstalledVersion, StringFormat={}Zainstalowana wersja: {0}}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/><TextBlock Text="{Binding AvailableVersion, StringFormat={}Dostępna wersja: {0}}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/><TextBlock Text="{Binding Id}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/><TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/></StackPanel></Expander>
+                            <Button Grid.Column="2" Content="{Binding ActionButtonText}" IsEnabled="{Binding CanAction}" Style="{StaticResource SecondaryButtonStyle}" Padding="14,8" Click="InstallSingleApp_Click" Tag="{Binding}" Visibility="{Binding ActionButtonVisible, Converter={StaticResource BoolToVis}}" VerticalAlignment="Center"/>
+                          </Grid></Border>
+                        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+                      </Grid>
+                      <Border x:Name="AppsSelectionBar" Grid.Row="3" Style="{StaticResource SurfaceCardStyle}" Visibility="Collapsed" Margin="0,12,0,0" Padding="14"><DockPanel><Button Content="Zastosuj zaznaczone" DockPanel.Dock="Right" Click="InstallSelectedApps_Click" Style="{StaticResource PrimaryButtonStyle}"/><Button Content="Odznacz" DockPanel.Dock="Right" Click="DeselectAllApps_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><TextBlock x:Name="AppsSelectionText" VerticalAlignment="Center"/></DockPanel></Border>
                     </Grid>
-
                     <!-- ==================== WIDOK 6: USTAWIENIA SYSTEMU & MODUŁY ROZSZERZONE ==================== -->
                     <Grid x:Name="ViewSettings" Visibility="Collapsed">
                       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -1186,116 +673,18 @@
 
                     <!-- ==================== WIDOK 8: HISTORIA I AUDYT OPERACJI ==================== -->
                     <Grid x:Name="ViewHistory" Visibility="Collapsed">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" /> <!-- Podsumowanie statystyk -->
-                            <RowDefinition Height="*" />    <!-- Lista operacji -->
-                        </Grid.RowDefinitions>
-
-                        <!-- Podsumowanie statystyk -->
-                        <Grid Grid.Row="0" Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Karta 1: Liczba wykonanych operacji -->
-                            <Border Grid.Column="0" Style="{StaticResource SurfaceCardStyle}" Margin="0,0,8,0" Padding="18,14">
-                                <StackPanel>
-                                    <TextBlock Text="ŁĄCZNIE OPERACJI" Style="{StaticResource EyebrowStyle}" />
-                                    <TextBlock x:Name="HistoryTotalOpsText" Text="0" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0" />
-                                    <TextBlock Text="Zarejestrowane procedury" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Karta 2: Łącznie zwolniona przestrzeń -->
-                            <Border Grid.Column="1" Style="{StaticResource SurfaceCardStyle}" Margin="4,0,4,0" Padding="18,14">
-                                <StackPanel>
-                                    <TextBlock Text="ZWOLNIONA PRZESTRZEŃ" Style="{StaticResource EyebrowStyle}" />
-                                    <TextBlock x:Name="HistoryTotalFreedText" Text="0 B" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,6,0,0" />
-                                    <TextBlock Text="Odzyskane miejsce na dyskach" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Karta 3: Ostatnia optymalizacja -->
-                            <Border Grid.Column="2" Style="{StaticResource SurfaceCardStyle}" Margin="8,0,0,0" Padding="18,14">
-                                <StackPanel>
-                                    <TextBlock Text="OSTATNIA OPTYMALIZACJA" Style="{StaticResource EyebrowStyle}" />
-                                    <TextBlock x:Name="HistoryLastDateText" Text="Brak wpisów" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,0" />
-                                    <TextBlock Text="Rejestr w %LocalAppData%\Aetherial" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <!-- Lista wpisów z historii -->
-                        <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <!-- Pasek akcji historii -->
-                                <Border Grid.Row="0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="16,10">
-                                    <DockPanel>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="📜" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Dziennik zdarzeń i rejestr zmian" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <Button Content="🔄 Odśwież" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="10,5" FontSize="12" Click="RefreshHistory_Click" />
-                                            <Button Content="📂 Otwórz folder" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="10,5" FontSize="12" Click="OpenHistoryFolder_Click" />
-                                            <Button Content="🗑 Wyczyść historię" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="12" Click="ClearHistory_Click" />
-                                        </StackPanel>
-                                    </DockPanel>
-                                </Border>
-
-                                <!-- Elementy historii -->
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl x:Name="HistoryItemsControl" Margin="12">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate DataType="{x:Type models:HistoryEntry}">
-                                                <Border Background="{DynamicResource CardBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,0,8" Padding="16,12">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-
-                                                        <!-- Status Badge -->
-                                                        <Border Grid.Column="0" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center" Margin="0,0,16,0">
-                                                            <TextBlock Text="{Binding StatusBadge}" FontSize="11" FontWeight="Bold" Foreground="{Binding StatusColor}" />
-                                                        </Border>
-
-                                                        <!-- Typ operacji & Czas -->
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,20,0" MinWidth="160">
-                                                            <TextBlock Text="{Binding OperationType}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                                                            <TextBlock Text="{Binding FormattedDate}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                                                        </StackPanel>
-
-                                                        <!-- Podsumowanie / Szczegóły -->
-                                                        <TextBlock Grid.Column="2" Text="{Binding Summary}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
-
-                                                        <!-- Zwolnione bajty -->
-                                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="110">
-                                                            <TextBlock Text="{Binding FormattedBytes}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
-                                                            <TextBlock Text="{Binding ItemsFixed, StringFormat={}{0} naprawionych}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" Margin="0,2,0,0" />
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                            </Grid>
-                        </Border>
+                      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                      <DockPanel Margin="0,4,0,22"><StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="Dziennik zdarzeń" Click="ToggleLogButton_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button Content="Odśwież" Click="RefreshHistory_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button Content="Wyczyść historię" Click="ClearHistory_Click" Style="{StaticResource SecondaryButtonStyle}"/></StackPanel><StackPanel><TextBlock Text="Historia" Style="{StaticResource PageTitleStyle}"/><TextBlock x:Name="HistoryLastDateText" Text="Brak operacji" Style="{StaticResource SubtitleStyle}"/><TextBlock x:Name="HistoryTotalOpsText" Visibility="Collapsed"/><TextBlock x:Name="HistoryTotalFreedText" Visibility="Collapsed"/></StackPanel></DockPanel>
+                      <Grid Grid.Row="1"><TextBlock Text="Tutaj pojawią się wyniki wykonanych operacji." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Items.Count, ElementName=HistoryItemsControl}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><ItemsControl x:Name="HistoryItemsControl"><ItemsControl.ItemTemplate><DataTemplate DataType="{x:Type models:HistoryEntry}">
+                          <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="6,16"><Expander HorizontalContentAlignment="Stretch"><Expander.Header><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding OperationType}" FontWeight="SemiBold"/><TextBlock Text="{Binding FormattedDate}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0"/></StackPanel><TextBlock Grid.Column="1" Text="{Binding StatusBadge}" Foreground="{Binding StatusColor}" VerticalAlignment="Center" Margin="24,0,0,0"/></Grid></Expander.Header><StackPanel Margin="24,12,0,0"><TextBlock Text="{Binding Summary}" TextWrapping="Wrap"/><TextBlock Text="{Binding FormattedBytes, StringFormat={}Zwolnione miejsce: {0}}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0"/></StackPanel></Expander></Border>
+                        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+                      </Grid>
                     </Grid>
                 </Grid>
 
                 <!-- 3. PASEK PODSUMOWANIA & KONSOLA DZIENNIKA (LOG) -->
-                <Grid Grid.Row="3" Margin="0,14,0,0">
+                <Grid x:Name="LegacyFooter" Visibility="Collapsed" Grid.Row="3" Margin="0,14,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />

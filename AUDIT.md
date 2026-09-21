@@ -1,6 +1,6 @@
-# Audyt Aetherial 6.1
+# Audyt Aetherial 6.3
 
-Data: 2026-09-13. Dokument opisuje stan implementacji i znane granice;
+Data: 2026-09-21. Dokument opisuje stan implementacji i znane granice;
 nie jest deklaracją, że wszystkie funkcje sprawdzono na każdym komputerze.
 
 | Moduł | Stan implementacji | Granice |
@@ -10,6 +10,7 @@ nie jest deklaracją, że wszystkie funkcje sprawdzono na każdym komputerze.
 | Czyść | Osobny widok i view model, skan, wybór, potwierdzenie, anulowanie, raport i historia. Cele są sprawdzane ponownie przed działaniem. | Konwencjonalne lokalizacje cache nie obejmują wszystkich konfiguracji. Zablokowane pliki mogą pozostać. |
 | Skan i wykonawca | Raport dostępnych celów czyszczenia, tylko obsługiwane działania; brak arbitralnego wskaźnika zdrowia oraz automatycznej naprawy PnP. | Nie jest to pełna diagnostyka sprzętu. Starsze przepływy wymagają dalszego ujednolicenia. |
 | Punkt przywracania | Sprawdzenie utworzenia przed zbiorczym czyszczeniem; niepowodzenie zatrzymuje wykonanie. | Wymaga obsługi przez system i uprawnień. Nie odtwarza usuwanych plików użytkownika. |
+| Programy | Bieżący spis WinGet, dokładne ID i rzeczywiste wersje; fallback do rejestru, osobny katalog i potwierdzenie wybranych działań. | Parser obsługuje nagłówki polskie i angielskie; inne formaty zgłaszają niepełny odczyt. Nie wykonywano aktualizacji programów użytkownika podczas QA. |
 | Historia | Ograniczony do 100 wpisów, synchronizowany zapis atomowy JSON; zachowanie uszkodzonego pliku i zgłoszenie błędu. | Awaria zapisu jest zgłaszana, nie gwarantuje utrwalenia operacji. |
 | Architektura | Core bez WPF, Services, aplikacja UI, DI i Serilog; nowe view modele oparte na CommunityToolkit.Mvvm. | Część starszych usług oraz MainWindow nadal koordynuje logikę; migracja MVVM nie jest zakończona. |
 | Narzędzia zaawansowane | Zachowano migracje folderów, projekty dev, RAM, winget i Windows Update. | Istnienie funkcji nie potwierdza poprawności każdego scenariusza produkcyjnego; nie uruchamiano masowych zmian na danych użytkownika. |

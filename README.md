@@ -1,4 +1,4 @@
-# Aetherial 6.2 — Storage & Diagnostics
+# Aetherial 6.3 — Storage & Diagnostics
 
 Polska aplikacja Windows 10/11 x64 w C# / .NET 8 / WPF do przeglądania dysków,
 czyszczenia wybranych danych i sprawdzania sprzętu. Pracuje na odczytach Windows;
@@ -16,12 +16,12 @@ brak pomiaru lub odpowiedzi producenta pozostaje wyraźnie oznaczony.
   błędy/pominięcia i anulowanie.
 - **Dyski:** wybór wykrytego woluminu zmienia ścieżkę i odczytywaną listę. Nowsza
   nawigacja anuluje poprzedni odczyt; spóźniony wynik nie zastępuje bieżącego folderu.
-- **Skan i historia:** wyniki dostępnych celów czyszczenia oraz trwały zapis wykonanych
+- **Historia:** trwały zapis wykonanych
   operacji. Licznik wyników nie jest procentową oceną zdrowia komputera.
 
 ## Nawigacja i preferencje
 
-Pasek tematów pozostaje dostępny w modułach Narzędzi. Ustawienia mają trzy działy:
+Jedno boczne menu udostępnia Czyść, Dyski, Sterowniki, Programy, Narzędzia, Historię i Ustawienia. Czyść jest ekranem startowym. Szczegóły pojawiają się po rozwinięciu, a operacje usuwania po zaznaczeniu. Narzędzia zaczynają od czterech kategorii z przyciskiem powrotu. Ustawienia mają trzy działy:
 „Wygląd i odczyty”, „Programy i pliki” oraz „Windows i raporty”.
 
 W preferencjach można zapisać sześć ustawień: motyw, włączenie cyklicznego odczytu
@@ -29,6 +29,8 @@ parametrów, jego interwał (5–120 sekund), skan sprzętu po otwarciu, skan ca
 po otwarciu oraz próg dużych plików (100–10 240 MB). Motyw i timer są stosowane
 w bieżącej sesji, a nowy próg przy następnym wyszukiwaniu. Automatyczny skan
 wyłącznie odczytuje dane; czyszczenie i instalacja nadal wymagają własnego wyboru.
+
+Programy pokazują rzeczywistą listę instalacji z WinGet, oddzielną listę aktualizacji oraz opcjonalny katalog do instalowania nowych aplikacji. Przy niedostępnym WinGet odczyt z rejestru pozostaje wyraźnie niezweryfikowany; nie pozwala na instalację z niepotwierdzonego ID. Aktualizacje dotyczą wybranych programów i respektują ustawienie cichej instalacji.
 
 ## Zakres i źródła danych
 

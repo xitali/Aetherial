@@ -22,8 +22,12 @@ public partial class App : Application
     {
         // Resolve BAML deferred resources before replacing theme entries: templates
         // that have not yet been displayed can still hold deferred references.
-        foreach (var resourceKey in Current.Resources.Keys.Cast<object>().ToArray())
-            _ = Current.Resources[resourceKey];
+        static void ResolveResources(ResourceDictionary resources)
+        {
+            foreach (var merged in resources.MergedDictionaries) ResolveResources(merged);
+            foreach (var key in resources.Keys.Cast<object>().ToArray()) _ = resources[key];
+        }
+        ResolveResources(Current.Resources);
         var palette = new Dictionary<string, string>
         {
             ["BgDarkBrush"] = light ? "#F3F5F9" : "#0C1018",

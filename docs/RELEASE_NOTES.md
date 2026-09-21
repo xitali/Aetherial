@@ -1,24 +1,21 @@
-# Aetherial 6.2.0
+# Aetherial 6.3.0
 
-- Stały pasek tematów w modułach Narzędzi pozwala przechodzić pomiędzy nimi bez
-  wracania do strony wyboru. Pulpit jest bardziej zwarty, z czytelniejszą hierarchią
-  bieżących danych i akcji.
-- Ustawienia podzielono na „Wygląd i odczyty”, „Programy i pliki” oraz „Windows
-  i raporty”. Preferencje sterują działaniem aplikacji: motywem, cyklicznym odczytem
-  parametrów, interwałem odświeżania, skanem sprzętu i cache po otwarciu modułu
-  oraz progiem rozmiaru podczas wyszukiwania dużych plików.
-- Zapisane preferencje są walidowane i stosowane w bieżącej sesji. Błędy odczytu
-  oraz zapisu są zgłaszane; nieprawidłowa konfiguracja nie zastępuje poprawnego pliku.
-- Ujednolicono paski przewijania, pola wyboru, listy rozwijane i wskaźniki postępu.
-- Rozszerzono izolowane testy ustawień oraz testy zdarzeń WPF o nawigację,
-  rzeczywisty timer odświeżania, próg wyszukiwania i przewijanie.
+Uproszczony interfejs: jedno boczne menu, jeden pasek tytułu i ekran Czyść na start.
+Wyniki, opisy i działania są pokazywane wtedy, gdy są potrzebne.
 
-Automatyczny skan odczytuje dane. Nie wybiera plików do usunięcia ani nie instaluje
-sterowników. Weryfikacja katalogu producenta nadal obejmuje NVIDIA Game Ready WHQL
-DCH na Windows 10/11 x64; pozostałe urządzenia pozostają niezweryfikowane.
+- Czyść: skan, krótka lista kategorii, szczegóły na żądanie, podgląd i wynik.
+- Dyski: wykryte woluminy, duże pliki, lista folderów oraz akcje przy zaznaczeniu.
+- Sterowniki: krótkie wiersze; wersje, źródła i identyfikatory w szczegółach.
+- Programy: rzeczywiste instalacje, aktualizacje i osobny katalog. Niezweryfikowane
+  wpisy nie stają się celami instalacji. Odświeżanie kasuje stare wyniki.
+- Narzędzia: cztery kategorie, wybrane zadanie i zawsze dostępny powrót.
+- Historia i dziennik dostępne na żądanie; krótsze opisy ustawień.
 
-W repozytorium dostępny jest `scripts/install-local.ps1`: instaluje przygotowany
-pakiet `release/latest` w profilu użytkownika, sprawdza sumę EXE, tworzy skróty
-oraz wpis deinstalacji. To lokalny skrypt instalacyjny; automatyczny aktualizator
-Aetherial nie został dodany. Instrukcja i ograniczenia testów znajdują się w README
-oraz docs/WERYFIKACJA.md.
+Porównanie sterowników z katalogiem producenta obejmuje NVIDIA Game Ready WHQL
+DCH na Windows 10/11 x64. Inne urządzenia mają jawnie niepotwierdzony status.
+Odczyt programów wykorzystuje WinGet; gdy jest niedostępny, aplikacja prezentuje
+instalacje z rejestru bez deklarowania aktualności.
+
+Pakiet zastępuje poprzednie wydanie. Dane użytkownika pozostają w LocalAppData.
+Automatyczny aktualizator samego Aetherial oraz pozostałe etapy planu są nadal
+opisane w BACKLOG.md; to wydanie nie deklaruje ich ukończenia.

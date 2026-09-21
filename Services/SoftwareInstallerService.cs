@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
@@ -15,7 +13,7 @@ public class SoftwareInstallerService
 {
     public List<AppPackageItem> GetCuratedCatalog()
     {
-        return new List<AppPackageItem>
+        var catalog = new List<AppPackageItem>
         {
             // ==================== 1. SERWER DOMOWY & HOMELAB (22) ====================
             new AppPackageItem { Id = "Tailscale.Tailscale", Name = "Tailscale Mesh VPN", Category = "Serwer Domowy", Icon = "🌐", Description = "Prywatna, szyfrowana sieć mesh VPN do łączenia z domowym serwerem z całego świata bez publicznego IP i bez otwierania portów." },
@@ -175,329 +173,152 @@ public class SoftwareInstallerService
             new AppPackageItem { Id = "Spotify.Spotify", Name = "Spotify Music", Category = "Biuro", Icon = "🎵", Description = "Miliony utworów muzycznych, playlist i podcastów w wysokiej jakości na żądanie." },
             new AppPackageItem { Id = "PeterPawlowski.foobar2000", Name = "foobar2000 Audio Player", Category = "Biuro", Icon = "📻", Description = "Audiofilski odtwarzacz muzyki z obsługą bezstratnych formatów FLAC i DSD." }
         };
+        foreach (var app in catalog)
+        {
+            app.Source = !app.Id.Contains('.') && app.Id.Length == 12 ? "msstore" : "winget";
+            app.IsPackageIdVerified = SoftwareInventoryParser.IsActionableId(app.Id, app.Source);
+        }
+        return catalog;
+    }
+
+    /// <summary>Read-only inventory of all apps returned by WinGet, with a local registry fallback.</summary>
+    public async Task<SoftwareInventoryResult> GetInstalledAppsAsync(Action<string>? logger = null, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(90));
+        logger?.Invoke("Odczytywanie zainstalowanych programów i dostępnych wersji...");
+        var (ok, output, _) = await DiskHelper.RunProcessDetailedAsync("winget",
+            "list --accept-source-agreements --disable-interactivity", null, timeout.Token);
+        // The shared process wrapper returns a failure for cancellation; preserve it here.
+        ct.ThrowIfCancellationRequested();
+        var parsed = SoftwareInventoryParser.Parse(output);
+        if (ok && parsed.HasTable && parsed.Apps.Count > 0 && parsed.RejectedRows == 0)
+        {
+            string status = $"{parsed.Apps.Count} programów · {parsed.Apps.Count(a => a.HasUpdate)} aktualizacji";
+            logger?.Invoke(status);
+            return new SoftwareInventoryResult(parsed.Apps, true, true, status);
+        }
+
+        var fallback = await Task.Run(() => GetRegistryInventory(ct), ct);
+        // Never turn a failed source lookup into an 'everything up to date' result.
+        string reason = timeout.IsCancellationRequested ? "Przekroczono czas odczytu WinGet." :
+            ok ? "Nie udało się w pełni odczytać formatu odpowiedzi WinGet." : "WinGet jest niedostępny lub nie odczytał źródeł.";
+        string message = $"{reason} Lista z rejestru Windows: {fallback.Count}. Aktualizacje niezweryfikowane.";
+        logger?.Invoke(message);
+        return new SoftwareInventoryResult(fallback, false, false, message);
     }
 
     public async Task RefreshInstalledStatusesAsync(IEnumerable<AppPackageItem> catalog, string? customInstallFolder = null, Action<string>? logger = null)
     {
-        await Task.Run(async () =>
-        {
-            try
-            {
-                logger?.Invoke("🔍 Skanowanie rejestru Windows i magazynu aplikacji AppX w poszukiwaniu zainstalowanych programów...");
-                var regNames = GetInstalledRegistryDisplayNames();
-                var appxPackages = GetInstalledAppxPackageNames();
-
-                // 1. Sprawdź najpierw bezpośrednio rejestr Windows, pakiety AppX/MS Store oraz lokalne ścieżki
-                foreach (var app in catalog)
-                {
-                    bool isFound = IsAppInstalled(app, regNames, appxPackages, customInstallFolder);
-                    if (isFound)
-                    {
-                        app.IsInstalled = true;
-                        app.Status = "Zainstalowano";
-                        app.StatusColor = "#81C784";
-                    }
-                    else
-                    {
-                        app.IsInstalled = false;
-                        app.Status = "Niezainstalowany";
-                        app.StatusColor = "#888898";
-                    }
-                }
-
-                logger?.Invoke("🔍 Odpytywanie menedżera winget o listę zainstalowanych pakietów w systemie...");
-                var (ok, output) = await DiskHelper.RunProcessAsync("winget", "list --accept-source-agreements", null);
-                if (ok && !string.IsNullOrEmpty(output))
-                {
-                    var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var app in catalog)
-                    {
-                        bool matches = lines.Any(l => 
-                            l.IndexOf(app.Id, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            (app.Id == "9PLM9XGG6VKS" && (l.IndexOf("ChatGPT", StringComparison.OrdinalIgnoreCase) >= 0 || l.IndexOf("OpenAI", StringComparison.OrdinalIgnoreCase) >= 0)));
-
-                        if (matches)
-                        {
-                            app.IsInstalled = true;
-                            app.Status = "Zainstalowano";
-                            app.StatusColor = "#81C784";
-                        }
-                    }
-                }
-
-                logger?.Invoke("🔍 Sprawdzanie dostępnych aktualizacji oprogramowania...");
-                var (upOk, upOutput) = await DiskHelper.RunProcessAsync("winget", "upgrade --accept-source-agreements", null);
-                if (upOk && !string.IsNullOrEmpty(upOutput))
-                {
-                    var upLines = upOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var app in catalog.Where(a => a.IsInstalled))
-                    {
-                        if (upLines.Any(l => l.IndexOf(app.Id, StringComparison.OrdinalIgnoreCase) >= 0))
-                        {
-                            app.HasUpdate = true;
-                            app.Status = "Dostępna aktualizacja";
-                            app.StatusColor = "#FFB74D";
-                        }
-                    }
-                }
-
-                int totalInstalled = catalog.Count(a => a.IsInstalled);
-                logger?.Invoke($"✓ Wykryto {totalInstalled} zainstalowanych aplikacji z katalogu.");
-            }
-            catch (Exception ex)
-            {
-                logger?.Invoke($"⚠️ Błąd sprawdzania programów: {ex.Message}");
-            }
-        });
+        var inventory = await GetInstalledAppsAsync(logger);
+        ApplyInventoryToCatalog(catalog, inventory);
     }
 
-    private static HashSet<string> GetInstalledRegistryDisplayNames()
+    public static void ApplyInventoryToCatalog(IEnumerable<AppPackageItem> catalog, SoftwareInventoryResult inventory)
     {
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        string[] regRoots =
+        var exact = inventory.Apps.Where(a => a.IsPackageIdVerified)
+            .GroupBy(a => a.Id, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.HasUpdate).First(), StringComparer.OrdinalIgnoreCase);
+        var names = inventory.Apps.GroupBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        foreach (var app in catalog)
         {
-            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-            @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
-        };
+            app.HasUpdate = false;
+            app.AvailableVersion = "";
+            app.InstalledVersion = "";
+            app.UpdatesChecked = false;
+            app.IsInstalled = false;
+            app.IsSelected = false;
+            if (exact.TryGetValue(app.Id, out var installed))
+            {
+                app.IsInstalled = true;
+                app.InstalledVersion = installed.InstalledVersion;
+                app.AvailableVersion = installed.AvailableVersion;
+                app.HasUpdate = installed.HasUpdate;
+                app.UpdatesChecked = installed.UpdatesChecked;
+                app.Source = installed.Source;
+                app.IsPackageIdVerified = true;
+                app.Status = installed.Status;
+                app.StatusColor = installed.StatusColor;
+            }
+            else if (names.TryGetValue(app.Name, out var local))
+            {
+                // An exact display name establishes presence, never an update package identity.
+                app.IsInstalled = true;
+                app.InstalledVersion = local.InstalledVersion;
+                app.IsPackageIdVerified = false;
+                app.Status = "Zainstalowany · aktualizacje niezweryfikowane";
+                app.StatusColor = "#888898";
+            }
+            else
+            {
+                // Missing from an incomplete inventory says nothing about installation state.
+                // Disable installs too, rather than accidentally reinstalling an unknown record.
+                app.IsPackageIdVerified = inventory.IsComplete && !app.InventoryOnly &&
+                    SoftwareInventoryParser.IsActionableId(app.Id, app.Source);
+                app.Status = inventory.IsComplete ? "Niewykryty przez WinGet" : "Stan niezweryfikowany";
+                app.StatusColor = "#888898";
+            }
+        }
+    }
 
-        foreach (var root in regRoots)
+    private static List<AppPackageItem> GetRegistryInventory(CancellationToken ct)
+    {
+        var apps = new List<AppPackageItem>();
+        foreach (var hive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser })
+        foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
         {
+            ct.ThrowIfCancellationRequested();
             try
             {
-                using var key = Registry.LocalMachine.OpenSubKey(root);
-                if (key != null)
+                using var root = RegistryKey.OpenBaseKey(hive, view);
+                using var uninstall = root.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                if (uninstall is null) continue;
+                foreach (string subName in uninstall.GetSubKeyNames())
                 {
-                    foreach (var sub in key.GetSubKeyNames())
-                    {
-                        try
-                        {
-                            using var subKey = key.OpenSubKey(sub);
-                            var val = subKey?.GetValue("DisplayName")?.ToString();
-                            if (!string.IsNullOrWhiteSpace(val)) names.Add(val);
-                        }
-                        catch { }
-                    }
-                }
-            }
-            catch { }
-        }
-
-        try
-        {
-            using var userKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
-            if (userKey != null)
-            {
-                foreach (var sub in userKey.GetSubKeyNames())
-                {
+                    ct.ThrowIfCancellationRequested();
                     try
                     {
-                        using var subKey = userKey.OpenSubKey(sub);
-                        var val = subKey?.GetValue("DisplayName")?.ToString();
-                        if (!string.IsNullOrWhiteSpace(val)) names.Add(val);
+                        using var key = uninstall.OpenSubKey(subName);
+                        string? name = key?.GetValue("DisplayName") as string;
+                        if (string.IsNullOrWhiteSpace(name) || Convert.ToString(key?.GetValue("SystemComponent")) == "1") continue;
+                        apps.Add(new AppPackageItem
+                        {
+                            Id = $"Registry:{hive}:{view}:{subName}", Name = name,
+                            InstalledVersion = key?.GetValue("DisplayVersion") as string ?? "",
+                            Category = "Zainstalowane", Source = "Rejestr Windows", InventoryOnly = true,
+                            IsInstalled = true, IsPackageIdVerified = false,
+                            Description = key?.GetValue("Publisher") as string ?? "",
+                            Status = "Aktualizacje niezweryfikowane", StatusColor = "#888898"
+                        });
                     }
-                    catch { }
+                    catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException) { }
                 }
             }
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException) { }
         }
-        catch { }
-
-        return names;
-    }
-
-    private static HashSet<string> GetInstalledAppxPackageNames()
-    {
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        string[] roots =
-        {
-            @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages",
-            @"SOFTWARE\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\PackageRepository\Packages"
-        };
-
-        try
-        {
-            using var curKey = Registry.CurrentUser.OpenSubKey(roots[0]);
-            if (curKey != null)
-            {
-                foreach (var name in curKey.GetSubKeyNames()) names.Add(name);
-            }
-        }
-        catch { }
-
-        try
-        {
-            using var lmk1 = Registry.LocalMachine.OpenSubKey(roots[0]);
-            if (lmk1 != null)
-            {
-                foreach (var name in lmk1.GetSubKeyNames()) names.Add(name);
-            }
-        }
-        catch { }
-
-        try
-        {
-            using var lmk2 = Registry.LocalMachine.OpenSubKey(roots[1]);
-            if (lmk2 != null)
-            {
-                foreach (var name in lmk2.GetSubKeyNames()) names.Add(name);
-            }
-        }
-        catch { }
-
-        return names;
-    }
-
-    private static bool IsAppInstalled(AppPackageItem app, HashSet<string> registryNames, HashSet<string> appxPackages, string? customInstallFolder)
-    {
-        // 1. Sprawdzenie dedykowane dla Microsoft Store / AppX
-        if (app.Id == "9PLM9XGG6VKS" || app.Name.Contains("ChatGPT", StringComparison.OrdinalIgnoreCase))
-        {
-            if (appxPackages.Any(p => p.IndexOf("OpenAI", StringComparison.OrdinalIgnoreCase) >= 0 || p.IndexOf("ChatGPT", StringComparison.OrdinalIgnoreCase) >= 0))
-                return true;
-        }
-
-        if (app.Id.Contains("WindowsTerminal", StringComparison.OrdinalIgnoreCase))
-        {
-            if (appxPackages.Any(p => p.IndexOf("WindowsTerminal", StringComparison.OrdinalIgnoreCase) >= 0))
-                return true;
-        }
-
-        if (app.Id.Contains("WhatsApp", StringComparison.OrdinalIgnoreCase))
-        {
-            if (appxPackages.Any(p => p.IndexOf("WhatsApp", StringComparison.OrdinalIgnoreCase) >= 0))
-                return true;
-        }
-
-        // 2. Sprawdzenie rejestru wg słów kluczowych
-        var keywords = GetSearchKeywords(app);
-        foreach (var kw in keywords)
-        {
-            if (registryNames.Any(rn => rn.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0))
-            {
-                return true;
-            }
-
-            if (appxPackages.Any(ap => ap.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0))
-            {
-                return true;
-            }
-        }
-
-        // 3. Sprawdzenie znanych katalogów i plików wykonywalnych na dyskach
-        return CheckKnownPaths(app, customInstallFolder);
-    }
-
-    private static List<string> GetSearchKeywords(AppPackageItem app)
-    {
-        var list = new List<string>();
-
-        string[] idParts = app.Id.Split('.');
-        if (idParts.Length > 1)
-        {
-            string lastPart = idParts[^1];
-            if (lastPart.Length >= 3) list.Add(lastPart);
-        }
-
-        string cleanName = Regex.Replace(app.Name, @"\s*\([^)]*\)", "").Trim();
-        string[] nameWords = cleanName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (nameWords.Length > 0)
-        {
-            list.Add(nameWords[0]);
-            if (nameWords.Length > 1 && !nameWords[1].Equals("Suite", StringComparison.OrdinalIgnoreCase)
-                                    && !nameWords[1].Equals("Editor", StringComparison.OrdinalIgnoreCase)
-                                    && !nameWords[1].Equals("Player", StringComparison.OrdinalIgnoreCase)
-                                    && !nameWords[1].Equals("Desktop", StringComparison.OrdinalIgnoreCase)
-                                    && !nameWords[1].Equals("Client", StringComparison.OrdinalIgnoreCase))
-            {
-                list.Add($"{nameWords[0]} {nameWords[1]}");
-            }
-        }
-
-        if (app.Id.Contains("Antigravity", StringComparison.OrdinalIgnoreCase)) list.Add("Antigravity");
-        if (app.Id.Contains("Python", StringComparison.OrdinalIgnoreCase)) list.Add("Python");
-        if (app.Id.Contains("Docker", StringComparison.OrdinalIgnoreCase)) list.Add("Docker Desktop");
-        if (app.Id.Contains("Tailscale", StringComparison.OrdinalIgnoreCase)) list.Add("Tailscale");
-        if (app.Id.Contains("7zip", StringComparison.OrdinalIgnoreCase)) list.Add("7-Zip");
-        if (app.Id.Contains("Steam", StringComparison.OrdinalIgnoreCase)) list.Add("Steam");
-        if (app.Id.Contains("Discord", StringComparison.OrdinalIgnoreCase)) list.Add("Discord");
-        if (app.Id.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) list.Add("Google Chrome");
-        if (app.Id.Contains("Git", StringComparison.OrdinalIgnoreCase)) list.Add("Git");
-        if (app.Id.Contains("Brave", StringComparison.OrdinalIgnoreCase)) list.Add("Brave");
-        if (app.Id.Contains("Blender", StringComparison.OrdinalIgnoreCase)) list.Add("Blender");
-        if (app.Id.Contains("Notepad++", StringComparison.OrdinalIgnoreCase) || app.Name.Contains("Notepad++")) list.Add("Notepad++");
-        if (app.Id.Contains("Everything", StringComparison.OrdinalIgnoreCase)) list.Add("Everything");
-        if (app.Id.Contains("WinSCP", StringComparison.OrdinalIgnoreCase)) list.Add("WinSCP");
-        if (app.Id.Contains("qBittorrent", StringComparison.OrdinalIgnoreCase)) list.Add("qBittorrent");
-        if (app.Id.Contains("Ollama", StringComparison.OrdinalIgnoreCase)) list.Add("Ollama");
-        if (app.Id.Contains("KeePass", StringComparison.OrdinalIgnoreCase)) list.Add("KeePass");
-        if (app.Id.Contains("Edge", StringComparison.OrdinalIgnoreCase)) list.Add("Microsoft Edge");
-        if (app.Id.Contains("WSL", StringComparison.OrdinalIgnoreCase)) list.Add("Windows Subsystem for Linux");
-        if (app.Id.Contains("ChatGPT", StringComparison.OrdinalIgnoreCase)) list.Add("ChatGPT");
-
-        return list.Distinct(StringComparer.OrdinalIgnoreCase).Where(k => k.Length >= 3).ToList();
-    }
-
-    private static bool CheckKnownPaths(AppPackageItem app, string? customInstallFolder)
-    {
-        try
-        {
-            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            string progFiles86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            if (!string.IsNullOrEmpty(customInstallFolder) && Directory.Exists(customInstallFolder))
-            {
-                string sanitizedName = string.Concat(app.Name.Split(Path.GetInvalidFileNameChars())).Trim();
-                string appDir = Path.Combine(customInstallFolder, sanitizedName);
-                if (Directory.Exists(appDir) && Directory.EnumerateFileSystemEntries(appDir).Any()) return true;
-            }
-
-            var testDirs = new[]
-            {
-                Path.Combine(progFiles, app.Name),
-                Path.Combine(progFiles86, app.Name),
-                Path.Combine(localApp, @"Programs", app.Name),
-                Path.Combine(appData, app.Name)
-            };
-
-            foreach (var d in testDirs)
-            {
-                if (Directory.Exists(d)) return true;
-            }
-
-            if (app.Id == "7zip.7zip" && (File.Exists(Path.Combine(progFiles, @"7-Zip\7z.exe")) || File.Exists(Path.Combine(progFiles86, @"7-Zip\7z.exe")))) return true;
-            if (app.Id == "Google.Chrome" && File.Exists(Path.Combine(progFiles, @"Google\Chrome\Application\chrome.exe"))) return true;
-            if (app.Id == "Valve.Steam" && (File.Exists(Path.Combine(progFiles86, @"Steam\steam.exe")) || File.Exists(Path.Combine(progFiles, @"Steam\steam.exe")))) return true;
-            if (app.Id == "Discord.Discord" && (Directory.Exists(Path.Combine(localApp, @"Discord")) || Directory.Exists(Path.Combine(appData, @"discord")))) return true;
-            if (app.Id == "Docker.DockerDesktop" && (File.Exists(Path.Combine(progFiles, @"Docker\Docker\Docker Desktop.exe")) || Directory.Exists(Path.Combine(localApp, @"Docker")))) return true;
-            if (app.Id.Contains("Antigravity") && File.Exists(Path.Combine(localApp, @"Programs\Antigravity\Antigravity.exe"))) return true;
-            if (app.Id == "Git.Git" && (File.Exists(Path.Combine(progFiles, @"Git\bin\git.exe")) || File.Exists(Path.Combine(progFiles, @"Git\cmd\git.exe")))) return true;
-            if (app.Id.Contains("Python") && (Directory.Exists(Path.Combine(localApp, @"Programs\Python")) || File.Exists(@"C:\Windows\py.exe"))) return true;
-            if (app.Id == "Tailscale.Tailscale" && Directory.Exists(Path.Combine(progFiles, @"Tailscale"))) return true;
-            if (app.Id == "voidtools.Everything" && Directory.Exists(Path.Combine(progFiles, @"Everything"))) return true;
-            if (app.Id == "Notepad++.Notepad++" && (Directory.Exists(Path.Combine(progFiles, @"Notepad++")) || Directory.Exists(Path.Combine(progFiles86, @"Notepad++")))) return true;
-            if (app.Id == "Brave.Brave" && Directory.Exists(Path.Combine(progFiles, @"BraveSoftware\Brave-Browser"))) return true;
-            if (app.Id == "WinSCP.WinSCP" && (Directory.Exists(Path.Combine(progFiles86, @"WinSCP")) || Directory.Exists(Path.Combine(progFiles, @"WinSCP")))) return true;
-            if ((app.Id == "9PLM9XGG6VKS" || app.Name.Contains("ChatGPT", StringComparison.OrdinalIgnoreCase)) &&
-                (Directory.Exists(Path.Combine(localApp, @"Programs\ChatGPT")) || Directory.Exists(Path.Combine(localApp, @"OpenAI")))) return true;
-            if (app.Id == "qBittorrent.qBittorrent" && Directory.Exists(Path.Combine(progFiles, @"qBittorrent"))) return true;
-        }
-        catch { }
-
-        return false;
+        return apps.DistinctBy(a => $"{a.Name}\u001f{a.InstalledVersion}", StringComparer.OrdinalIgnoreCase)
+            .OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 
     public async Task<bool> InstallAppAsync(AppPackageItem app, string? targetLocation, Action<string>? logger = null, CancellationToken ct = default, bool silent = true)
     {
+        ct.ThrowIfCancellationRequested();
+        if (!app.CanInstall || !SoftwareInventoryParser.IsActionableId(app.Id, app.Source))
+        {
+            logger?.Invoke("Instalacja wymaga programu wybranego z katalogu i potwierdzonego identyfikatora pakietu.");
+            return false;
+        }
         app.IsBusy = true;
         app.Status = "Pobieranie i instalacja...";
         app.StatusColor = "#38BDF8";
         logger?.Invoke($"⬇️ Rozpoczynam automatyczną instalację: {app.Name} ({app.Id})...");
 
-        bool isMsStore = !app.Id.Contains('.') && app.Id.Length == 12;
+        bool isMsStore = app.Source.Equals("msstore", StringComparison.OrdinalIgnoreCase);
         string args = isMsStore
             ? $"install --id \"{app.Id}\" --source msstore --accept-package-agreements --accept-source-agreements"
-            : $"install --id \"{app.Id}\" --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
+            : $"install --id \"{app.Id}\" --source winget --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
 
         if (!isMsStore && !string.IsNullOrWhiteSpace(targetLocation))
         {
@@ -515,7 +336,7 @@ public class SoftwareInstallerService
         }
 
         (bool ok, string output, int exitCode) result;
-        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); }
+        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); ct.ThrowIfCancellationRequested(); }
         catch (OperationCanceledException) { app.Status = "Anulowano"; throw; }
         finally { app.IsBusy = false; }
         var (ok, output, exitCode) = result;
@@ -530,22 +351,19 @@ public class SoftwareInstallerService
         bool isAlreadyUpToDate = exitCode == -1978335189 
             || exitCode == -1978335187 
             || exitCode == -1978335212 
-            || exitCode == -1978335188
-            || (!string.IsNullOrEmpty(output) && (
-                output.Contains("No available upgrade found", StringComparison.OrdinalIgnoreCase) ||
-                output.Contains("No newer package versions are available", StringComparison.OrdinalIgnoreCase) ||
-                output.Contains("already installed", StringComparison.OrdinalIgnoreCase) ||
-                output.Contains("Existing package already installed", StringComparison.OrdinalIgnoreCase)));
+            || exitCode == -1978335188;
 
         if (ok || isAlreadyUpToDate)
         {
             app.IsInstalled = true;
             app.HasUpdate = false;
-            app.Status = isAlreadyUpToDate ? "Zainstalowany (Aktualny)" : "Zainstalowano pomyślnie";
+            app.AvailableVersion = "";
+            app.UpdatesChecked = false;
+            app.Status = isAlreadyUpToDate ? "Pakiet jest już zainstalowany" : "Zainstalowano pomyślnie";
             app.StatusColor = "#81C784";
             if (isAlreadyUpToDate)
             {
-                logger?.Invoke($"✓ {app.Name} jest już zainstalowany w najnowszej wersji!");
+                logger?.Invoke($"✓ WinGet potwierdził, że {app.Name} jest już zainstalowany.");
             }
             else
             {
@@ -564,18 +382,24 @@ public class SoftwareInstallerService
 
     public async Task<bool> UpgradeAppAsync(AppPackageItem app, Action<string>? logger = null, CancellationToken ct = default, bool silent = true)
     {
+        ct.ThrowIfCancellationRequested();
+        if (!app.CanUpdate || !SoftwareInventoryParser.IsActionableId(app.Id, app.Source))
+        {
+            logger?.Invoke("Brak potwierdzonej aktualizacji dla tego pakietu.");
+            return false;
+        }
         app.IsBusy = true;
         app.Status = "Aktualizowanie...";
         app.StatusColor = "#FFB74D";
         logger?.Invoke($"⬆️ Rozpoczynam aktualizację: {app.Name} ({app.Id})...");
 
-        bool isMsStore = !app.Id.Contains('.') && app.Id.Length == 12;
+        bool isMsStore = app.Source.Equals("msstore", StringComparison.OrdinalIgnoreCase);
         string args = isMsStore
             ? $"upgrade --id \"{app.Id}\" --source msstore --accept-package-agreements --accept-source-agreements"
-            : $"upgrade --id \"{app.Id}\" --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
+            : $"upgrade --id \"{app.Id}\" --source winget --exact {(silent ? "--silent" : "--interactive")} --accept-package-agreements --accept-source-agreements";
 
         (bool ok, string output, int exitCode) result;
-        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); }
+        try { result = await DiskHelper.RunProcessDetailedAsync("winget", args, logger, ct); ct.ThrowIfCancellationRequested(); }
         catch (OperationCanceledException) { app.Status = "Anulowano"; throw; }
         finally { app.IsBusy = false; }
         var (ok, output, exitCode) = result;
@@ -584,19 +408,18 @@ public class SoftwareInstallerService
 
         bool isAlreadyUpToDate = exitCode == -1978335189 
             || exitCode == -1978335187 
-            || exitCode == -1978335188
-            || (!string.IsNullOrEmpty(output) && (
-                output.Contains("No available upgrade found", StringComparison.OrdinalIgnoreCase) ||
-                output.Contains("No newer package versions are available", StringComparison.OrdinalIgnoreCase)));
+            || exitCode == -1978335188;
 
         if (ok || isAlreadyUpToDate)
         {
             app.HasUpdate = false;
-            app.Status = "Zainstalowany (Aktualny)";
+            app.AvailableVersion = "";
+            app.UpdatesChecked = false;
+            app.Status = isAlreadyUpToDate ? "Brak aktualizacji w WinGet" : "Zaktualizowano. Odśwież dane wersji.";
             app.StatusColor = "#81C784";
             if (isAlreadyUpToDate)
             {
-                logger?.Invoke($"✓ {app.Name} posiada już najnowszą wersję!");
+                logger?.Invoke($"✓ WinGet nie udostępnia nowszej wersji {app.Name}.");
             }
             else
             {

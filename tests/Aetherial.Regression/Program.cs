@@ -34,6 +34,7 @@ internal static class Program
         Directory.CreateDirectory(Root);
         try
         {
+            SoftwareInventoryCases.Run(Check);
             Reject(() => DiskHelper.ValidateCleaningPath(Path.GetPathRoot(Root)!), "Drive root protected");
             Reject(() => DiskHelper.ValidateCleaningPath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)), "User root protected");
             Reject(() => DiskHelper.ValidateCleaningPath(Environment.GetFolderPath(Environment.SpecialFolder.Windows)), "Windows root protected");

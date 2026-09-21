@@ -13,12 +13,36 @@ public class AppPackageItem : INotifyPropertyChanged
     private string _status = "Niezainstalowany";
     private string _statusColor = "#888898";
     private bool _isBusy;
+    private bool _inventoryOnly;
+    private bool _isPackageIdVerified;
+    private bool _updatesChecked;
 
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Icon { get; set; } = "📦";
+    public string Source { get; set; } = string.Empty;
+
+    // Inventory records may only update after WinGet returns an exact package ID and source.
+    // They must never become install targets when a subsequent scan is incomplete.
+    public bool InventoryOnly
+    {
+        get => _inventoryOnly;
+        set { _inventoryOnly = value; OnPropertyChanged(); NotifyActions(); }
+    }
+
+    public bool IsPackageIdVerified
+    {
+        get => _isPackageIdVerified;
+        set { _isPackageIdVerified = value; OnPropertyChanged(); NotifyActions(); }
+    }
+
+    public bool UpdatesChecked
+    {
+        get => _updatesChecked;
+        set { _updatesChecked = value; OnPropertyChanged(); }
+    }
 
     public bool IsSelected
     {
@@ -33,8 +57,7 @@ public class AppPackageItem : INotifyPropertyChanged
         { 
             _isInstalled = value; 
             OnPropertyChanged(); 
-            OnPropertyChanged(nameof(ActionButtonText));
-            OnPropertyChanged(nameof(ActionButtonVisible));
+            NotifyActions();
         }
     }
 
@@ -45,8 +68,7 @@ public class AppPackageItem : INotifyPropertyChanged
         { 
             _hasUpdate = value; 
             OnPropertyChanged(); 
-            OnPropertyChanged(nameof(ActionButtonText));
-            OnPropertyChanged(nameof(ActionButtonVisible));
+            NotifyActions();
         }
     }
 
@@ -59,7 +81,7 @@ public class AppPackageItem : INotifyPropertyChanged
     public string AvailableVersion
     {
         get => _availableVersion;
-        set { _availableVersion = value; OnPropertyChanged(); }
+        set { _availableVersion = value; OnPropertyChanged(); NotifyActions(); }
     }
 
     public string Status
@@ -81,23 +103,34 @@ public class AppPackageItem : INotifyPropertyChanged
         { 
             _isBusy = value; 
             OnPropertyChanged(); 
-            OnPropertyChanged(nameof(CanAction));
+            NotifyActions();
         }
     }
 
-    public bool CanAction => !_isBusy;
+    public bool CanInstall => !IsBusy && !InventoryOnly && IsPackageIdVerified && !IsInstalled;
+    public bool CanUpdate => !IsBusy && IsInstalled && IsPackageIdVerified && HasUpdate && !string.IsNullOrWhiteSpace(AvailableVersion);
+    public bool CanAction => CanInstall || CanUpdate;
 
     public string ActionButtonText
     {
         get
         {
-            if (HasUpdate) return "⬆️ Aktualizuj";
+            if (HasUpdate && IsPackageIdVerified) return "Aktualizuj";
             if (IsInstalled) return "✓ Zainstalowano";
-            return "⬇️ Zainstaluj";
+            return "Zainstaluj";
         }
     }
 
-    public bool ActionButtonVisible => !IsInstalled || HasUpdate;
+    public bool ActionButtonVisible => IsPackageIdVerified && ((!InventoryOnly && !IsInstalled) || (IsInstalled && HasUpdate && !string.IsNullOrWhiteSpace(AvailableVersion)));
+
+    private void NotifyActions()
+    {
+        OnPropertyChanged(nameof(CanInstall));
+        OnPropertyChanged(nameof(CanUpdate));
+        OnPropertyChanged(nameof(CanAction));
+        OnPropertyChanged(nameof(ActionButtonVisible));
+        OnPropertyChanged(nameof(ActionButtonText));
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

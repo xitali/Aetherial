@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>6.2.0</Version>
+    <Version>6.3.0</Version>
     <AssemblyName>Aetherial</AssemblyName>
     <RootNamespace>DiskOptimizer</RootNamespace>
     <DefaultItemExcludes>$(DefaultItemExcludes);.artifacts/**;release/**;tests/**;Aetherial.Core/**;Aetherial.Services/**</DefaultItemExcludes>
